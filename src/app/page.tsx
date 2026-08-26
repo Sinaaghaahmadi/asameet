@@ -31,8 +31,9 @@ function HomeInner() {
     } else if (tab && VALID_TABS.includes(tab)) {
       setTab(tab);
     }
-    if ((mode === "messenger" || tab) && !restoreSession()) {
-      // Deep link (PWA shortcut / Android app) without a session → prompt login
+    // ?login=1 is how every marketing page hands the visitor over to the app.
+    if ((params.get("login") === "1" || mode === "messenger" || tab) && !restoreSession()) {
+      // Deep link (PWA shortcut / Android app / site CTA) without a session → prompt login
       setShowLoginModal(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -82,7 +82,7 @@ export function AppShell() {
         </nav>
 
         <div className="flex flex-col items-center gap-1.5 [&_button]:text-zinc-400 [&_button:hover]:bg-zinc-800 [&_button:hover]:text-zinc-100">
-          <ThemeToggle />
+          <ThemeToggle compact />
           <LanguageSwitcher />
           <Tooltip>
             <TooltipTrigger asChild>

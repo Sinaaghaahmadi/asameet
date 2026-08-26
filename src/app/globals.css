@@ -4,7 +4,7 @@
 
 /* ============================================================
    ASAMEET DESIGN SYSTEM
-   بستر هوشمند گفت‌وگو — Telegram-inspired, glassmorphism, 3D
+   بستر هوشمند گفت‌وگو — glassmorphism, depth, motion
    ============================================================ */
 
 :root {
@@ -144,7 +144,7 @@ body {
   background: color-mix(in oklch, var(--asameet) 30%, transparent);
 }
 
-/* ---------- Telegram-style thin scrollbar ---------- */
+/* ---------- Thin, unobtrusive scrollbar ---------- */
 
 * {
   scrollbar-width: thin;
@@ -432,7 +432,7 @@ body {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--asameet) 35%, transparent);
 }
 
-/* ---------- Telegram-style message bubbles ---------- */
+/* ---------- Message bubbles ---------- */
 
 .msg-bubble-own,
 .msg-bubble-other {
@@ -480,3 +480,219 @@ body {
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 .text-balance { text-wrap: balance; }
+
+/* ============================================================
+   INTERACTIVE LAYER
+   Pointer-reactive surfaces, kinetic type, depth on scroll.
+   Everything here degrades to a static, legible page when the
+   viewer asks for reduced motion.
+   ============================================================ */
+
+/* Pointer position, written once per frame by <InteractiveBackground>.
+   Components read it instead of subscribing to mousemove themselves. */
+:root {
+  --px: 0.5;
+  --py: 0.5;
+  --pxp: 50%;
+  --pyp: 50%;
+}
+
+/* ---------- Aurora field ---------- */
+
+.aurora {
+  position: fixed;
+  inset: -20vmax;
+  z-index: -2;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.aurora__blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(72px);
+  opacity: 0.5;
+  will-change: transform;
+  transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dark .aurora__blob {
+  opacity: 0.42;
+}
+
+.aurora__grid {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--asameet) 8%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--asameet) 8%, transparent) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(circle 38vmax at var(--pxp) var(--pyp), #000 0%, transparent 78%);
+  -webkit-mask-image: radial-gradient(circle 38vmax at var(--pxp) var(--pyp), #000 0%, transparent 78%);
+  transition: opacity 0.4s ease;
+}
+
+/* ---------- Spotlight surface ---------- */
+
+.spotlight {
+  position: relative;
+  isolation: isolate;
+}
+
+.spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  background: radial-gradient(
+    circle 16rem at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--asameet) 22%, transparent),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.spotlight:hover::before,
+.spotlight:focus-within::before {
+  opacity: 1;
+}
+
+.spotlight > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Hairline that lights up along the pointer — gives cards a physical edge. */
+.edge-glow {
+  position: relative;
+}
+
+.edge-glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: radial-gradient(
+    circle 12rem at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--asameet-light) 75%, transparent),
+    transparent 65%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+
+.edge-glow:hover::after,
+.edge-glow:focus-within::after {
+  opacity: 1;
+}
+
+/* ---------- Tilt ---------- */
+
+.tilt-scene {
+  perspective: 1200px;
+}
+
+.tilt {
+  transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) translateZ(0);
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.tilt-layer {
+  transform: translateZ(var(--tilt-z, 40px));
+}
+
+/* ---------- Kinetic type ---------- */
+
+.kinetic-line {
+  display: inline-grid;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+
+.kinetic-line > span {
+  grid-area: 1 / 1;
+}
+
+@keyframes kinetic-in {
+  from { opacity: 0; transform: translateY(0.7em) rotate(2deg); }
+  to { opacity: 1; transform: translateY(0) rotate(0); }
+}
+
+@keyframes kinetic-out {
+  from { opacity: 1; transform: translateY(0) rotate(0); }
+  to { opacity: 0; transform: translateY(-0.7em) rotate(-2deg); }
+}
+
+.kinetic-enter { animation: kinetic-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.kinetic-exit { animation: kinetic-out 0.55s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* ---------- Marquee (logos / value strip) ---------- */
+
+@keyframes marquee-rtl {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee-rtl 38s linear infinite;
+}
+
+.marquee:hover {
+  animation-play-state: paused;
+}
+
+.marquee-mask {
+  mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+}
+
+/* ---------- Depth helpers ---------- */
+
+.depth-1 { box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(13,148,136,0.06); }
+.depth-2 { box-shadow: 0 2px 6px rgba(0,0,0,0.06), 0 12px 32px rgba(13,148,136,0.10); }
+.depth-3 { box-shadow: 0 6px 18px rgba(0,0,0,0.08), 0 28px 64px rgba(13,148,136,0.16); }
+
+.dark .depth-1 { box-shadow: 0 1px 2px rgba(0,0,0,0.4), 0 4px 12px rgba(0,0,0,0.3); }
+.dark .depth-2 { box-shadow: 0 2px 6px rgba(0,0,0,0.45), 0 12px 32px rgba(0,0,0,0.4); }
+.dark .depth-3 { box-shadow: 0 6px 18px rgba(0,0,0,0.5), 0 28px 64px rgba(0,0,0,0.5); }
+
+/* ---------- Scroll affordance ---------- */
+
+@keyframes scroll-hint {
+  0%, 100% { transform: translateY(0); opacity: 0.5; }
+  50% { transform: translateY(6px); opacity: 1; }
+}
+
+.scroll-hint { animation: scroll-hint 1.8s ease-in-out infinite; }
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  .aurora__blob,
+  .aurora__grid { transition: none; }
+  .marquee { animation: none; }
+  .tilt { transform: none !important; }
+}

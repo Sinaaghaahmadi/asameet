@@ -11,7 +11,14 @@ const isVercel = process.env.VERCEL === "1";
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 const nextConfig: NextConfig = {
-  ...(isStatic ? { output: "export" as const } : isVercel ? {} : { output: "standalone" as const }),
+  // The static export needs trailingSlash: without it a route lands at
+  // `pricing.html` with an empty `pricing/` beside it, which only resolves on
+  // hosts that guess the extension. With it, every route is `pricing/index.html`.
+  ...(isStatic
+    ? { output: "export" as const, trailingSlash: true }
+    : isVercel
+      ? {}
+      : { output: "standalone" as const }),
   ...(basePath ? { basePath } : {}),
   ...(isStatic
     ? {}
