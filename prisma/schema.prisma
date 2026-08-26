@@ -1,0 +1,160 @@
+// Asameet database schema — used by the self-hosted deployment.
+// The demo deployment runs on an in-memory store (src/lib/server/store.ts);
+// see docs/DEPLOYMENT.md for switching to Prisma + SQLite/PostgreSQL.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(uuid())
+  username    String   @unique
+  password    String
+  displayName String
+  avatar      String?
+  role        String   @default("user") // user | teacher | host | admin
+  status      String   @default("offline") // online | offline | away | busy
+  isOnline    Boolean  @default(false)
+  isSuspended Boolean  @default(false)
+  lastSeen    DateTime @default(now())
+  country     String?
+  createdAt   DateTime @default(now())
+
+  chatMembers         ChatMember[]
+  messages            Message[]
+  initiatedCalls      Call[]               @relation("CallInitiator")
+  callParticipants    CallParticipant[]
+  hostedMeetings      Meeting[]            @relation("MeetingHost")
+  meetingParticipants MeetingParticipant[]
+  taughtClasses       ClassSession[]       @relation("ClassTeacher")
+  classMembers        ClassMember[]
+}
+
+model Chat {
+  id            String    @id @default(uuid())
+  name          String?
+  type          String    @default("private") // private | group | channel
+  avatar        String?
+  isPinned      Boolean   @default(false)
+  lastMessage   String?
+  lastMessageAt DateTime?
+  createdAt     DateTime  @default(now())
+
+  members  ChatMember[]
+  messages Message[]
+}
+
+model ChatMember {
+  id     String @id @default(uuid())
+  chatId String
+  userId String
+  role   String @default("member") // admin | member
+
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([chatId, userId])
+}
+
+model Message {
+  id            String   @id @default(uuid())
+  chatId        String
+  senderId      String
+  content       String
+  type          String   @default("text") // text | image | file | voice | system
+  replyToId     String?
+  forwardedFrom String?
+  isRead        Boolean  @default(false)
+  isPinned      Boolean  @default(false)
+  reactions     String? // JSON [{emoji, userIds[]}]
+  createdAt     DateTime @default(now())
+
+  chat   Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+}
+
+model Call {
+  id          String   @id @default(uuid())
+  type        String   @default("audio") // audio | video
+  status      String   @default("ringing") // ringing | active | ended
+  direction   String   @default("outgoing") // incoming | outgoing | missed
+  initiatorId String
+  duration    Int?
+  createdAt   DateTime @default(now())
+
+  initiator    User              @relation("CallInitiator", fields: [initiatorId], references: [id], onDelete: Cascade)
+  participants CallParticipant[]
+}
+
+model CallParticipant {
+  id          String  @id @default(uuid())
+  callId      String
+  userId      String
+  isMuted     Boolean @default(false)
+  isCameraOff Boolean @default(false)
+
+  call Call @relation(fields: [callId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([callId, userId])
+}
+
+model Meeting {
+  id              String   @id @default(uuid())
+  title           String
+  type            String   @default("meeting") // meeting | conference | class
+  link            String   @unique
+  status          String   @default("scheduled") // scheduled | active | ended
+  hostId          String
+  maxParticipants Int      @default(100)
+  isRecording     Boolean  @default(false)
+  startsAt        DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  host         User                 @relation("MeetingHost", fields: [hostId], references: [id], onDelete: Cascade)
+  participants MeetingParticipant[]
+}
+
+model MeetingParticipant {
+  id         String  @id @default(uuid())
+  meetingId  String
+  userId     String
+  role       String  @default("participant") // host | co_host | speaker | participant
+  handRaised Boolean @default(false)
+
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([meetingId, userId])
+}
+
+model ClassSession {
+  id             String   @id @default(uuid())
+  title          String
+  teacherId      String
+  status         String   @default("scheduled")
+  attendance     String? // JSON {userId: boolean}
+  whiteboardData String? // JSON canvas state
+  startsAt       DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  teacher User          @relation("ClassTeacher", fields: [teacherId], references: [id], onDelete: Cascade)
+  members ClassMember[]
+}
+
+model ClassMember {
+  id        String  @id @default(uuid())
+  classId   String
+  userId    String
+  isPresent Boolean @default(false)
+
+  class ClassSession @relation(fields: [classId], references: [id], onDelete: Cascade)
+  user  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([classId, userId])
+}

@@ -1,0 +1,13 @@
+{
+  "appId": "online.asameet.messenger",
+  "appName": "آسامیت پیام‌رسان",
+  "webDir": "www",
+  "server": {
+    "url": "https://sinaaghaahmadi.github.io/q/?mode=messenger",
+    "cleartext": false
+  },
+  "android": {
+    "backgroundColor": "#f0fdfa",
+    "allowMixedContent": false
+  }
+}

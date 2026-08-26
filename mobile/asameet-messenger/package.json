@@ -1,0 +1,11 @@
+{
+  "name": "asameet-messenger-android",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Asameet Messenger — Telegram-like messaging-only Android app",
+  "dependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/cli": "^6.2.0",
+    "@capacitor/core": "^6.2.0"
+  }
+}

@@ -1,0 +1,72 @@
+name: Build Android APKs
+
+on:
+  workflow_dispatch:
+    inputs:
+      app_url:
+        description: "Deployed web app URL the APKs point at"
+        required: false
+        default: "https://sinaaghaahmadi.github.io/q"
+  push:
+    branches: [main, claude/asameet-messaging-platform-hv7npi]
+    paths:
+      - "mobile/**"
+      - ".github/workflows/android.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - dir: mobile/asameet
+            name: asameet
+            url_suffix: ""
+          - dir: mobile/asameet-messenger
+            name: asameet-messenger
+            url_suffix: "/?mode=messenger"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Point app at the deployed URL
+        working-directory: ${{ matrix.dir }}
+        run: |
+          APP_URL="${{ github.event.inputs.app_url || 'https://sinaaghaahmadi.github.io/q' }}"
+          node -e "
+            const fs = require('fs');
+            const cfg = JSON.parse(fs.readFileSync('capacitor.config.json', 'utf8'));
+            cfg.server.url = '$APP_URL${{ matrix.url_suffix }}';
+            fs.writeFileSync('capacitor.config.json', JSON.stringify(cfg, null, 2));
+          "
+          cat capacitor.config.json
+
+      - name: Install Capacitor
+        working-directory: ${{ matrix.dir }}
+        run: npm install --no-audit --no-fund
+
+      - name: Add Android platform
+        working-directory: ${{ matrix.dir }}
+        run: npx cap add android && npx cap sync android
+
+      - name: Generate launcher icons
+        working-directory: ${{ matrix.dir }}
+        run: npx --yes @capacitor/assets generate --android --iconBackgroundColor '#0d9488' --iconBackgroundColorDark '#042f2e' --splashBackgroundColor '#f0fdfa' --splashBackgroundColorDark '#042f2e' || echo "icon generation skipped"
+
+      - name: Build debug APK
+        working-directory: ${{ matrix.dir }}/android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}-debug-apk
+          path: ${{ matrix.dir }}/android/app/build/outputs/apk/debug/app-debug.apk

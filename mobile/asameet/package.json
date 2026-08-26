@@ -1,0 +1,11 @@
+{
+  "name": "asameet-android",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Asameet full app — Android (Capacitor wrapper around the PWA)",
+  "dependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/cli": "^6.2.0",
+    "@capacitor/core": "^6.2.0"
+  }
+}
