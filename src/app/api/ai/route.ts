@@ -37,6 +37,22 @@ function demoOutput(mode: AiMode, title: string, input: string, locale: string):
   return (locale === "fa" || locale === "ar" ? faDemo : enDemo)[mode];
 }
 
+/**
+ * Health probe. Whether the assistant is live comes down to one env var, and
+ * until now the only way to find out was to POST a transcript and read the
+ * `demo` flag off the reply — which costs a model call. A GET answers it for
+ * free, and never reveals the key itself.
+ */
+export async function GET() {
+  const configured = Boolean(process.env.ANTHROPIC_API_KEY);
+  return NextResponse.json({
+    configured,
+    mode: configured ? "live" : "demo",
+    model: process.env.ASAMEET_AI_MODEL || "claude-opus-5",
+    modes: Object.keys(SYSTEM_PROMPTS),
+  });
+}
+
 export async function POST(req: NextRequest) {
   const body = (await req.json().catch(() => null)) as AiRequest | null;
   const mode = body?.mode;
