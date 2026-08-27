@@ -91,8 +91,15 @@ jobs:
           # stray spaces. A bare LF is fine for base64 -d, a CR is not — so strip
           # every whitespace character before decoding rather than making whoever
           # sets the secret paste it perfectly.
-          if ! printf '%s' "$KEYSTORE_B64" | tr -d '[:space:]' | base64 -d > "$RUNNER_TEMP/release.jks" 2>/dev/null; then
-            echo "::error::ANDROID_KEYSTORE_BASE64 is not valid base64. Regenerate it with: base64 -w0 my-release-key.jks — and paste the whole single line."
+          CLEAN="$(printf '%s' "$KEYSTORE_B64" | tr -d '[:space:]')"
+
+          # Describe a bad secret by shape only — never echo any of it. Lengths
+          # and counts are enough to tell "pasted the wrong thing" from
+          # "pasted a truncated blob".
+          LEN=${#CLEAN}
+          BAD=$(printf '%s' "$CLEAN" | tr -d 'A-Za-z0-9+/=' | wc -c)
+          if ! printf '%s' "$CLEAN" | base64 -d > "$RUNNER_TEMP/release.jks" 2>/dev/null; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 is not valid base64: $LEN characters after trimming whitespace, of which $BAD are outside the base64 alphabet. It should be one long line of only A-Z a-z 0-9 + / = — the entire contents of the file produced by: base64 -w0 my-release-key.jks"
             exit 1
           fi
           if [ ! -s "$RUNNER_TEMP/release.jks" ]; then
@@ -102,7 +109,7 @@ jobs:
 
           # Decoding to *some* bytes is not proof it is the right keystore, and a
           # wrong password should say so here rather than deep inside apksigner.
-          if ! keytool -list -keystore "$RUNNER_TEMP/release.jks" -storepass "$KEYSTORE_PASSWORD" >/dev/null 2>&1; then
+          if ! keytool -list -keystore "$RUNNER_TEMP/release.jks" -storepass "$(printf '%s' "$KEYSTORE_PASSWORD" | tr -d '[:space:]')" >/dev/null 2>&1; then
             echo "::error::The keystore decoded but could not be opened. Either ANDROID_KEYSTORE_PASSWORD is wrong, or the base64 is of a different/partial file."
             exit 1
           fi
