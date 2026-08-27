@@ -13,7 +13,7 @@ import { DesignSystemStrip } from "@/components/site/design-system-strip";
 import { useLocale, useT } from "@/lib/i18n";
 import { cn, toLocaleDigits } from "@/lib/utils";
 
-const RELEASES = "https://github.com/sinaaghaahmadi/q/releases";
+const RELEASES = "https://github.com/sinaaghaahmadi/asameet/releases";
 
 /** Marketing pages all sit inside this shell: living backdrop, nav, footer. */
 export function SiteChrome({ children }: { children: React.ReactNode }) {

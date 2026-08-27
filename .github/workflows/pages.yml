@@ -2,7 +2,7 @@ name: Deploy Static Demo (GitHub Pages)
 
 on:
   push:
-    branches: [main, claude/asameet-messaging-platform-hv7npi]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -35,8 +35,8 @@ jobs:
         env:
           STATIC_EXPORT: "1"
           NEXT_PUBLIC_STATIC: "1"
-          NEXT_PUBLIC_BASE_PATH: /q
-          NEXT_PUBLIC_APP_URL: https://sinaaghaahmadi.github.io/q
+          NEXT_PUBLIC_BASE_PATH: /asameet
+          NEXT_PUBLIC_APP_URL: https://sinaaghaahmadi.github.io/asameet
 
       - name: Disable Jekyll processing
         run: touch out/.nojekyll
