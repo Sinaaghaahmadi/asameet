@@ -37,20 +37,64 @@ function demoOutput(mode: AiMode, title: string, input: string, locale: string):
   return (locale === "fa" || locale === "ar" ? faDemo : enDemo)[mode];
 }
 
+/** Env names close enough to ANTHROPIC_API_KEY to be a misconfiguration. */
+const KEYISH = /^(next_public_)?(anthropic|antropic|anthopic|claude)[._-]?(api)?[._-]?(key|token|secret)$/i;
+
+/**
+ * Describe a candidate key by shape only. Never returns any part of a value:
+ * a length and a few booleans are enough to tell "that is the key under the
+ * wrong name" from "that is something else entirely".
+ */
+function describe(name: string, value: string) {
+  return {
+    name,
+    length: value.length,
+    looksAnthropic: /^sk-ant-/.test(value.trim()),
+    hasSurroundingQuotes: /^["'].*["']$/s.test(value),
+    hasWhitespace: value !== value.trim(),
+  };
+}
+
 /**
  * Health probe. Whether the assistant is live comes down to one env var, and
- * until now the only way to find out was to POST a transcript and read the
- * `demo` flag off the reply — which costs a model call. A GET answers it for
- * free, and never reveals the key itself.
+ * the alternative was to POST a transcript and read the `demo` flag off the
+ * reply — which costs a model call. A GET answers it for free.
+ *
+ * When the key is missing it also reports which near-miss names are set, so a
+ * typo is visible without anyone reading the deployment's env. The key itself
+ * is never returned, and the diagnostics disappear once it is configured, so
+ * a healthy deployment discloses nothing.
  */
 export async function GET() {
-  const configured = Boolean(process.env.ANTHROPIC_API_KEY);
-  return NextResponse.json({
+  const key = process.env.ANTHROPIC_API_KEY;
+  const configured = Boolean(key);
+
+  const body: Record<string, unknown> = {
     configured,
     mode: configured ? "live" : "demo",
     model: process.env.ASAMEET_AI_MODEL || "claude-opus-5",
     modes: Object.keys(SYSTEM_PROMPTS),
-  });
+  };
+
+  if (!configured) {
+    const nearMisses = Object.entries(process.env)
+      .filter(([n, v]) => Boolean(v) && n !== "ANTHROPIC_API_KEY" && KEYISH.test(n))
+      .map(([n, v]) => describe(n, v as string));
+
+    body.diagnostics = {
+      expected: "ANTHROPIC_API_KEY",
+      set: false,
+      // An empty string reads as unset to the app, and is worth calling out.
+      definedButEmpty: "ANTHROPIC_API_KEY" in process.env,
+      nearMisses,
+      hint:
+        nearMisses.length > 0
+          ? `Found ${nearMisses.map((m) => m.name).join(", ")}. Rename to ANTHROPIC_API_KEY (Production), then redeploy.`
+          : "No similar name is set on this deployment. Check the variable is on the 'asameet' project, ticked for Production, and that you redeployed after saving.",
+    };
+  }
+
+  return NextResponse.json(body);
 }
 
 export async function POST(req: NextRequest) {
