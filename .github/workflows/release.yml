@@ -73,16 +73,83 @@ jobs:
         working-directory: ${{ matrix.dir }}
         run: npx --yes @capacitor/assets generate --android --iconBackgroundColor '#0d9488' --iconBackgroundColorDark '#042f2e' --splashBackgroundColor '#f0fdfa' --splashBackgroundColorDark '#042f2e' || echo "icon generation skipped"
 
-      - name: Build APK
+      # The keystore never touches the workspace: it lands in the runner's temp
+      # dir, which is not uploaded as an artifact and is wiped with the runner.
+      - name: Unpack the release keystore
+        id: keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            echo "No ANDROID_KEYSTORE_BASE64 secret — falling back to a debug build."
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          if [ ! -s "$RUNNER_TEMP/release.jks" ]; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 did not decode to a file. Re-run: base64 -w0 my-key.jks"
+            exit 1
+          fi
+          echo "available=true" >> "$GITHUB_OUTPUT"
+
+      - name: Build signed release APK
+        if: steps.keystore.outputs.available == 'true'
         working-directory: ${{ matrix.dir }}/android
-        run: ./gradlew assembleDebug --no-daemon
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "$KEY_ALIAS" ]; then
+            echo "::error::ANDROID_KEY_ALIAS is empty. Set it to the alias you passed to keytool -alias."
+            exit 1
+          fi
+
+          ./gradlew assembleRelease --no-daemon
+
+          # Capacitor's generated project has no signingConfig, so Gradle leaves
+          # the APK unsigned — we align it and sign it ourselves with apksigner.
+          UNSIGNED="$(find app/build/outputs/apk/release -name '*.apk' | head -1)"
+          if [ -z "$UNSIGNED" ]; then
+            echo "::error::assembleRelease produced no APK."
+            exit 1
+          fi
+          echo "Built $UNSIGNED"
+
+          BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" -maxdepth 1 -mindepth 1 -type d | sort -V | tail -1)"
+          echo "Using build-tools at $BUILD_TOOLS"
+
+          # A key password is optional: keystores often reuse the store password.
+          : "${KEY_PASSWORD:=$KEYSTORE_PASSWORD}"
+          export KEYSTORE_PASSWORD KEY_PASSWORD
+
+          "$BUILD_TOOLS/zipalign" -p -f 4 "$UNSIGNED" "$RUNNER_TEMP/aligned.apk"
+          "$BUILD_TOOLS/apksigner" sign \
+            --ks "$RUNNER_TEMP/release.jks" \
+            --ks-pass env:KEYSTORE_PASSWORD \
+            --ks-key-alias "$KEY_ALIAS" \
+            --key-pass env:KEY_PASSWORD \
+            --out "$RUNNER_TEMP/signed.apk" \
+            "$RUNNER_TEMP/aligned.apk"
+
+          # Fail the build rather than ship something that will not install.
+          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs "$RUNNER_TEMP/signed.apk"
+
+      - name: Build debug APK
+        if: steps.keystore.outputs.available != 'true'
+        working-directory: ${{ matrix.dir }}/android
+        run: |
+          set -euo pipefail
+          ./gradlew assembleDebug --no-daemon
+          cp app/build/outputs/apk/debug/app-debug.apk "$RUNNER_TEMP/signed.apk"
 
       - name: Name the APK after its version
         run: |
+          set -euo pipefail
           VERSION="${{ github.event.inputs.version || github.ref_name }}"
           mkdir -p dist
-          cp "${{ matrix.dir }}/android/app/build/outputs/apk/debug/app-debug.apk" \
-             "dist/${{ matrix.name }}-${VERSION}.apk"
+          cp "$RUNNER_TEMP/signed.apk" "dist/${{ matrix.name }}-${VERSION}.apk"
           ls -lh dist
 
       - uses: actions/upload-artifact@v4
@@ -101,6 +168,18 @@ jobs:
           path: dist
 
       - run: ls -lh dist
+
+      # The release notes must not claim the APKs are signed when they are not.
+      - name: Describe how these APKs are signed
+        id: signing
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo 'note=این فایل‌ها با کلید انتشار شما امضا شده‌اند (زیرساخت v1+v2+v3) و آمادهٔ بارگذاری در Google Play، کافه‌بازار و مایکت هستند.' >> "$GITHUB_OUTPUT"
+          else
+            echo 'note=**توجه:** کلید انتشار روی مخزن تنظیم نشده، بنابراین این‌ها بیلد debug و امضانشده‌اند — برای نصب دستی مناسب‌اند، ولی برای بارگذاری در فروشگاه‌ها نه. راهنمای تنظیم کلید در ANDROID.md آمده است.' >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Publish the release
         uses: softprops/action-gh-release@v2
@@ -122,8 +201,8 @@ jobs:
             ### نصب
 
             فایل را روی گوشی دانلود کنید و اجازهٔ نصب از منابع ناشناس را بدهید.
-            این‌ها بیلدهای debug و امضانشده‌اند؛ برای انتشار در بازار یا Google Play
-            باید با کلید خودتان امضا شوند.
+
+            ${{ steps.signing.outputs.note }}
 
             ### حساب‌های دمو
 
