@@ -144,18 +144,45 @@ jobs:
           BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" -maxdepth 1 -mindepth 1 -type d | sort -V | tail -1)"
           echo "Using build-tools at $BUILD_TOOLS"
 
+          # Every secret gets the same treatment as the keystore blob: pasted
+          # values pick up stray whitespace, and apksigner sees them raw.
+          KEYSTORE_PASSWORD="$(printf '%s' "$KEYSTORE_PASSWORD" | tr -d '[:space:]')"
+          KEY_PASSWORD="$(printf '%s' "$KEY_PASSWORD" | tr -d '[:space:]')"
+          KEY_ALIAS="$(printf '%s' "$KEY_ALIAS" | tr -d '[:space:]')"
+
           # A key password is optional: keystores often reuse the store password.
           : "${KEY_PASSWORD:=$KEYSTORE_PASSWORD}"
           export KEYSTORE_PASSWORD KEY_PASSWORD
 
           "$BUILD_TOOLS/zipalign" -p -f 4 "$UNSIGNED" "$RUNNER_TEMP/aligned.apk"
-          "$BUILD_TOOLS/apksigner" sign \
-            --ks "$RUNNER_TEMP/release.jks" \
-            --ks-pass env:KEYSTORE_PASSWORD \
-            --ks-key-alias "$KEY_ALIAS" \
-            --key-pass env:KEY_PASSWORD \
-            --out "$RUNNER_TEMP/signed.apk" \
-            "$RUNNER_TEMP/aligned.apk"
+
+          sign_apk() {
+            "$BUILD_TOOLS/apksigner" sign \
+              --ks "$RUNNER_TEMP/release.jks" \
+              --ks-pass env:KEYSTORE_PASSWORD \
+              --ks-key-alias "$KEY_ALIAS" \
+              --key-pass env:KEY_PASSWORD \
+              --out "$RUNNER_TEMP/signed.apk" \
+              "$RUNNER_TEMP/aligned.apk"
+          }
+
+          # The store opening but the key refusing its password almost always
+          # means ANDROID_KEY_PASSWORD was mis-pasted while the keystore really
+          # uses one password for both — keytool's default. Retrying with the
+          # store password turns that misconfiguration into a warning instead
+          # of a dead release; a keystore with genuinely distinct passwords
+          # still fails both attempts and stops the build.
+          if ! sign_apk; then
+            if [ "$KEY_PASSWORD" != "$KEYSTORE_PASSWORD" ]; then
+              echo "::warning::ANDROID_KEY_PASSWORD was rejected for alias '$KEY_ALIAS'; retrying with the store password."
+              KEY_PASSWORD="$KEYSTORE_PASSWORD"
+              export KEY_PASSWORD
+              sign_apk
+            else
+              echo "::error::The key under alias '$KEY_ALIAS' refused the store password. The keystore uses a distinct key password — set ANDROID_KEY_PASSWORD to it."
+              exit 1
+            fi
+          fi
 
           # Fail the build rather than ship something that will not install.
           "$BUILD_TOOLS/apksigner" verify --verbose --print-certs "$RUNNER_TEMP/signed.apk"
