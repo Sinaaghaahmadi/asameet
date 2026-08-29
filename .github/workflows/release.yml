@@ -69,6 +69,19 @@ jobs:
         working-directory: ${{ matrix.dir }}
         run: npx cap add android && npx cap sync android
 
+      # Without this, every APK identifies itself as "1.0" — the Capacitor
+      # template default — no matter which tag built it.
+      - name: Stamp the app version from the release tag
+        working-directory: ${{ matrix.dir }}/android/app
+        run: |
+          set -euo pipefail
+          VERSION="${{ github.event.inputs.version || github.ref_name }}"
+          V="${VERSION#v}"
+          IFS=. read -r MA MI PA <<< "$V"
+          CODE=$((MA*10000 + MI*100 + PA))
+          sed -i "s/versionCode 1$/versionCode $CODE/; s/versionName \"1.0\"$/versionName \"$V\"/" build.gradle
+          grep -nE "versionCode|versionName" build.gradle
+
       - name: Generate launcher icons
         working-directory: ${{ matrix.dir }}
         run: npx --yes @capacitor/assets generate --android --iconBackgroundColor '#0d9488' --iconBackgroundColorDark '#042f2e' --splashBackgroundColor '#f0fdfa' --splashBackgroundColorDark '#042f2e' || echo "icon generation skipped"
@@ -212,6 +225,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - uses: actions/download-artifact@v4
         with:
           pattern: release-*
@@ -219,6 +234,19 @@ jobs:
           path: dist
 
       - run: ls -lh dist
+
+      # The changelog is the single source of release notes: the section for
+      # this version becomes the body, so notes are versioned with the code.
+      - name: Release notes from the changelog
+        run: |
+          set -euo pipefail
+          VERSION="${{ github.event.inputs.version || github.ref_name }}"
+          V="${VERSION#v}"
+          awk -v v="$V" '$0 ~ "^## \\[" v "\\]" {f=1; next} /^## \[/ {if (f) exit} f' CHANGELOG.md > notes.md
+          if [ ! -s notes.md ]; then
+            echo "_(برای این نسخه بخشی در CHANGELOG.md ثبت نشده است.)_" > notes.md
+          fi
+          cat notes.md
 
       # The release notes must not claim the APKs are signed when they are not.
       - name: Describe how these APKs are signed
@@ -232,6 +260,39 @@ jobs:
             echo 'note=**توجه:** کلید انتشار روی مخزن تنظیم نشده، بنابراین این‌ها بیلد debug و امضانشده‌اند — برای نصب دستی مناسب‌اند، ولی برای بارگذاری در فروشگاه‌ها نه. راهنمای تنظیم کلید در ANDROID.md آمده است.' >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Compose the release body
+        run: |
+          set -euo pipefail
+          VERSION="${{ github.event.inputs.version || github.ref_name }}"
+          {
+            echo "## آسامیت — بستر هوشمند گفت‌وگو"
+            echo
+            cat notes.md
+            echo
+            echo "---"
+            echo
+            echo "| فایل | توضیح |"
+            echo "| --- | --- |"
+            echo "| \`asameet-${VERSION}.apk\` | نسخهٔ کامل — چت، تماس، جلسه، کلاس، پنل مدیریت |"
+            echo "| \`asameet-messenger-${VERSION}.apk\` | فقط پیام‌رسان |"
+            echo
+            echo "### نصب"
+            echo
+            echo "فایل را روی گوشی دانلود کنید و اجازهٔ نصب از منابع ناشناس را بدهید."
+            echo
+            echo '${{ steps.signing.outputs.note }}'
+            echo
+            echo "### حساب‌های دمو"
+            echo
+            echo '\`admin\` / \`sara\` / \`amir\` — رمز هر سه: \`123456\`'
+            echo
+            echo "### سایر خروجی‌ها"
+            echo
+            echo "- وب و PWA: <https://asameet.vercel.app>"
+            echo "- دموی استاتیک: <https://sinaaghaahmadi.github.io/asameet/>"
+          } > release-body.md
+          cat release-body.md
+
       - name: Publish the release
         uses: softprops/action-gh-release@v2
         with:
@@ -239,27 +300,4 @@ jobs:
           name: آسامیت ${{ github.event.inputs.version || github.ref_name }}
           files: dist/*.apk
           generate_release_notes: false
-          body: |
-            ## آسامیت — بستر هوشمند گفت‌وگو
-
-            هر دو اپلیکیشن اندروید به نسخهٔ production وصل‌اند: <https://asameet.vercel.app>
-
-            | فایل | توضیح |
-            | --- | --- |
-            | `asameet-${{ github.event.inputs.version || github.ref_name }}.apk` | نسخهٔ کامل — چت، تماس، جلسه، کلاس، پنل مدیریت |
-            | `asameet-messenger-${{ github.event.inputs.version || github.ref_name }}.apk` | فقط پیام‌رسان |
-
-            ### نصب
-
-            فایل را روی گوشی دانلود کنید و اجازهٔ نصب از منابع ناشناس را بدهید.
-
-            ${{ steps.signing.outputs.note }}
-
-            ### حساب‌های دمو
-
-            `admin` / `sara` / `amir` — رمز هر سه: `123456`
-
-            ### سایر خروجی‌ها
-
-            - وب و PWA: <https://asameet.vercel.app>
-            - دموی استاتیک: <https://sinaaghaahmadi.github.io/asameet/>
+          body_path: release-body.md
