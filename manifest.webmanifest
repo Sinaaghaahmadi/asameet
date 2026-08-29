@@ -1,0 +1,26 @@
+{
+  "name": "آسامیت | Asameet",
+  "short_name": "آسامیت",
+  "description": "بستر هوشمند گفت‌وگو — پیام‌رسانی، تماس، جلسات آنلاین و کلاس مجازی",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "lang": "fa",
+  "dir": "rtl",
+  "background_color": "#f0fdfa",
+  "theme_color": "#0d9488",
+  "categories": ["communication", "social", "productivity"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "چت‌ها", "url": "./?tab=chats", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "تماس‌ها", "url": "./?tab=calls", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "جلسات", "url": "./?tab=meetings", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
