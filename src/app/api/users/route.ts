@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
-import { getStore } from "@/lib/server/store";
+import { errorResponse, requireToken, rpc } from "@/lib/server/api";
 
 export async function GET() {
-  const s = getStore();
-  return NextResponse.json({ users: s.users });
+  try {
+    const token = await requireToken();
+    return NextResponse.json(await rpc("api_users", { p_token: token }));
+  } catch (e) {
+    return errorResponse(e);
+  }
 }

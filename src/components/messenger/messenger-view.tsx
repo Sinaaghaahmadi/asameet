@@ -11,6 +11,7 @@ import {
   CheckCheck,
   Copy,
   CornerUpLeft,
+  MessageSquarePlus,
   Mic,
   Paperclip,
   Pin,
@@ -47,7 +48,6 @@ import { useAppStore } from "@/stores/app-store";
 type ChatFilter = "all" | "unread" | "groups" | "channels";
 
 const REACTION_EMOJIS = ["👍", "❤️", "😂", "🔥", "🎉", "🙏"];
-const DEMO_REPLIES = ["عالیه! 👌", "ممنون، الان چک می‌کنم", "👍", "باشه، هماهنگ می‌کنیم", "چه خبر خوبی 🎉"];
 
 export function MessengerView() {
   const t = useT();
@@ -60,24 +60,26 @@ export function MessengerView() {
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [draft, setDraft] = useState("");
-  const [peerTyping, setPeerTyping] = useState(false);
   const [showNewGroup, setShowNewGroup] = useState(false);
+  const [showNewChat, setShowNewChat] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [groupMembers, setGroupMembers] = useState<string[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Presence and chat-list updates arrive by polling; the interval doubles as
+  // the heartbeat that keeps this user marked online.
   const { data: usersData } = useQuery({
     queryKey: ["users"],
     queryFn: async () => (await apiFetch("/api/users")).json() as Promise<{ users: User[] }>,
+    refetchInterval: 30000,
   });
   const users = useMemo(() => new Map((usersData?.users ?? []).map((u) => [u.id, u])), [usersData]);
 
   const { data: chatsData } = useQuery({
-    queryKey: ["chats", currentUser?.id],
-    queryFn: async () =>
-      (await apiFetch(`/api/chats?userId=${currentUser?.id}`)).json() as Promise<{ chats: Chat[] }>,
+    queryKey: ["chats"],
+    queryFn: async () => (await apiFetch("/api/chats")).json() as Promise<{ chats: Chat[] }>,
     enabled: !!currentUser,
+    refetchInterval: 5000,
   });
   const chats = useMemo(() => chatsData?.chats ?? [], [chatsData]);
 
@@ -86,7 +88,7 @@ export function MessengerView() {
     queryFn: async () =>
       (await apiFetch(`/api/chats/${activeChatId}/messages`)).json() as Promise<{ messages: Message[] }>,
     enabled: !!activeChatId,
-    refetchInterval: 5000,
+    refetchInterval: 3000,
   });
   const messages = useMemo(() => messagesData?.messages ?? [], [messagesData]);
 
@@ -97,16 +99,37 @@ export function MessengerView() {
     setUnreadCount("chats", total);
   }, [chats, setUnreadCount]);
 
+  // A chat can reference someone who signed up after our last users fetch —
+  // refresh the directory as soon as an unknown member shows up.
+  useEffect(() => {
+    if (!usersData) return;
+    const known = new Set(usersData.users.map((u) => u.id));
+    if (chats.some((c) => c.memberIds.some((id) => !known.has(id)))) {
+      void qc.invalidateQueries({ queryKey: ["users"] });
+    }
+  }, [chats, usersData, qc]);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length, peerTyping]);
+  }, [messages.length]);
+
+  // Reading is real now: opening a chat (or receiving messages while it is
+  // open) clears its unread counter for this member on the server.
+  const lastMessageAt = messages.length > 0 ? messages[messages.length - 1].createdAt : null;
+  useEffect(() => {
+    if (!activeChatId || messages.length === 0) return;
+    void apiFetch(`/api/chats/${activeChatId}/read`, { method: "POST" }).then(() => {
+      void qc.invalidateQueries({ queryKey: ["chats"] });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeChatId, lastMessageAt]);
 
   const sendMessage = useMutation({
     mutationFn: async (payload: { content: string; replyToId: string | null }) => {
       const res = await apiFetch(`/api/chats/${activeChatId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ senderId: currentUser?.id, ...payload }),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error("send failed");
       return res.json() as Promise<{ message: Message }>;
@@ -114,29 +137,6 @@ export function MessengerView() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ["messages", activeChatId] });
       void qc.invalidateQueries({ queryKey: ["chats"] });
-      // Demo liveliness: a private-chat peer "types" and replies
-      const chat = chats.find((c) => c.id === activeChatId);
-      if (chat?.type === "private") {
-        const peerId = chat.memberIds.find((m) => m !== currentUser?.id);
-        if (peerId) {
-          if (typingTimer.current) clearTimeout(typingTimer.current);
-          setTimeout(() => setPeerTyping(true), 900);
-          typingTimer.current = setTimeout(() => {
-            setPeerTyping(false);
-            void apiFetch(`/api/chats/${chat.id}/messages`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                senderId: peerId,
-                content: DEMO_REPLIES[Math.floor(Math.random() * DEMO_REPLIES.length)],
-              }),
-            }).then(() => {
-              void qc.invalidateQueries({ queryKey: ["messages", chat.id] });
-              void qc.invalidateQueries({ queryKey: ["chats"] });
-            });
-          }, 2600);
-        }
-      }
     },
     onError: () => toast.error(t("common.error")),
   });
@@ -146,7 +146,7 @@ export function MessengerView() {
       await apiFetch(`/api/chats/${activeChatId}/messages`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...payload, userId: currentUser?.id }),
+        body: JSON.stringify(payload),
       });
     },
     onSuccess: () => void qc.invalidateQueries({ queryKey: ["messages", activeChatId] }),
@@ -160,7 +160,6 @@ export function MessengerView() {
         body: JSON.stringify({
           name: groupName,
           type: "group",
-          creatorId: currentUser?.id,
           memberIds: groupMembers,
         }),
       });
@@ -174,6 +173,24 @@ export function MessengerView() {
       setActiveChatId(data.chat.id);
       toast.success(t("messenger.groupCreated"));
     },
+  });
+
+  const startChat = useMutation({
+    mutationFn: async (peerId: string) => {
+      const res = await apiFetch("/api/chats", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "private", memberIds: [peerId] }),
+      });
+      if (!res.ok) throw new Error("chat failed");
+      return res.json() as Promise<{ chat: Chat }>;
+    },
+    onSuccess: (data) => {
+      setShowNewChat(false);
+      void qc.invalidateQueries({ queryKey: ["chats"] });
+      setActiveChatId(data.chat.id);
+    },
+    onError: () => toast.error(t("common.error")),
   });
 
   if (!currentUser) return null;
@@ -229,9 +246,14 @@ export function MessengerView() {
         <header className="space-y-3 p-4 pb-2">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-black">{t("messenger.title")}</h1>
-            <Button size="iconSm" variant="glass" onClick={() => setShowNewGroup(true)} aria-label={t("messenger.newGroup")}>
-              <Plus className="size-4" />
-            </Button>
+            <div className="flex items-center gap-1.5">
+              <Button size="iconSm" variant="glass" onClick={() => setShowNewChat(true)} aria-label={t("messenger.newChat")}>
+                <MessageSquarePlus className="size-4" />
+              </Button>
+              <Button size="iconSm" variant="glass" onClick={() => setShowNewGroup(true)} aria-label={t("messenger.newGroup")}>
+                <Plus className="size-4" />
+              </Button>
+            </div>
           </div>
           <div className="relative">
             <Search className="absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -321,13 +343,11 @@ export function MessengerView() {
               <div className="min-w-0 flex-1">
                 <h2 className="truncate text-sm font-bold">{chatTitle(activeChat)}</h2>
                 <p className="truncate text-xs text-muted-foreground">
-                  {peerTyping ? (
-                    <span className="text-primary">{t("messenger.typing")}</span>
-                  ) : activeChat.type === "private" ? (
-                    chatOnline(activeChat) ? t("common.online") : t("common.offline")
-                  ) : (
-                    `${activeChat.memberIds.length} ${t("messenger.members")}`
-                  )}
+                  {activeChat.type === "private"
+                    ? chatOnline(activeChat)
+                      ? t("common.online")
+                      : t("common.offline")
+                    : `${activeChat.memberIds.length} ${t("messenger.members")}`}
                 </p>
               </div>
             </header>
@@ -469,16 +489,6 @@ export function MessengerView() {
                   );
                 })}
               </AnimatePresence>
-              {peerTyping && (
-                <div className="flex items-end gap-2">
-                  <Avatar name={chatTitle(activeChat)} size="sm" />
-                  <div className="msg-bubble-other flex items-center gap-1 px-4 py-3">
-                    <span className="typing-dot inline-block size-1.5 rounded-full bg-muted-foreground" />
-                    <span className="typing-dot inline-block size-1.5 rounded-full bg-muted-foreground" />
-                    <span className="typing-dot inline-block size-1.5 rounded-full bg-muted-foreground" />
-                  </div>
-                </div>
-              )}
               <div ref={bottomRef} />
             </div>
 
@@ -529,6 +539,36 @@ export function MessengerView() {
           </>
         )}
       </section>
+
+      {/* ============ New chat dialog ============ */}
+      <Dialog open={showNewChat} onOpenChange={setShowNewChat}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageSquarePlus className="size-5 text-primary" /> {t("messenger.newChat")}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="max-h-72 space-y-1 overflow-y-auto">
+            {(usersData?.users ?? [])
+              .filter((u) => u.id !== currentUser.id && !u.isSuspended)
+              .map((u) => (
+                <button
+                  key={u.id}
+                  onClick={() => startChat.mutate(u.id)}
+                  disabled={startChat.isPending}
+                  className="flex w-full cursor-pointer items-center gap-3 rounded-xl p-2 text-start hover:bg-accent disabled:opacity-60"
+                >
+                  <Avatar name={u.displayName} size="sm" online={u.isOnline} />
+                  <span className="min-w-0 flex-1 truncate text-sm">{u.displayName}</span>
+                  <span className="text-xs text-muted-foreground" dir="ltr">@{u.username}</span>
+                </button>
+              ))}
+            {(usersData?.users ?? []).filter((u) => u.id !== currentUser.id).length === 0 && (
+              <p className="p-3 text-center text-sm text-muted-foreground">{t("messenger.noOtherUsers")}</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* ============ New group dialog ============ */}
       <Dialog open={showNewGroup} onOpenChange={setShowNewGroup}>

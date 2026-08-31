@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
-import { computeStats } from "@/lib/server/store";
+import { errorResponse, requireToken, rpc } from "@/lib/server/api";
 
 export async function GET() {
-  return NextResponse.json({ stats: computeStats() });
+  try {
+    const token = await requireToken();
+    return NextResponse.json(await rpc("api_admin_stats", { p_token: token }));
+  } catch (e) {
+    return errorResponse(e);
+  }
 }

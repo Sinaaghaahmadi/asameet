@@ -1,44 +1,50 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getStore } from "@/lib/server/store";
+import { assertSameOrigin, errorResponse, requireToken, rpc } from "@/lib/server/api";
 import type { Call } from "@/lib/types";
 
-export async function GET(req: NextRequest) {
-  const s = getStore();
-  const userId = req.nextUrl.searchParams.get("userId");
-  const calls = userId ? s.calls.filter((c) => c.initiatorId === userId || c.peerId === userId) : s.calls;
-  const sorted = [...calls].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  return NextResponse.json({ calls: sorted });
+export async function GET() {
+  try {
+    const token = await requireToken();
+    return NextResponse.json(await rpc("api_calls", { p_token: token }));
+  } catch (e) {
+    return errorResponse(e);
+  }
 }
 
 export async function POST(req: NextRequest) {
-  const body = (await req.json().catch(() => null)) as
-    | { type?: Call["type"]; initiatorId?: string; peerId?: string }
-    | null;
-  if (!body?.initiatorId || !body.peerId) {
-    return NextResponse.json({ error: "initiatorId and peerId required" }, { status: 400 });
+  try {
+    assertSameOrigin(req);
+    const token = await requireToken();
+    const body = (await req.json().catch(() => null)) as {
+      type?: Call["type"];
+      peerId?: string;
+    } | null;
+    const data = await rpc("api_call_start", {
+      p_token: token,
+      p_type: body?.type ?? "audio",
+      p_peer_id: body?.peerId ?? null,
+    });
+    return NextResponse.json(data, { status: 201 });
+  } catch (e) {
+    return errorResponse(e);
   }
-  const s = getStore();
-  const call: Call = {
-    id: `call-${Date.now().toString(36)}`,
-    type: body.type ?? "audio",
-    status: "active",
-    direction: "outgoing",
-    initiatorId: body.initiatorId,
-    peerId: body.peerId,
-    duration: null,
-    createdAt: new Date().toISOString(),
-  };
-  s.calls.unshift(call);
-  return NextResponse.json({ call }, { status: 201 });
 }
 
 export async function PATCH(req: NextRequest) {
-  const body = (await req.json().catch(() => null)) as { callId?: string; duration?: number } | null;
-  if (!body?.callId) return NextResponse.json({ error: "callId required" }, { status: 400 });
-  const s = getStore();
-  const call = s.calls.find((c) => c.id === body.callId);
-  if (!call) return NextResponse.json({ error: "not found" }, { status: 404 });
-  call.status = "ended";
-  call.duration = body.duration ?? 0;
-  return NextResponse.json({ call });
+  try {
+    assertSameOrigin(req);
+    const token = await requireToken();
+    const body = (await req.json().catch(() => null)) as {
+      callId?: string;
+      duration?: number;
+    } | null;
+    const data = await rpc("api_call_end", {
+      p_token: token,
+      p_call_id: body?.callId ?? null,
+      p_duration: body?.duration ?? 0,
+    });
+    return NextResponse.json(data);
+  } catch (e) {
+    return errorResponse(e);
+  }
 }

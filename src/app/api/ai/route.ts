@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { assertSameOrigin, errorResponse, requireToken, rpc } from "@/lib/server/api";
 
 export const maxDuration = 60;
 
@@ -98,6 +99,15 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  // The assistant spends real model tokens — only signed-in members may use it.
+  try {
+    assertSameOrigin(req);
+    const token = await requireToken();
+    await rpc("api_ping", { p_token: token });
+  } catch (e) {
+    return errorResponse(e);
+  }
+
   const body = (await req.json().catch(() => null)) as AiRequest | null;
   const mode = body?.mode;
   if (!mode || !(mode in SYSTEM_PROMPTS)) {

@@ -1,48 +1,29 @@
 # راهنمای استقرار آسامیت
 
-دو مسیر استقرار پشتیبانی می‌شود: **دموی رایگان (Vercel)** برای ارائه عمومی، و
-**سرور اختصاصی + دامنه** برای محیط نهایی. همه زیرساخت هر دو مسیر در مخزن آماده است.
+آسامیت یک اپ Next.js با پایگاه‌دادهٔ Postgres (Supabase) است. لایهٔ داده کاملاً
+داخل دیتابیس پیاده شده (توابع `public.api_*` از جنس SECURITY DEFINER در
+`supabase/migrations/`) و سرور Next فقط یک لایهٔ نازک احراز هویت/پروکسی است؛
+به همین دلیل **استقرار به هیچ Secret اجباری‌ای نیاز ندارد** — کلید anon عمومی
+است و همراه کد نگه‌داری می‌شود (`src/lib/server/api.ts`).
 
----
+## ۱. استقرار وب (Vercel — وضعیت فعلی production)
 
-## ۰. دموی استاتیک رایگان (GitHub Pages) — همیشه فعال
+- مخزن به Vercel متصل است؛ هر push روی `main` خودکار build و منتشر می‌شود.
+- متغیر اختیاری: `ANTHROPIC_API_KEY` تا دستیار هوشمند به‌جای خروجی دمو،
+  خروجی واقعی مدل Claude بدهد. وضعیت را از `GET /api/ai` می‌توان دید.
 
-گیت‌هاب اکشن `Deploy Static Demo (GitHub Pages)` با هر push یک نسخه کاملاً استاتیک
-می‌سازد و روی برنچ `gh-pages` منتشر می‌کند؛ آدرس نهایی: `https://sinaaghaahmadi.github.io/asameet/`
-
-**فعال‌سازی یک‌باره (فقط بار اول، توسط ادمین مخزن):**
-Settings → Pages → Build and deployment → Source: *Deploy from a branch* → Branch: `gh-pages` / `(root)` → Save
-
-- بدون هیچ سرور یا کلیدی کار می‌کند — لایه `src/lib/client-api.ts` همه درخواست‌های
-  `/api/*` را با همان store دمو **داخل مرورگر** پاسخ می‌دهد.
-- برای پرزنت و ارائه عمومی کافی است؛ داده‌ها با رفرش صفحه ریست می‌شوند.
-- محدودیت‌ها: دستیار هوشمند فقط خروجی دمو می‌دهد و ارتباط بلادرنگ بین دو مرورگر برقرار نمی‌شود (این‌ها به سرور نیاز دارند — بخش‌های بعدی).
-
-## ۱. دموی رایگان (Vercel)
-
-- مخزن را به Vercel وصل کنید (Framework: Next.js — تنظیمات از `vercel.json` خوانده می‌شود) یا با CLI:
-
-```bash
-npx vercel --prod
-```
-
-- هیچ متغیر محیطی الزامی نیست:
-  - داده‌ها از **فروشگاه درون‌حافظه‌ای** (`src/lib/server/store.ts`) با داده دموی کامل سرو می‌شوند (روی cold start ریست می‌شود — برای ارائه کافی است).
-  - مسیر `/api/ai` بدون کلید، خروجی دموی آماده برمی‌گرداند.
-- اختیاری: `ANTHROPIC_API_KEY` را ست کنید تا صورت‌جلسه/خلاصه/هم‌فکری واقعی با مدل Claude تولید شود.
-
-## ۲. سرور اختصاصی + دامنه (مرحله نهایی)
+## ۲. سرور اختصاصی + دامنه
 
 ### پیش‌نیاز
-- سروری با Docker و Docker Compose (Ubuntu 22+ پیشنهاد می‌شود)
+- سروری با Docker و Docker Compose (Ubuntu 22+ پیشنهاد می‌شود) یا یک PaaS
+  با پشتیبانی Docker (مثل لیارا)
 - یک دامنه (مثلاً `asameet.online`) با رکورد `A` به IP سرور
 
 ### گام‌ها
 
 ```bash
 git clone <repo> && cd <repo>
-cp .env.example .env          # مقادیر را تنظیم کنید
-docker compose up -d --build  # web:3000 + chat:3001
+docker compose up -d --build  # web:3000
 ```
 
 سپس nginx و SSL:
@@ -56,49 +37,33 @@ sudo nginx -t && sudo systemctl reload nginx
 sudo certbot --nginx -d asameet.online -d www.asameet.online
 ```
 
-### متغیرهای محیطی
+### متغیرهای محیطی (همه اختیاری)
 
 | متغیر | توضیح |
 |-------|-------|
 | `NEXT_PUBLIC_APP_URL` | آدرس عمومی اپ (برای متادیتا و لینک‌ها) |
-| `NEXT_PUBLIC_SOCKET_URL` | آدرس سرویس بلادرنگ؛ خالی = حالت polling |
-| `ANTHROPIC_API_KEY` | کلید Claude برای دستیار هوشمند (اختیاری) |
-| `DATABASE_URL` | مسیر SQLite یا آدرس PostgreSQL |
+| `ANTHROPIC_API_KEY` | کلید Claude برای دستیار هوشمند |
+| `ASAMEET_SUPABASE_URL` | فقط برای اشاره به پروژهٔ دیتابیس دیگر |
+| `ASAMEET_SUPABASE_ANON_KEY` | کلید anon همان پروژه |
 
-### دیتابیس پایدار (Prisma)
+### پایگاه‌داده
 
-نسخه دمو از فروشگاه درون‌حافظه‌ای استفاده می‌کند. برای داده پایدار روی سرور:
-
-```bash
-npx prisma generate
-npx prisma db push
-npm run db:seed
-```
-
-اسکیمای کامل (User, Chat, Message, Call, Meeting, ClassSession + جداول واسط) در
-`prisma/schema.prisma` آماده است؛ برای مهاجرت، آداپتور داده در
-`src/lib/server/store.ts` را با کوئری‌های Prisma (`src/lib/db.ts`) جایگزین کنید —
-شکل API تغییری نمی‌کند.
-
-### سرویس بلادرنگ
-
-`mini-services/chat-service` یک سرویس Socket.io مستقل است (پیام، تایپینگ، حضور،
-رویدادهای جلسه). در docker-compose روی پورت ۳۰۰۱ بالا می‌آید و nginx مسیر
-`/socket.io/` را به آن پروکسی می‌کند. سپس `NEXT_PUBLIC_SOCKET_URL=https://دامنه` را
-ست و rebuild کنید.
+دیتابیس روی Supabase (پلن رایگان) میزبانی می‌شود و از سرور وب جداست؛ جابه‌جایی
+سرور وب هیچ اثری روی داده‌ها ندارد. برای برپایی یک دیتابیس تازه، migration های
+`supabase/migrations/` را به‌ترتیب اجرا کنید و آدرس/کلید پروژهٔ جدید را با دو
+متغیر بالا بدهید. حساب‌ها با bcrypt هش می‌شوند و **اولین ثبت‌نام، مدیر می‌شود**.
 
 ## ۳. اپ‌های اندروید
 
-پس از تغییر دامنه، آدرس اپ‌ها را به‌روز کنید:
-گیت‌هاب اکشن **Build Android APKs** را با ورودی `app_url` دامنه جدید اجرا کنید —
-APK ها به‌صورت artifact ساخته می‌شوند. جزئیات در [ANDROID.md](ANDROID.md).
+پس از تغییر دامنه، گیت‌هاب اکشن **Release** (یا **Build Android APKs**) را با
+ورودی `app_url` روی دامنهٔ جدید اجرا کنید تا APK ها به آدرس تازه اشاره کنند.
+جزئیات در [ANDROID.md](ANDROID.md).
 
 ## ۴. چک‌لیست انتقال نهایی
 
 - [ ] رکورد DNS دامنه → IP سرور
 - [ ] `docker compose up -d --build`
 - [ ] nginx + certbot (SSL)
-- [ ] `.env` کامل (`APP_URL`, `SOCKET_URL`, `ANTHROPIC_API_KEY`)
-- [ ] Prisma migrate + seed برای داده پایدار
-- [ ] اجرای workflow اندروید با دامنه جدید
-- [ ] تست PWA (نصب روی موبایل) روی دامنه جدید
+- [ ] `ANTHROPIC_API_KEY` (اختیاری، برای دستیار هوشمند)
+- [ ] اجرای workflow انتشار با `app_url` دامنهٔ جدید
+- [ ] تست PWA (نصب روی موبایل) و ثبت‌نام/ورود روی دامنهٔ جدید

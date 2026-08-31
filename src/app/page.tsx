@@ -14,14 +14,19 @@ function HomeInner() {
   const { view, setView, setTab, login, setMessengerOnly, setShowLoginModal, currentUser } = useAppStore();
   const params = useSearchParams();
 
+  // The httpOnly cookie is the session; ask the server who it belongs to.
   useEffect(() => {
-    const saved = restoreSession();
-    if (saved) login(saved);
+    let cancelled = false;
+    void restoreSession().then((saved) => {
+      if (saved && !cancelled) login(saved);
+    });
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Separate effect keyed on params: in static exports useSearchParams is
-  // empty on first render and populates after hydration.
+  // Separate effect keyed on params: useSearchParams populates after hydration.
   useEffect(() => {
     const tab = params.get("tab") as AppTab | null;
     const mode = params.get("mode");
@@ -32,9 +37,12 @@ function HomeInner() {
       setTab(tab);
     }
     // ?login=1 is how every marketing page hands the visitor over to the app.
-    if ((params.get("login") === "1" || mode === "messenger" || tab) && !restoreSession()) {
-      // Deep link (PWA shortcut / Android app / site CTA) without a session → prompt login
-      setShowLoginModal(true);
+    if (params.get("login") === "1" || mode === "messenger" || tab) {
+      // Deep link (PWA shortcut / Android app / site CTA) — prompt auth unless
+      // the session restore has already signed the visitor in.
+      void restoreSession().then((saved) => {
+        if (!saved && !useAppStore.getState().currentUser) setShowLoginModal(true);
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);

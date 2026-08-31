@@ -1,6 +1,7 @@
 "use client";
 
 import { create } from "zustand";
+import { apiFetch } from "@/lib/client-api";
 import type { User } from "@/lib/types";
 
 export type AppView = "landing" | "app";
@@ -32,8 +33,6 @@ interface AppState {
   setUnreadCount: (tab: string, count: number) => void;
 }
 
-const USER_KEY = "asameet-user";
-
 export const useAppStore = create<AppState>((set) => ({
   view: "landing",
   tab: "chats",
@@ -49,21 +48,18 @@ export const useAppStore = create<AppState>((set) => ({
   setView: (view) => set({ view }),
   setTab: (tab) => set({ tab }),
   setMessengerOnly: (messengerOnly) => set({ messengerOnly }),
-  login: (user) => {
-    try {
-      localStorage.setItem(USER_KEY, JSON.stringify(user));
-    } catch {
-      /* storage unavailable */
-    }
-    set({ currentUser: user, view: "app", showLoginModal: false });
-  },
+  login: (user) => set({ currentUser: user, view: "app", showLoginModal: false }),
   logout: () => {
-    try {
-      localStorage.removeItem(USER_KEY);
-    } catch {
-      /* storage unavailable */
-    }
-    set({ currentUser: null, view: "landing", tab: "chats", activeCallId: null, activeMeetingId: null, activeClassId: null });
+    // Revoke the server session; local state resets regardless of the outcome.
+    void apiFetch("/api/auth", { method: "DELETE" }).catch(() => undefined);
+    set({
+      currentUser: null,
+      view: "landing",
+      tab: "chats",
+      activeCallId: null,
+      activeMeetingId: null,
+      activeClassId: null,
+    });
   },
   setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
   setActiveCallId: (activeCallId) => set({ activeCallId }),
@@ -74,10 +70,17 @@ export const useAppStore = create<AppState>((set) => ({
     set((s) => ({ unreadCounts: { ...s.unreadCounts, [tab]: count } })),
 }));
 
-export function restoreSession(): User | null {
+/**
+ * Ask the server who the cookie session belongs to. The session cookie is
+ * httpOnly, so the server is the only source of truth — nothing is trusted
+ * from localStorage.
+ */
+export async function restoreSession(): Promise<User | null> {
   try {
-    const raw = localStorage.getItem(USER_KEY);
-    return raw ? (JSON.parse(raw) as User) : null;
+    const res = await apiFetch("/api/auth");
+    if (!res.ok) return null;
+    const data = (await res.json()) as { user?: User };
+    return data.user ?? null;
   } catch {
     return null;
   }

@@ -39,7 +39,7 @@ export const viewport: Viewport = {
   ],
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
+  // No maximumScale cap: pinch-zoom must stay available (accessibility).
   viewportFit: "cover",
 };
 
