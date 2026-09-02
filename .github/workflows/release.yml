@@ -282,14 +282,13 @@ jobs:
             echo
             echo '${{ steps.signing.outputs.note }}'
             echo
-            echo "### حساب‌های دمو"
+            echo "### حساب کاربری"
             echo
-            echo '\`admin\` / \`sara\` / \`amir\` — رمز هر سه: \`123456\`'
+            echo "ثبت‌نام با نام کاربری و رمز عبور از داخل خود اپ انجام می‌شود. اولین حسابی که در بستر ساخته شود، مدیر سامانه است."
             echo
             echo "### سایر خروجی‌ها"
             echo
             echo "- وب و PWA: <https://asameet.vercel.app>"
-            echo "- دموی استاتیک: <https://sinaaghaahmadi.github.io/asameet/>"
           } > release-body.md
           cat release-body.md
 

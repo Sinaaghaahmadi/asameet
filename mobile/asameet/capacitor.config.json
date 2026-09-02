@@ -3,7 +3,7 @@
   "appName": "آسامیت",
   "webDir": "www",
   "server": {
-    "url": "https://sinaaghaahmadi.github.io/asameet/",
+    "url": "https://asameet.vercel.app/",
     "cleartext": false
   },
   "android": {

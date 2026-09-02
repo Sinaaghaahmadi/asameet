@@ -2,12 +2,11 @@
 
 import { apiFetch, openExport } from "@/lib/client-api";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Activity,
   Cpu,
-  Download,
   FileSpreadsheet,
   HardDrive,
   MessageSquare,
@@ -15,7 +14,6 @@ import {
   Search,
   Server,
   ShieldCheck,
-  Upload,
   Users,
   Video,
 } from "lucide-react";
@@ -32,7 +30,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { toast } from "sonner";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,7 +46,6 @@ export function AdminView() {
   const { locale } = useLocale();
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
-  const fileRef = useRef<HTMLInputElement>(null);
 
   const { data: statsData } = useQuery({
     queryKey: ["admin-stats"],
@@ -80,20 +76,6 @@ export function AdminView() {
       void qc.invalidateQueries({ queryKey: ["admin-users"] });
       void qc.invalidateQueries({ queryKey: ["admin-stats"] });
     },
-  });
-
-  const importFile = useMutation({
-    mutationFn: async (file: File) => {
-      const fd = new FormData();
-      fd.append("file", file);
-      const res = await apiFetch("/api/admin/import", { method: "POST", body: fd });
-      return res.json() as Promise<{ imported: number; skipped: number }>;
-    },
-    onSuccess: (data) => {
-      toast.success(`✅ ${toLocaleDigits(data.imported, locale)} ${t("admin.users")}`);
-      void qc.invalidateQueries({ queryKey: ["admin-users"] });
-    },
-    onError: () => toast.error(t("common.error")),
   });
 
   const stats = statsData?.stats;
@@ -228,23 +210,6 @@ export function AdminView() {
                   {ex.label}
                 </Button>
               ))}
-              <Button variant="glass" size="sm" onClick={() => fileRef.current?.click()}>
-                <Upload className="size-4 text-primary" /> {t("admin.importExcel")}
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => openExport("sample")}>
-                <Download className="size-4" /> {t("admin.downloadSample")}
-              </Button>
-              <input
-                ref={fileRef}
-                type="file"
-                accept=".csv,.xlsx"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) importFile.mutate(f);
-                  e.target.value = "";
-                }}
-              />
             </div>
 
             <div className="glass-card overflow-x-auto">

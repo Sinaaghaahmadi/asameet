@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { apiFetch } from "@/lib/client-api";
 import { GraduationCap, LogOut, MessageSquare, Phone, Shield, Video } from "lucide-react";
 import { AdminView } from "@/components/admin/admin-view";
 import { CallsView } from "@/components/calls/calls-view";
@@ -28,6 +30,20 @@ const NAV_ITEMS: { tab: AppTab; icon: typeof MessageSquare; labelKey: string; ad
 export function AppShell() {
   const t = useT();
   const { tab, setTab, currentUser, logout, messengerOnly, unreadCounts } = useAppStore();
+  const isAdmin = currentUser?.role === "admin";
+
+  // Presence heartbeat: every authenticated call refreshes last-seen on the
+  // server, so a light ping keeps the user "online" on any tab.
+  useEffect(() => {
+    if (!currentUser) return;
+    const id = setInterval(() => void apiFetch("/api/auth").catch(() => undefined), 45_000);
+    return () => clearInterval(id);
+  }, [currentUser]);
+
+  // A ?tab=admin deep link from a non-admin would otherwise show an empty panel.
+  useEffect(() => {
+    if (tab === "admin" && currentUser && !isAdmin) setTab("chats");
+  }, [tab, currentUser, isAdmin, setTab]);
 
   if (!currentUser) return null;
 

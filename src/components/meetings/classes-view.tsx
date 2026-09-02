@@ -59,8 +59,9 @@ export function ClassesView() {
       const res = await apiFetch("/api/classes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, teacherId: currentUser?.id }),
+        body: JSON.stringify({ title }),
       });
+      if (!res.ok) throw new Error("create failed");
       return res.json() as Promise<{ class: ClassSession }>;
     },
     onSuccess: (data) => {

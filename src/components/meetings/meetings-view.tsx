@@ -67,8 +67,9 @@ export function MeetingsView() {
       const res = await apiFetch("/api/meetings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, type, hostId: currentUser?.id }),
+        body: JSON.stringify({ title, type }),
       });
+      if (!res.ok) throw new Error("create failed");
       return res.json() as Promise<{ meeting: Meeting }>;
     },
     onSuccess: (data) => {
@@ -81,11 +82,12 @@ export function MeetingsView() {
 
   const joinMeeting = useMutation({
     mutationFn: async (id: string) => {
-      await apiFetch(`/api/meetings/${id}`, {
+      const res = await apiFetch(`/api/meetings/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "join", userId: currentUser?.id }),
+        body: JSON.stringify({ action: "join" }),
       });
+      if (!res.ok) throw new Error("join failed");
       return id;
     },
     onSuccess: (id) => {

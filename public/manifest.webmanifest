@@ -6,6 +6,7 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait-primary",
   "lang": "fa",
   "dir": "rtl",
@@ -17,6 +18,10 @@
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
     { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [
+    { "src": "screenshots/app-narrow.png", "sizes": "390x844", "type": "image/png", "form_factor": "narrow", "label": "پیام‌رسان آسامیت" },
+    { "src": "screenshots/app-wide.png", "sizes": "1280x800", "type": "image/png", "form_factor": "wide", "label": "آسامیت روی دسکتاپ" }
   ],
   "shortcuts": [
     { "name": "چت‌ها", "url": "./?tab=chats", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },

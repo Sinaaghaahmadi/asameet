@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { assertSameOrigin, errorResponse, requireToken, rpc, sessionToken } from "@/lib/server/api";
 
 export const maxDuration = 60;
 
@@ -76,7 +77,23 @@ export async function GET() {
     modes: Object.keys(SYSTEM_PROMPTS),
   };
 
-  if (!configured) {
+  // Env-shape diagnostics are for the operator only: shown to a signed-in admin.
+  let isAdmin = false;
+  try {
+    const token = await sessionToken();
+    if (token) {
+      const { user } = await rpc<{ user: { role: string } }>("api_me", { p_token: token });
+      isAdmin = user.role === "admin";
+    }
+  } catch {
+    isAdmin = false;
+  }
+
+  if (!configured && !isAdmin) {
+    body.diagnostics = { expected: "ANTHROPIC_API_KEY", set: false, hint: "Sign in as an administrator to see the full diagnostics." };
+  }
+
+  if (!configured && isAdmin) {
     const nearMisses = Object.entries(process.env)
       .filter(([n, v]) => Boolean(v) && n !== "ANTHROPIC_API_KEY" && KEYISH.test(n))
       .map(([n, v]) => describe(n, v as string));
@@ -98,6 +115,15 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  // The assistant spends real model tokens — only signed-in members may use it.
+  try {
+    assertSameOrigin(req);
+    const token = await requireToken();
+    await rpc("api_ping", { p_token: token });
+  } catch (e) {
+    return errorResponse(e);
+  }
+
   const body = (await req.json().catch(() => null)) as AiRequest | null;
   const mode = body?.mode;
   if (!mode || !(mode in SYSTEM_PROMPTS)) {
