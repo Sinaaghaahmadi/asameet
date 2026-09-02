@@ -1,11 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ThemeProvider } from "next-themes";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/lib/i18n";
+import { useAppStore } from "@/stores/app-store";
+
+/**
+ * Drops every cached query when the signed-in account changes (including
+ * logout), so the next account never sees the previous one's chats.
+ */
+function AccountBoundary() {
+  const qc = useQueryClient();
+  const userId = useAppStore((s) => s.currentUser?.id ?? null);
+  const previous = useRef<string | null>(null);
+  useEffect(() => {
+    if (previous.current !== null && previous.current !== userId) qc.clear();
+    previous.current = userId;
+  }, [userId, qc]);
+  return null;
+}
 
 export function ClientProviders({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -28,6 +44,7 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <AccountBoundary />
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
         <I18nProvider>
           <TooltipProvider delayDuration={300}>

@@ -110,7 +110,8 @@ export function attachSession(res: NextResponse, token: string): NextResponse {
   res.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    // Self-hosted plain-HTTP (no TLS yet) can opt out; never do this on a public host.
+    secure: process.env.NODE_ENV === "production" && process.env.ASAMEET_INSECURE_COOKIE !== "1",
     path: "/",
     maxAge: SESSION_MAX_AGE,
   });

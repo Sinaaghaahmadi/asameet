@@ -2,10 +2,13 @@
 # so the web container is the whole stack — see docs/DEPLOYMENT.md.
 services:
   web:
-    build: .
+    build:
+      context: .
+      args:
+        # Baked into the bundle at build time (NEXT_PUBLIC_*), so it is a build arg.
+        NEXT_PUBLIC_APP_URL: ${APP_URL:-https://asameet.online}
     restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_APP_URL=${APP_URL:-http://localhost:3000}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}

@@ -48,10 +48,9 @@ Next.js 16 (App Router) · TypeScript 5 strict · Tailwind CSS 4 · Framer Motio
 ```
 src/app              # لایه‌بندی، صفحه اصلی (SPA تک‌مسیره)، globals.css، API routes
 src/components       # landing / shared / messenger / calls / meetings / admin / ui
-src/lib              # i18n (fa,en,fr,de,ar) · types · server store · utils · socket
+src/lib              # i18n (fa,en,fr,de,ar) · types · server/api (پل به دیتابیس) · utils
 src/stores           # Zustand
-prisma               # اسکیما + seed برای استقرار سرور
-mini-services        # سرویس بلادرنگ Socket.io
+supabase/migrations  # اسکیمای Postgres و توابع API (SECURITY DEFINER)
 mobile               # دو اپ اندروید Capacitor
 docs                 # پرامپت محصول، استقرار، اندروید، سیستم طراحی
 ```
@@ -64,7 +63,7 @@ docs                 # پرامپت محصول، استقرار، اندروید
 
 ## استقرار
 
-- **دمو رایگان:** Vercel (بدون تنظیمات اضافه — `vercel.json` آماده است)
+- **Vercel:** بدون تنظیمات اضافه (`vercel.json` آماده است) — استقرار فعلی
 - **سرور و دامنه نهایی:** `docker compose up -d` + نمونه کانفیگ `nginx.conf.example` — راهنمای کامل در [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 - **اندروید:** راهنمای ساخت APK در [docs/ANDROID.md](docs/ANDROID.md)
 

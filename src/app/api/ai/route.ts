@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { assertSameOrigin, errorResponse, requireToken, rpc } from "@/lib/server/api";
+import { assertSameOrigin, errorResponse, requireToken, rpc, sessionToken } from "@/lib/server/api";
 
 export const maxDuration = 60;
 
@@ -77,7 +77,23 @@ export async function GET() {
     modes: Object.keys(SYSTEM_PROMPTS),
   };
 
-  if (!configured) {
+  // Env-shape diagnostics are for the operator only: shown to a signed-in admin.
+  let isAdmin = false;
+  try {
+    const token = await sessionToken();
+    if (token) {
+      const { user } = await rpc<{ user: { role: string } }>("api_me", { p_token: token });
+      isAdmin = user.role === "admin";
+    }
+  } catch {
+    isAdmin = false;
+  }
+
+  if (!configured && !isAdmin) {
+    body.diagnostics = { expected: "ANTHROPIC_API_KEY", set: false, hint: "Sign in as an administrator to see the full diagnostics." };
+  }
+
+  if (!configured && isAdmin) {
     const nearMisses = Object.entries(process.env)
       .filter(([n, v]) => Boolean(v) && n !== "ANTHROPIC_API_KEY" && KEYISH.test(n))
       .map(([n, v]) => describe(n, v as string));

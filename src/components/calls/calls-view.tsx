@@ -67,8 +67,9 @@ export function CallsView() {
       const res = await apiFetch("/api/calls", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, initiatorId: currentUser?.id, peerId: peer.id }),
+        body: JSON.stringify({ type, peerId: peer.id }),
       });
+      if (!res.ok) throw new Error("call failed");
       const data = (await res.json()) as { call: Call };
       return { call: data.call, peer };
     },
