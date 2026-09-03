@@ -1,4 +1,5 @@
 import type { fa } from "./fa";
+import { en } from "./en";
 
 export const de: typeof fa = {
   meta: {
@@ -455,4 +456,5 @@ export const de: typeof fa = {
     install: "Installieren",
     later: "Später",
   },
+  talk: en.talk,
 };

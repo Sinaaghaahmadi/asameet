@@ -1,13 +1,13 @@
 {
-  "appId": "online.asameet.messenger",
-  "appName": "آسامیت پیام‌رسان",
+  "appId": "online.asameet.asatalk",
+  "appName": "آساتاک",
   "webDir": "www",
   "server": {
-    "url": "https://asameet.vercel.app/?mode=messenger",
+    "url": "https://asameet.vercel.app/talk",
     "cleartext": false
   },
   "android": {
-    "backgroundColor": "#f0fdfa",
+    "backgroundColor": "#eef4ff",
     "allowMixedContent": false
   }
 }

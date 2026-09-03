@@ -6,6 +6,7 @@ export interface User {
   username: string;
   displayName: string;
   avatar: string | null;
+  bio?: string | null;
   role: Role;
   status: UserStatus;
   isOnline: boolean;
@@ -19,14 +20,46 @@ export interface Chat {
   name: string | null;
   type: "private" | "group" | "channel";
   avatar: string | null;
+  description?: string | null;
+  username?: string | null;
+  inviteCode?: string | null;
+  createdBy?: string | null;
+  myRole?: "owner" | "admin" | "member";
   isPinned: boolean;
+  isMuted?: boolean;
   memberIds: string[];
+  adminIds?: string[];
+  typingUserIds?: string[];
   lastMessage: string | null;
+  lastMessageType?: MessageType | null;
+  lastMessageSenderId?: string | null;
   lastMessageAt: string | null;
   unreadCount: number;
 }
 
-export type MessageType = "text" | "image" | "file" | "voice" | "system";
+export type MessageType =
+  | "text"
+  | "image"
+  | "file"
+  | "voice"
+  | "video"
+  | "video_note"
+  | "sticker"
+  | "call"
+  | "system";
+
+/** Free-form per-message metadata (duration, waveform, file name, …). */
+export interface MessageMeta {
+  duration?: number;
+  waveform?: number[];
+  fileName?: string;
+  fileSize?: number;
+  width?: number;
+  height?: number;
+  userId?: string;
+  sticker?: string;
+  [key: string]: unknown;
+}
 
 export interface Message {
   id: string;
@@ -34,6 +67,9 @@ export interface Message {
   senderId: string;
   content: string;
   type: MessageType;
+  mediaId?: string | null;
+  meta?: MessageMeta;
+  editedAt?: string | null;
   replyToId: string | null;
   forwardedFrom: string | null;
   isRead: boolean;
@@ -45,7 +81,7 @@ export interface Message {
 export interface Call {
   id: string;
   type: "audio" | "video";
-  status: "ringing" | "active" | "ended";
+  status: "ringing" | "active" | "ended" | "declined";
   direction: "incoming" | "outgoing" | "missed";
   initiatorId: string;
   peerId: string;
@@ -99,4 +135,22 @@ export interface ServerMetrics {
   version: string;
   platform: string;
   nodeVersion: string;
+}
+
+export interface DeviceSession {
+  id: string;
+  userAgent: string | null;
+  createdAt: string;
+  lastUsedAt: string;
+  current: boolean;
+}
+
+export interface ChatPreview {
+  id: string;
+  name: string | null;
+  type: Chat["type"];
+  avatar: string | null;
+  description: string | null;
+  memberCount: number;
+  joined: boolean;
 }

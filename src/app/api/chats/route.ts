@@ -19,6 +19,8 @@ export async function POST(req: NextRequest) {
       name?: string;
       type?: Chat["type"];
       memberIds?: string[];
+      description?: string;
+      avatar?: string;
     } | null;
     const memberIds = Array.isArray(body?.memberIds) ? body.memberIds : [];
     const type = body?.type ?? (memberIds.length > 1 ? "group" : "private");
@@ -27,6 +29,8 @@ export async function POST(req: NextRequest) {
       p_type: type,
       p_name: body?.name ?? null,
       p_member_ids: memberIds,
+      p_description: body?.description ?? null,
+      p_avatar: body?.avatar ?? null,
     });
     return NextResponse.json(data, { status: 201 });
   } catch (e) {
