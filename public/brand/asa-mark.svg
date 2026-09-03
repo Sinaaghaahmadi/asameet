@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" aria-label="Asa mark">
+  <!-- Asa family core mark: the ascending "A" + spark. Monochrome, used inside product containers. -->
+  <path d="M150 352 L256 140 L362 352 H312 L256 234 L200 352 Z" fill="currentColor"/>
+  <circle cx="256" cy="104" r="18" fill="currentColor"/>
+</svg>
