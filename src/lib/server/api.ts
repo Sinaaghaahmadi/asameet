@@ -17,6 +17,9 @@ const SUPABASE_ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdxcm1zeWJoamliaGhmemZ0aGZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxNTY0NjQsImV4cCI6MjEwMzczMjQ2NH0.GlO0xnos-Q7klm9O73DZpXn89POPssWF3a1svOL5Wqk";
 
 export const SESSION_COOKIE = "asameet_session";
+/** Asatalk multi-account: every signed-in token, "|"-separated, httpOnly. */
+export const ACCOUNTS_COOKIE = "asameet_accounts";
+export const MAX_ACCOUNTS = 5;
 const SESSION_MAX_AGE = 60 * 60 * 24 * 30; // matches the DB session lifetime
 
 /** Error carrying a machine-readable code the client maps to a localized message. */
@@ -121,6 +124,33 @@ export function attachSession(res: NextResponse, token: string): NextResponse {
 export function clearSession(res: NextResponse): NextResponse {
   res.cookies.set(SESSION_COOKIE, "", { httpOnly: true, path: "/", maxAge: 0 });
   return res;
+}
+
+/** Tokens of every account signed in on this browser (current one included). */
+export async function accountTokens(): Promise<string[]> {
+  const jar = await cookies();
+  const raw = jar.get(ACCOUNTS_COOKIE)?.value ?? "";
+  const current = jar.get(SESSION_COOKIE)?.value;
+  const list = raw.split("|").filter((t) => /^[a-f0-9]{64}$/.test(t));
+  if (current && !list.includes(current)) list.unshift(current);
+  return Array.from(new Set(list)).slice(0, MAX_ACCOUNTS);
+}
+
+export function attachAccounts(res: NextResponse, tokens: string[]): NextResponse {
+  const value = tokens.slice(0, MAX_ACCOUNTS).join("|");
+  res.cookies.set(ACCOUNTS_COOKIE, value, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production" && process.env.ASAMEET_INSECURE_COOKIE !== "1",
+    path: "/",
+    maxAge: value ? SESSION_MAX_AGE : 0,
+  });
+  return res;
+}
+
+/** Browser identity stored with the session so the user can review devices. */
+export function userAgentOf(req: NextRequest): string {
+  return (req.headers.get("user-agent") ?? "").slice(0, 200);
 }
 
 export function errorResponse(e: unknown): NextResponse {

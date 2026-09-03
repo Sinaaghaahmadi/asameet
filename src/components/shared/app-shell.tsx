@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { apiFetch } from "@/lib/client-api";
 import { GraduationCap, LogOut, MessageSquare, Phone, Shield, Video } from "lucide-react";
@@ -98,6 +99,18 @@ export function AppShell() {
         </nav>
 
         <div className="flex flex-col items-center gap-1.5 [&_button]:text-zinc-400 [&_button:hover]:bg-zinc-800 [&_button:hover]:text-zinc-100">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Link
+                href="/talk"
+                aria-label="Asatalk"
+                className="flex size-9 items-center justify-center rounded-lg bg-gradient-to-br from-sky-400 to-indigo-600 text-[11px] font-black text-white shadow-lg shadow-sky-500/30 transition hover:scale-105"
+              >
+                AT
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="left">{t("talk.name")}</TooltipContent>
+          </Tooltip>
           <ThemeToggle compact />
           <LanguageSwitcher />
           <Tooltip>
