@@ -1,0 +1,1505 @@
+/* ============================================================
+   ASATALK DESIGN SYSTEM
+   Telegram-class messenger on the Asameet foundation.
+   Accent is OKLCH driven (--talk-h / --talk-c) so the whole UI
+   re-tints from a single "accent" setting. Glass, depth, motion.
+   ============================================================ */
+
+.talk {
+  --talk-h: 240;
+  --talk-c: 0.16;
+  --talk: oklch(0.62 var(--talk-c) var(--talk-h));
+  --talk-strong: oklch(0.54 var(--talk-c) var(--talk-h));
+  --talk-soft: oklch(0.72 calc(var(--talk-c) * 0.9) var(--talk-h));
+  --talk-tint: oklch(0.95 0.03 var(--talk-h));
+  --talk-tint-2: oklch(0.9 0.05 var(--talk-h));
+  --talk-fg: oklch(0.22 0.02 var(--talk-h));
+  --talk-muted: oklch(0.52 0.02 var(--talk-h));
+  --talk-bg: oklch(0.975 0.008 var(--talk-h));
+  --talk-surface: oklch(1 0 0 / 0.72);
+  --talk-surface-solid: oklch(1 0 0);
+  --talk-line: oklch(0.88 0.015 var(--talk-h) / 0.7);
+  --talk-bubble-out: linear-gradient(135deg, oklch(0.9 0.06 var(--talk-h)), oklch(0.86 0.07 var(--talk-h)));
+  --talk-bubble-out-fg: oklch(0.22 0.03 var(--talk-h));
+  --talk-bubble-in: oklch(1 0 0 / 0.92);
+  --talk-bubble-in-fg: var(--talk-fg);
+  --talk-shadow: 0 10px 30px oklch(0.4 0.08 var(--talk-h) / 0.12);
+  --talk-shadow-sm: 0 2px 8px oklch(0.4 0.08 var(--talk-h) / 0.1);
+  --talk-glass: oklch(1 0 0 / 0.55);
+  --talk-glass-strong: oklch(1 0 0 / 0.78);
+  --talk-glass-border: oklch(1 0 0 / 0.6);
+  --talk-radius: 16px;
+  --talk-font-size: 15px;
+  --talk-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --talk-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  color: var(--talk-fg);
+  background: var(--talk-bg);
+  font-size: var(--talk-font-size);
+  font-family: "Vazirmatn", "Vazir", system-ui, -apple-system, sans-serif;
+}
+
+.dark .talk {
+  --talk: oklch(0.7 var(--talk-c) var(--talk-h));
+  --talk-strong: oklch(0.62 var(--talk-c) var(--talk-h));
+  --talk-soft: oklch(0.78 calc(var(--talk-c) * 0.8) var(--talk-h));
+  --talk-tint: oklch(0.28 0.04 var(--talk-h));
+  --talk-tint-2: oklch(0.34 0.06 var(--talk-h));
+  --talk-fg: oklch(0.95 0.01 var(--talk-h));
+  --talk-muted: oklch(0.7 0.02 var(--talk-h));
+  --talk-bg: oklch(0.17 0.02 var(--talk-h));
+  --talk-surface: oklch(0.23 0.02 var(--talk-h) / 0.8);
+  --talk-surface-solid: oklch(0.23 0.02 var(--talk-h));
+  --talk-line: oklch(0.35 0.02 var(--talk-h) / 0.7);
+  --talk-bubble-out: linear-gradient(135deg, oklch(0.5 0.14 var(--talk-h)), oklch(0.42 0.13 var(--talk-h)));
+  --talk-bubble-out-fg: oklch(0.98 0.01 var(--talk-h));
+  --talk-bubble-in: oklch(0.27 0.02 var(--talk-h) / 0.95);
+  --talk-bubble-in-fg: var(--talk-fg);
+  --talk-shadow: 0 10px 30px oklch(0 0 0 / 0.4);
+  --talk-shadow-sm: 0 2px 8px oklch(0 0 0 / 0.35);
+  --talk-glass: oklch(0.22 0.02 var(--talk-h) / 0.55);
+  --talk-glass-strong: oklch(0.2 0.02 var(--talk-h) / 0.82);
+  --talk-glass-border: oklch(1 0 0 / 0.1);
+}
+
+.talk[data-anim="off"] *,
+.talk[data-anim="off"] *::before,
+.talk[data-anim="off"] *::after {
+  animation-duration: 0.001s !important;
+  transition-duration: 0.001s !important;
+}
+
+/* ---------- Surfaces ---------- */
+
+.tg-glass {
+  background: var(--talk-glass);
+  backdrop-filter: blur(18px) saturate(170%);
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+  border: 1px solid var(--talk-glass-border);
+  box-shadow: var(--talk-shadow-sm), inset 0 1px 0 oklch(1 0 0 / 0.35);
+}
+.dark .tg-glass {
+  box-shadow: var(--talk-shadow-sm), inset 0 1px 0 oklch(1 0 0 / 0.06);
+}
+.tg-glass-strong {
+  background: var(--talk-glass-strong);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--talk-glass-border);
+  box-shadow: var(--talk-shadow);
+}
+.tg-panel {
+  background: var(--talk-surface);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+}
+.tg-line {
+  border-color: var(--talk-line);
+}
+
+/* ---------- Glass buttons ---------- */
+
+.tg-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 999px;
+  border: 1px solid oklch(1 0 0 / 0.45);
+  background: linear-gradient(160deg, oklch(1 0 0 / 0.75), oklch(1 0 0 / 0.45));
+  color: var(--talk-strong);
+  box-shadow: 0 1px 0 oklch(1 0 0 / 0.6) inset, 0 6px 16px oklch(0.4 0.1 var(--talk-h) / 0.12);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  transition: transform 0.25s var(--talk-spring), box-shadow 0.25s ease, background 0.25s ease;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.dark .tg-btn {
+  border-color: oklch(1 0 0 / 0.12);
+  background: linear-gradient(160deg, oklch(1 0 0 / 0.14), oklch(1 0 0 / 0.06));
+  color: var(--talk-soft);
+  box-shadow: 0 1px 0 oklch(1 0 0 / 0.12) inset, 0 6px 16px oklch(0 0 0 / 0.3);
+}
+.tg-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 1px 0 oklch(1 0 0 / 0.6) inset, 0 10px 24px oklch(0.4 0.1 var(--talk-h) / 0.2);
+}
+.tg-btn:active {
+  transform: translateY(0) scale(0.96);
+}
+.tg-btn:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+.tg-btn-primary {
+  color: white;
+  border-color: oklch(1 0 0 / 0.35);
+  background: linear-gradient(135deg, var(--talk), var(--talk-strong));
+  box-shadow: 0 1px 0 oklch(1 0 0 / 0.35) inset, 0 8px 22px oklch(0.55 var(--talk-c) var(--talk-h) / 0.45);
+}
+.tg-btn-primary:hover {
+  box-shadow: 0 1px 0 oklch(1 0 0 / 0.4) inset, 0 12px 30px oklch(0.55 var(--talk-c) var(--talk-h) / 0.55);
+}
+.tg-btn-danger {
+  color: white;
+  border-color: oklch(1 0 0 / 0.3);
+  background: linear-gradient(135deg, oklch(0.66 0.21 25), oklch(0.56 0.21 25));
+  box-shadow: 0 1px 0 oklch(1 0 0 / 0.3) inset, 0 8px 22px oklch(0.6 0.2 25 / 0.45);
+}
+.tg-btn-success {
+  color: white;
+  border-color: oklch(1 0 0 / 0.3);
+  background: linear-gradient(135deg, oklch(0.72 0.19 150), oklch(0.6 0.18 150));
+  box-shadow: 0 1px 0 oklch(1 0 0 / 0.3) inset, 0 8px 22px oklch(0.65 0.18 150 / 0.45);
+}
+.tg-btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  color: var(--talk-muted);
+}
+.tg-btn-ghost:hover {
+  background: oklch(0.5 0.05 var(--talk-h) / 0.1);
+  color: var(--talk-strong);
+  box-shadow: none;
+}
+.tg-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+}
+.tg-icon-lg {
+  width: 3.5rem;
+  height: 3.5rem;
+  padding: 0;
+}
+.tg-fab {
+  width: 3.5rem;
+  height: 3.5rem;
+  padding: 0;
+  box-shadow: 0 1px 0 oklch(1 0 0 / 0.35) inset, 0 12px 28px oklch(0.55 var(--talk-c) var(--talk-h) / 0.5);
+}
+
+/* ---------- Ripple ---------- */
+
+.tg-ripple {
+  position: relative;
+  overflow: hidden;
+}
+.tg-ripple::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--rx, 50%) var(--ry, 50%), oklch(1 0 0 / 0.5) 0%, transparent 55%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+.tg-ripple:active::after {
+  opacity: 1;
+  transition: opacity 0s;
+}
+
+/* ---------- Inputs ---------- */
+
+.tg-input {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid var(--talk-line);
+  background: var(--talk-surface);
+  padding: 0.7rem 0.95rem;
+  color: var(--talk-fg);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.tg-input::placeholder {
+  color: var(--talk-muted);
+}
+.tg-input:focus {
+  border-color: var(--talk);
+  box-shadow: 0 0 0 3px oklch(0.62 var(--talk-c) var(--talk-h) / 0.22);
+}
+.tg-search {
+  border-radius: 999px;
+  background: oklch(0.5 0.04 var(--talk-h) / 0.08);
+  border-color: transparent;
+  padding-inline-start: 2.6rem;
+}
+.dark .tg-search {
+  background: oklch(1 0 0 / 0.06);
+}
+
+/* ---------- List rows (Telegram-style) ---------- */
+
+.tg-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 14px;
+  text-align: start;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s var(--talk-ease);
+  -webkit-tap-highlight-color: transparent;
+}
+.tg-row:hover {
+  background: oklch(0.5 0.06 var(--talk-h) / 0.08);
+}
+.tg-row[data-active="true"] {
+  background: linear-gradient(135deg, var(--talk), var(--talk-strong));
+  color: white;
+  box-shadow: 0 8px 20px oklch(0.55 var(--talk-c) var(--talk-h) / 0.35);
+}
+.tg-row[data-active="true"] .tg-muted,
+.tg-row[data-active="true"] .tg-time {
+  color: oklch(1 0 0 / 0.8);
+}
+.tg-muted {
+  color: var(--talk-muted);
+}
+.tg-time {
+  font-size: 0.7rem;
+  color: var(--talk-muted);
+}
+.tg-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: var(--talk);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  box-shadow: 0 2px 6px oklch(0.55 var(--talk-c) var(--talk-h) / 0.4);
+}
+.tg-badge-muted {
+  background: oklch(0.6 0.02 var(--talk-h));
+  box-shadow: none;
+}
+.tg-row[data-active="true"] .tg-badge {
+  background: white;
+  color: var(--talk-strong);
+}
+
+/* ---------- Section list (settings) ---------- */
+
+.tg-section {
+  border-radius: 18px;
+  background: var(--talk-surface);
+  border: 1px solid var(--talk-line);
+  overflow: hidden;
+  box-shadow: var(--talk-shadow-sm);
+}
+.tg-section > * + * {
+  border-top: 1px solid var(--talk-line);
+}
+.tg-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  padding: 0.8rem 1rem;
+  text-align: start;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.tg-item:hover {
+  background: oklch(0.5 0.06 var(--talk-h) / 0.07);
+}
+.tg-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 10px;
+  color: white;
+  box-shadow: 0 4px 10px oklch(0 0 0 / 0.15), inset 0 1px 0 oklch(1 0 0 / 0.4);
+  flex-shrink: 0;
+}
+.tg-section-title {
+  padding: 0.5rem 1.1rem 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--talk);
+  letter-spacing: 0.01em;
+}
+.tg-hint {
+  padding: 0.35rem 1.1rem 0.8rem;
+  font-size: 0.75rem;
+  color: var(--talk-muted);
+  line-height: 1.6;
+}
+
+/* ---------- Switch ---------- */
+
+.tg-switch {
+  position: relative;
+  width: 2.7rem;
+  height: 1.55rem;
+  border-radius: 999px;
+  background: oklch(0.6 0.02 var(--talk-h) / 0.35);
+  transition: background 0.25s ease;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.tg-switch::after {
+  content: "";
+  position: absolute;
+  top: 0.15rem;
+  inset-inline-start: 0.15rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 2px 6px oklch(0 0 0 / 0.25);
+  transition: transform 0.25s var(--talk-spring);
+}
+.tg-switch[data-on="true"] {
+  background: linear-gradient(135deg, var(--talk), var(--talk-strong));
+}
+[dir="ltr"] .tg-switch[data-on="true"]::after {
+  transform: translateX(1.15rem);
+}
+[dir="rtl"] .tg-switch[data-on="true"]::after {
+  transform: translateX(-1.15rem);
+}
+
+/* ---------- Chat wallpapers ---------- */
+
+.tg-wall {
+  position: relative;
+  background-color: var(--talk-bg);
+  isolation: isolate;
+}
+.tg-wall::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.9;
+  pointer-events: none;
+}
+.tg-wall[data-wall="plain"]::before {
+  background: linear-gradient(180deg, var(--talk-tint), var(--talk-bg));
+}
+.tg-wall[data-wall="gradient"]::before {
+  background:
+    radial-gradient(60% 50% at 10% 10%, oklch(0.85 0.1 var(--talk-h) / 0.55), transparent 60%),
+    radial-gradient(50% 60% at 90% 20%, oklch(0.85 0.12 calc(var(--talk-h) + 60) / 0.45), transparent 60%),
+    radial-gradient(60% 60% at 50% 100%, oklch(0.85 0.1 calc(var(--talk-h) - 60) / 0.45), transparent 60%);
+  animation: tg-wall-drift 18s ease-in-out infinite alternate;
+}
+.tg-wall[data-wall="bubbles"]::before {
+  background-color: var(--talk-tint);
+  background-image:
+    radial-gradient(circle at 20% 30%, oklch(1 0 0 / 0.55) 0 18px, transparent 19px),
+    radial-gradient(circle at 70% 60%, oklch(1 0 0 / 0.5) 0 26px, transparent 27px),
+    radial-gradient(circle at 45% 85%, oklch(1 0 0 / 0.45) 0 12px, transparent 13px),
+    radial-gradient(circle at 85% 15%, oklch(1 0 0 / 0.45) 0 10px, transparent 11px),
+    radial-gradient(circle at 10% 80%, oklch(1 0 0 / 0.4) 0 22px, transparent 23px);
+  background-size: 260px 260px;
+}
+.tg-wall[data-wall="doodle"]::before {
+  background-color: var(--talk-tint);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'><g fill='none' stroke='%23ffffff' stroke-opacity='0.55' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'><path d='M30 40h40a12 12 0 0 1 0 24H46l-10 9v-9a12 12 0 0 1-6-24z'/><circle cx='150' cy='50' r='16'/><path d='M140 46q10 12 20 0'/><circle cx='144' cy='44' r='2' fill='%23fff'/><circle cx='156' cy='44' r='2' fill='%23fff'/><path d='M60 150l8-8 8 8-8 8z'/><path d='M120 170c0-12 10-22 22-22s22 10 22 22-10 22-22 22'/><path d='M40 190l6-14 6 14M43 183h6'/><path d='M180 120l-6 6 6 6 6-6z'/><path d='M100 100c6-10 16-10 20 0 4-10 14-10 20 0-4 12-20 22-20 22s-16-10-20-22z'/><path d='M175 180c10-6 20 0 22 8'/></g></svg>");
+  background-size: 220px 220px;
+}
+.tg-wall[data-wall="waves"]::before {
+  background-color: var(--talk-tint);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='120' viewBox='0 0 200 120'><path d='M0 30c25-20 50-20 75 0s50 20 75 0 50-20 75 0' fill='none' stroke='%23ffffff' stroke-opacity='0.5' stroke-width='3'/><path d='M0 90c25-20 50-20 75 0s50 20 75 0 50-20 75 0' fill='none' stroke='%23ffffff' stroke-opacity='0.35' stroke-width='3'/></svg>");
+  background-size: 200px 120px;
+}
+.tg-wall[data-wall="stars"]::before {
+  background-color: var(--talk-tint);
+  background-image:
+    radial-gradient(circle at 12% 18%, oklch(1 0 0 / 0.9) 0 1.5px, transparent 2px),
+    radial-gradient(circle at 60% 40%, oklch(1 0 0 / 0.8) 0 2px, transparent 3px),
+    radial-gradient(circle at 80% 75%, oklch(1 0 0 / 0.7) 0 1.5px, transparent 2px),
+    radial-gradient(circle at 35% 80%, oklch(1 0 0 / 0.6) 0 1px, transparent 2px),
+    radial-gradient(circle at 90% 20%, oklch(1 0 0 / 0.7) 0 1px, transparent 2px);
+  background-size: 180px 180px;
+}
+.dark .tg-wall[data-wall="bubbles"]::before,
+.dark .tg-wall[data-wall="doodle"]::before,
+.dark .tg-wall[data-wall="waves"]::before,
+.dark .tg-wall[data-wall="stars"]::before {
+  filter: brightness(0.55) saturate(1.2);
+  opacity: 0.5;
+}
+@keyframes tg-wall-drift {
+  from {
+    transform: translate3d(-2%, -2%, 0) scale(1.05);
+  }
+  to {
+    transform: translate3d(2%, 2%, 0) scale(1.1);
+  }
+}
+
+/* ---------- Message bubbles with tails ---------- */
+
+.tg-bubble {
+  position: relative;
+  max-width: min(78%, 520px);
+  padding: 0.42rem 0.7rem 0.35rem;
+  border-radius: var(--talk-radius);
+  line-height: 1.55;
+  word-break: break-word;
+  box-shadow: 0 1px 2px oklch(0 0 0 / 0.08), 0 4px 12px oklch(0 0 0 / 0.04);
+  font-size: var(--talk-font-size);
+  animation: tg-bubble-in 0.22s var(--talk-spring);
+}
+.tg-bubble-in {
+  background: var(--talk-bubble-in);
+  color: var(--talk-bubble-in-fg);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.tg-bubble-out {
+  background: var(--talk-bubble-out);
+  color: var(--talk-bubble-out-fg);
+}
+.tg-bubble-media {
+  padding: 0.25rem;
+}
+.tg-bubble-sticker {
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+[dir="rtl"] .tg-bubble-out.tg-tail {
+  border-end-start-radius: 4px;
+}
+[dir="rtl"] .tg-bubble-in.tg-tail {
+  border-end-end-radius: 4px;
+}
+[dir="ltr"] .tg-bubble-out.tg-tail {
+  border-end-end-radius: 4px;
+}
+[dir="ltr"] .tg-bubble-in.tg-tail {
+  border-end-start-radius: 4px;
+}
+.tg-bubble.tg-tail::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  width: 12px;
+  height: 14px;
+  background: inherit;
+  clip-path: polygon(0 0, 100% 100%, 0 100%);
+}
+[dir="ltr"] .tg-bubble-out.tg-tail::after {
+  right: -8px;
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  transform: scaleX(-1);
+}
+[dir="ltr"] .tg-bubble-in.tg-tail::after {
+  left: -8px;
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+}
+[dir="rtl"] .tg-bubble-out.tg-tail::after {
+  left: -8px;
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+}
+[dir="rtl"] .tg-bubble-in.tg-tail::after {
+  right: -8px;
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+  transform: scaleX(-1);
+}
+.tg-bubble-sticker.tg-tail::after {
+  display: none;
+}
+@keyframes tg-bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.tg-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  float: inline-end;
+  margin-inline-start: 0.6rem;
+  margin-top: 0.35rem;
+  font-size: 0.68rem;
+  opacity: 0.7;
+  line-height: 1;
+  white-space: nowrap;
+}
+.tg-meta-overlay {
+  position: absolute;
+  bottom: 0.35rem;
+  inset-inline-end: 0.5rem;
+  float: none;
+  margin: 0;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: oklch(0 0 0 / 0.45);
+  color: white;
+  opacity: 1;
+  backdrop-filter: blur(6px);
+}
+.tg-quote {
+  display: block;
+  margin-bottom: 0.3rem;
+  padding: 0.25rem 0.55rem;
+  border-inline-start: 3px solid var(--talk);
+  border-radius: 8px;
+  background: oklch(0.6 var(--talk-c) var(--talk-h) / 0.12);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.tg-bubble-out .tg-quote {
+  border-color: oklch(0.35 0.1 var(--talk-h));
+  background: oklch(0.35 0.1 var(--talk-h) / 0.12);
+}
+.dark .tg-bubble-out .tg-quote {
+  border-color: oklch(1 0 0 / 0.8);
+  background: oklch(1 0 0 / 0.15);
+}
+.tg-sender {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--talk-strong);
+  margin-bottom: 0.1rem;
+}
+.tg-reaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: oklch(0.6 var(--talk-c) var(--talk-h) / 0.14);
+  border: 1px solid oklch(0.6 var(--talk-c) var(--talk-h) / 0.2);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: transform 0.2s var(--talk-spring), background 0.2s ease;
+}
+.tg-reaction:hover {
+  transform: scale(1.08);
+}
+.tg-reaction[data-mine="true"] {
+  background: var(--talk);
+  color: white;
+  border-color: transparent;
+}
+.tg-date-chip {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background: oklch(0.3 0.05 var(--talk-h) / 0.35);
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.tg-system-chip {
+  display: inline-block;
+  padding: 0.25rem 0.8rem;
+  border-radius: 999px;
+  background: oklch(0.3 0.05 var(--talk-h) / 0.3);
+  color: white;
+  font-size: 0.74rem;
+  backdrop-filter: blur(8px);
+}
+
+/* ---------- Voice player ---------- */
+
+.tg-wave {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 26px;
+  cursor: pointer;
+}
+.tg-wave span {
+  width: 3px;
+  border-radius: 3px;
+  background: currentColor;
+  opacity: 0.35;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.tg-wave span[data-played="true"] {
+  opacity: 1;
+}
+.tg-play {
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--talk);
+  color: white;
+  box-shadow: 0 4px 12px oklch(0.55 var(--talk-c) var(--talk-h) / 0.4);
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.2s var(--talk-spring);
+}
+.tg-play:active {
+  transform: scale(0.92);
+}
+.tg-bubble-out .tg-play {
+  background: oklch(1 0 0 / 0.9);
+  color: var(--talk-strong);
+}
+.dark .tg-bubble-out .tg-play {
+  background: oklch(1 0 0 / 0.2);
+  color: white;
+}
+
+/* ---------- Composer ---------- */
+
+.tg-composer {
+  border-radius: 22px;
+  background: var(--talk-glass-strong);
+  border: 1px solid var(--talk-glass-border);
+  box-shadow: var(--talk-shadow);
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+}
+.tg-textarea {
+  width: 100%;
+  resize: none;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0.65rem 0.25rem;
+  max-height: 160px;
+  line-height: 1.5;
+  font-size: var(--talk-font-size);
+  color: var(--talk-fg);
+}
+.tg-textarea::placeholder {
+  color: var(--talk-muted);
+}
+.tg-record-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: oklch(0.62 0.22 25);
+  animation: tg-blink 1s ease-in-out infinite;
+}
+@keyframes tg-blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.2;
+  }
+}
+/* the record-lock affordance floats above the mic button (plain CSS wins over
+   Tailwind's layered utilities, which .tg-btn's own position would override) */
+.tg-lock-fab {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  height: 2.25rem;
+  width: 2.25rem;
+  padding: 0;
+}
+.tg-mic-ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: oklch(0.62 var(--talk-c) var(--talk-h) / 0.22);
+  transform: scale(var(--level, 1));
+  transition: transform 0.1s ease;
+  pointer-events: none;
+}
+
+/* ---------- Popovers / menus ---------- */
+
+.tg-menu {
+  min-width: 12rem;
+  padding: 0.35rem;
+  border-radius: 16px;
+  background: var(--talk-glass-strong);
+  border: 1px solid var(--talk-glass-border);
+  box-shadow: var(--talk-shadow);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  animation: tg-pop 0.18s var(--talk-spring);
+  z-index: 60;
+}
+.tg-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-align: start;
+  transition: background 0.15s ease;
+}
+.tg-menu-item:hover {
+  background: oklch(0.5 0.06 var(--talk-h) / 0.12);
+}
+.tg-menu-item[data-danger="true"] {
+  color: oklch(0.58 0.2 25);
+}
+@keyframes tg-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- Avatars ---------- */
+
+.tg-avatar {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: white;
+  font-weight: 800;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: inset 0 -3px 8px oklch(0 0 0 / 0.18), inset 0 2px 4px oklch(1 0 0 / 0.35), 0 4px 10px oklch(0 0 0 / 0.12);
+  user-select: none;
+}
+.tg-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.tg-online {
+  position: absolute;
+  bottom: 1px;
+  inset-inline-end: 1px;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  background: oklch(0.72 0.19 150);
+  border: 2px solid var(--talk-surface-solid);
+  box-shadow: 0 0 0 0 oklch(0.72 0.19 150 / 0.6);
+  animation: tg-online-pulse 2.2s ease-out infinite;
+}
+@keyframes tg-online-pulse {
+  0% {
+    box-shadow: 0 0 0 0 oklch(0.72 0.19 150 / 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 8px oklch(0.72 0.19 150 / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 oklch(0.72 0.19 150 / 0);
+  }
+}
+
+/* ---------- Mascot animations ---------- */
+
+.tg-mascot {
+  filter: drop-shadow(0 12px 18px oklch(0.4 0.1 var(--talk-h) / 0.25));
+}
+.tg-float {
+  animation: tg-float 3.6s ease-in-out infinite;
+}
+@keyframes tg-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+.tg-blink {
+  transform-origin: center;
+  animation: tg-blink-eye 4.5s ease-in-out infinite;
+}
+@keyframes tg-blink-eye {
+  0%, 92%, 100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.08);
+  }
+}
+.tg-wave-arm {
+  transform-origin: 85% 90%;
+  animation: tg-wave-arm 1.6s ease-in-out infinite;
+}
+@keyframes tg-wave-arm {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-22deg);
+  }
+  50% {
+    transform: rotate(8deg);
+  }
+  75% {
+    transform: rotate(-16deg);
+  }
+}
+.tg-bounce {
+  animation: tg-bounce 1.4s var(--talk-spring) infinite;
+}
+@keyframes tg-bounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  40% {
+    transform: translateY(-14px) scale(1.04, 0.96);
+  }
+  60% {
+    transform: translateY(0) scale(0.98, 1.02);
+  }
+}
+.tg-zzz {
+  animation: tg-zzz 2.4s ease-in-out infinite;
+  opacity: 0;
+}
+.tg-zzz:nth-child(2) {
+  animation-delay: 0.6s;
+}
+.tg-zzz:nth-child(3) {
+  animation-delay: 1.2s;
+}
+@keyframes tg-zzz {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.6);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(10px, -26px) scale(1.1);
+  }
+}
+.tg-ring-shake {
+  transform-origin: 50% 20%;
+  animation: tg-ring-shake 0.8s ease-in-out infinite;
+}
+@keyframes tg-ring-shake {
+  0%, 100% {
+    transform: rotate(0);
+  }
+  20% {
+    transform: rotate(-12deg);
+  }
+  40% {
+    transform: rotate(10deg);
+  }
+  60% {
+    transform: rotate(-8deg);
+  }
+  80% {
+    transform: rotate(6deg);
+  }
+}
+.tg-confetti {
+  animation: tg-confetti 1.8s ease-out infinite;
+}
+@keyframes tg-confetti {
+  0% {
+    transform: translateY(0) rotate(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-40px) rotate(180deg);
+    opacity: 0;
+  }
+}
+.tg-heartbeat {
+  transform-origin: center;
+  animation: tg-heartbeat 1.2s ease-in-out infinite;
+}
+@keyframes tg-heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  20% {
+    transform: scale(1.18);
+  }
+  40% {
+    transform: scale(1);
+  }
+  60% {
+    transform: scale(1.12);
+  }
+}
+.tg-spin-slow {
+  animation: tg-spin 6s linear infinite;
+  transform-origin: center;
+}
+@keyframes tg-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Call screen ---------- */
+
+.tg-call-bg {
+  color: #fff;
+  background: oklch(0.16 0.03 var(--talk-h));
+  isolation: isolate;
+}
+.tg-call-bg::before {
+  content: "";
+  position: absolute;
+  inset: -10%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 50% at 20% 10%, oklch(0.5 0.15 var(--talk-h) / 0.6), transparent 60%),
+    radial-gradient(50% 60% at 90% 30%, oklch(0.5 0.15 calc(var(--talk-h) + 80) / 0.45), transparent 60%),
+    radial-gradient(70% 60% at 50% 100%, oklch(0.45 0.12 calc(var(--talk-h) - 60) / 0.5), transparent 60%);
+  animation: tg-wall-drift 12s ease-in-out infinite alternate;
+}
+.tg-call-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid oklch(1 0 0 / 0.35);
+  animation: tg-call-ring 2.4s ease-out infinite;
+}
+.tg-call-ring:nth-child(2) {
+  animation-delay: 0.8s;
+}
+.tg-call-ring:nth-child(3) {
+  animation-delay: 1.6s;
+}
+@keyframes tg-call-ring {
+  from {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+.tg-call-btn {
+  width: 3.6rem;
+  height: 3.6rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  background: oklch(1 0 0 / 0.16);
+  border: 1px solid oklch(1 0 0 / 0.25);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.3), 0 8px 20px oklch(0 0 0 / 0.3);
+  transition: transform 0.2s var(--talk-spring), background 0.2s ease;
+  cursor: pointer;
+}
+.tg-call-btn:active {
+  transform: scale(0.92);
+}
+.tg-call-btn[data-on="true"] {
+  background: white;
+  color: oklch(0.3 0.05 var(--talk-h));
+}
+.tg-call-end {
+  background: linear-gradient(135deg, oklch(0.66 0.21 25), oklch(0.56 0.21 25));
+  border-color: transparent;
+  box-shadow: 0 10px 26px oklch(0.6 0.2 25 / 0.55);
+}
+.tg-call-accept {
+  background: linear-gradient(135deg, oklch(0.74 0.19 150), oklch(0.62 0.18 150));
+  border-color: transparent;
+  box-shadow: 0 10px 26px oklch(0.65 0.18 150 / 0.55);
+}
+
+/* ---------- Misc ---------- */
+
+.tg-scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.tg-slide-in-start {
+  animation: tg-slide-in-start 0.3s var(--talk-ease);
+}
+@keyframes tg-slide-in-start {
+  from {
+    opacity: 0;
+    transform: translateX(var(--tg-slide, 24px));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+[dir="rtl"] .tg-slide-in-start {
+  --tg-slide: -24px;
+}
+.tg-fade-in {
+  animation: tg-fade 0.25s ease;
+}
+@keyframes tg-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.tg-emoji-big {
+  font-size: 3.4rem;
+  line-height: 1.15;
+  padding-bottom: 14px;
+}
+.tg-video-note {
+  border-radius: 50%;
+  overflow: hidden;
+  width: 240px;
+  height: 240px;
+  box-shadow: 0 10px 24px oklch(0 0 0 / 0.25), inset 0 0 0 3px oklch(1 0 0 / 0.5);
+  background: black;
+}
+.tg-video-note video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.tg-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  color: var(--talk-muted);
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+.tg-chip:hover {
+  background: oklch(0.5 0.06 var(--talk-h) / 0.1);
+}
+.tg-chip[data-active="true"] {
+  background: linear-gradient(135deg, var(--talk), var(--talk-strong));
+  color: white;
+  box-shadow: 0 6px 14px oklch(0.55 var(--talk-c) var(--talk-h) / 0.35);
+}
+.tg-typing-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: typing-dot 1.2s ease-in-out infinite;
+}
+.tg-typing-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.tg-typing-dot:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.tg-progress {
+  height: 3px;
+  border-radius: 3px;
+  background: oklch(0.5 0.05 var(--talk-h) / 0.15);
+  overflow: hidden;
+}
+.tg-progress > div {
+  height: 100%;
+  background: var(--talk);
+  border-radius: 3px;
+  transition: width 0.15s linear;
+}
+.tg-pip {
+  position: fixed;
+  z-index: 70;
+  width: 160px;
+  height: 200px;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 16px 40px oklch(0 0 0 / 0.4);
+  cursor: grab;
+  touch-action: none;
+}
+.tg-safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+.tg-safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ============================================================
+   HANDOFF ADDITIONS (Asatalk Screens.dc.html)
+   ============================================================ */
+
+/* dark is the product default; the handoff ground */
+.dark .talk {
+  --talk-bg: oklch(0.17 0.02 var(--talk-h));
+}
+
+@keyframes asa-twinkle {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  50% { transform: scale(1.35) rotate(20deg); opacity: 0.75; }
+}
+.asa-spark {
+  transform-origin: 100px 26px;
+  animation: asa-twinkle 2.6s ease-in-out infinite;
+}
+@keyframes asa-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+.asa-skel {
+  background: linear-gradient(90deg, oklch(0.5 0.02 var(--talk-h) / 0.18) 25%, oklch(0.5 0.02 var(--talk-h) / 0.32) 50%, oklch(0.5 0.02 var(--talk-h) / 0.18) 75%);
+  background-size: 200% 100%;
+  animation: asa-shimmer 1.4s linear infinite;
+  border-radius: 8px;
+  display: block;
+}
+
+/* phone-style status bar spacer + big page titles */
+.tg-title {
+  font-size: 18px;
+  font-weight: 900;
+}
+
+/* status / notes strip (WhatsApp status rings + Messenger notes) */
+.tg-status-ring {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  padding: 2.5px;
+  background: conic-gradient(var(--talk), oklch(0.78 0.16 70), var(--talk));
+}
+.tg-status-ring[data-seen="true"] {
+  background: oklch(0.4 0.02 var(--talk-h));
+}
+.tg-status-add {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 2px dashed var(--talk);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--talk);
+}
+.tg-note-bubble {
+  position: absolute;
+  top: -16px;
+  inset-inline-start: -8px;
+  border-radius: 14px 14px 14px 3px;
+  padding: 4px 9px;
+  font-size: 10.5px;
+  white-space: nowrap;
+  z-index: 2;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* language tiles */
+.tg-lang {
+  border-radius: 18px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s ease, transform 0.2s var(--talk-spring);
+}
+.tg-lang:active { transform: scale(0.98); }
+.tg-lang[data-active="true"] { border-color: var(--talk); }
+
+/* OTP boxes + numpad */
+.tg-otp {
+  width: 46px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 800;
+}
+.tg-otp[data-active="true"] {
+  border: 2px solid var(--talk);
+  box-shadow: 0 0 0 3px oklch(0.62 0.16 var(--talk-h) / 0.22);
+}
+.tg-caret {
+  width: 2px;
+  height: 26px;
+  background: var(--talk);
+  border-radius: 2px;
+  animation: tg-blink 1s step-end infinite;
+}
+.tg-numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+}
+.tg-numpad button {
+  height: 56px;
+  font-size: 23px;
+  font-weight: 700;
+  border-radius: 12px;
+}
+
+/* bottom sheet */
+.tg-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: oklch(0.1 0.02 var(--talk-h) / 0.55);
+  backdrop-filter: blur(2px);
+}
+.tg-sheet {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 61;
+  border-radius: 28px 28px 0 0;
+  padding: 14px 24px calc(34px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  animation: tg-sheet-in 0.32s var(--talk-ease);
+}
+@media (min-width: 768px) {
+  .tg-sheet { inset-inline: auto; left: 50%; transform: translateX(-50%); width: 420px; border-radius: 28px; bottom: 24px; }
+}
+.tg-sheet-handle {
+  width: 44px;
+  height: 5px;
+  border-radius: 99px;
+  background: var(--talk-line);
+}
+@keyframes tg-sheet-in {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@media (min-width: 768px) {
+  @keyframes tg-sheet-in {
+    from { transform: translate(-50%, 40px); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+  }
+}
+
+/* attach grid */
+.tg-attach-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  padding: 6px 16px 10px;
+  width: 100%;
+}
+.tg-attach-grid button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--talk-fg);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.tg-attach-grid .tg-item-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+}
+
+/* pinned bar indicator */
+.tg-pin-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tg-pin-bars span {
+  width: 3px;
+  height: 8px;
+  background: var(--talk);
+  border-radius: 2px;
+}
+.tg-pin-bars span[data-dim="true"] { opacity: 0.4; }
+
+/* quick reactions row in the message menu */
+.tg-quick-reactions {
+  border-radius: 999px;
+  padding: 8px 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.tg-quick-reactions button {
+  font-size: 26px;
+  line-height: 1;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: transform 0.2s var(--talk-spring);
+}
+.tg-quick-reactions button:hover { transform: scale(1.25); }
+
+/* seen-by line, admin badge, mention menu */
+.tg-seenby {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  justify-content: flex-end;
+  font-size: 10.5px;
+  padding-inline-end: 8px;
+  color: var(--talk-muted);
+}
+.tg-role-badge {
+  font-size: 10px;
+  padding: 1px 7px;
+  border-radius: 99px;
+  background: oklch(0.62 0.16 var(--talk-h) / 0.18);
+  color: var(--talk);
+  font-weight: 700;
+}
+.tg-mention-menu {
+  position: absolute;
+  bottom: 100%;
+  inset-inline: 10px;
+  margin-bottom: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+/* speed pill on voice */
+.tg-speed {
+  font-size: 11px;
+  font-weight: 800;
+  border: 1px solid currentColor;
+  border-radius: 99px;
+  padding: 2px 7px;
+  opacity: 0.8;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* call screen extras */
+.tg-call-label {
+  font-size: 12px;
+  opacity: 0.8;
+}
+.tg-signal { display: inline-flex; align-items: center; gap: 6px; }
+
+/* channel post card */
+.tg-post {
+  max-width: 92%;
+  width: 100%;
+}
+.tg-post-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--talk-line);
+  color: var(--talk-muted);
+  font-size: 12px;
+}
+
+/* theme picker cards */
+.tg-theme-card {
+  border-radius: 18px;
+  border: 1px solid var(--talk-line);
+  overflow: hidden;
+  cursor: pointer;
+}
+.tg-theme-card[data-active="true"] { border: 2px solid var(--talk); }
+
+/* PIN dots */
+.tg-pin-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid var(--talk-muted);
+}
+.tg-pin-dot[data-on="true"] { background: var(--talk); border-color: var(--talk); }
+
+/* segmented control */
+.tg-seg {
+  display: flex;
+  gap: 4px;
+  background: oklch(0.5 0.04 var(--talk-h) / 0.15);
+  border-radius: 999px;
+  padding: 3px;
+}
+.tg-seg button {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--talk-muted);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.tg-seg button[data-active="true"] {
+  background: linear-gradient(135deg, var(--talk), var(--talk-strong));
+  color: #fff;
+  font-weight: 700;
+}
+
+/* range slider (chat settings) */
+.tg-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 99px;
+  background: linear-gradient(to right, var(--talk) var(--p, 50%), var(--talk-line) var(--p, 50%));
+  outline: none;
+}
+[dir="rtl"] .tg-range {
+  background: linear-gradient(to left, var(--talk) var(--p, 50%), var(--talk-line) var(--p, 50%));
+}
+.tg-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid var(--talk);
+  box-shadow: 0 2px 8px oklch(0 0 0 / 0.2);
+  cursor: pointer;
+}
+.tg-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid var(--talk);
+  cursor: pointer;
+}

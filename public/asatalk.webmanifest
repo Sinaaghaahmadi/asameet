@@ -1,0 +1,26 @@
+{
+  "name": "آساتاک | Asatalk",
+  "short_name": "آساتاک",
+  "description": "پیام‌رسان و تماس صوتی و تصویری — گروه، کانال، پیام صوتی و ویدئویی، چند حساب",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "lang": "fa",
+  "dir": "rtl",
+  "background_color": "#eef4ff",
+  "theme_color": "#3b82f6",
+  "categories": ["communication", "social"],
+  "icons": [
+    { "src": "asatalk/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "asatalk/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "asatalk/icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "asatalk/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "چت‌ها", "url": "./", "icons": [{ "src": "asatalk/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "تماس‌ها", "url": "./?panel=calls", "icons": [{ "src": "asatalk/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

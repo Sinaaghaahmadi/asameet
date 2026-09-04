@@ -1,0 +1,13 @@
+{
+  "appId": "app.asatalk",
+  "appName": "آساتاک",
+  "webDir": "www",
+  "server": {
+    "url": "https://asatalk.vercel.app",
+    "cleartext": false
+  },
+  "android": {
+    "backgroundColor": "#0b1220",
+    "allowMixedContent": false
+  }
+}

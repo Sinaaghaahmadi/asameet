@@ -1,0 +1,38 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# next.js
+.next/
+out/
+build/
+next-env.d.ts
+
+# database
+db/*.db
+db/*.db-journal
+prisma/*.db
+
+# misc
+.DS_Store
+*.pem
+*.log
+npm-debug.log*
+
+# env
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+
+# android build outputs
+mobile/**/android/
+mobile/**/node_modules/
