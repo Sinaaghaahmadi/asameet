@@ -1521,8 +1521,12 @@
 
 /* status / notes strip (WhatsApp status rings + Messenger notes) */
 .tg-status-ring {
-  width: 58px !important;
-  height: 58px !important;
+  /* a <span> is an inline box, and width/height simply do not apply to one —
+     no amount of !important changes that, it has to be blockified first */
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
   border-radius: 50%;
   padding: 2.5px;
   background: conic-gradient(var(--talk), oklch(0.78 0.16 70), var(--talk));
