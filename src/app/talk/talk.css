@@ -705,13 +705,25 @@
     opacity: 0.2;
   }
 }
+/* the record-lock affordance floats above the mic button (plain CSS wins over
+   Tailwind's layered utilities, which .tg-btn's own position would override) */
+.tg-lock-fab {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  height: 2.25rem;
+  width: 2.25rem;
+  padding: 0;
+}
 .tg-mic-ring {
   position: absolute;
-  inset: -12px;
+  inset: -6px;
   border-radius: 50%;
-  background: oklch(0.62 var(--talk-c) var(--talk-h) / 0.25);
+  background: oklch(0.62 var(--talk-c) var(--talk-h) / 0.22);
   transform: scale(var(--level, 1));
   transition: transform 0.1s ease;
+  pointer-events: none;
 }
 
 /* ---------- Popovers / menus ---------- */
@@ -1057,8 +1069,9 @@
   }
 }
 .tg-emoji-big {
-  font-size: 3.2rem;
-  line-height: 1.2;
+  font-size: 3.4rem;
+  line-height: 1.15;
+  padding-bottom: 14px;
 }
 .tg-video-note {
   border-radius: 50%;

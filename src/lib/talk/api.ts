@@ -135,6 +135,7 @@ export type SignalPayload =
   | { kind: "answer"; sdp: string }
   | { kind: "ice"; candidate: RTCIceCandidateInit }
   | { kind: "state"; muted?: boolean; camera?: boolean; screen?: boolean }
+  | { kind: "restart" }
   | { kind: "bye" };
 
 export function mediaUrl(mediaId: string): string {

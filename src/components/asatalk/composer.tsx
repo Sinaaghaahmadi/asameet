@@ -492,7 +492,14 @@ export function Composer({
 
         {/* main action button: 48px round primary */}
         <div className="relative shrink-0">
-          {recording === "voice" && !locked && <span className="tg-mic-ring" style={{ ["--level" as string]: 1 + level * 0.8 }} />}
+          {recording === "voice" && !locked && (
+            <>
+              <span className="tg-mic-ring" style={{ ["--level" as string]: 1 + Math.min(level, 1) * 0.35 }} aria-hidden />
+              <button type="button" className="tg-btn tg-lock-fab" onClick={() => setLocked(true)} aria-label={t("talk.composer.lock")}>
+                <Lock className="size-4" />
+              </button>
+            </>
+          )}
           {hasText || editing ? (
             <GBtn variant="primary" size="fab" className="!size-12" onClick={() => void submitText()} disabled={busy} aria-label={t("talk.msg.send")}>
               {editing ? <Pencil className="size-5" /> : <Send className="size-5 rtl:-scale-x-100" />}
@@ -521,11 +528,6 @@ export function Composer({
             >
               {videoMode ? <Video className="size-5" /> : <Mic className="size-5" />}
             </GBtn>
-          )}
-          {recording === "voice" && !locked && (
-            <button type="button" className="tg-btn absolute -top-12 start-1/2 -translate-x-1/2 !h-9 !w-9 rtl:translate-x-1/2" onClick={() => setLocked(true)} aria-label="lock">
-              <Lock className="size-4" />
-            </button>
           )}
         </div>
       </div>

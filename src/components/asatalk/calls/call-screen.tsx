@@ -205,6 +205,7 @@ export function CallScreen({
             <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center gap-3 text-center">
               <TalkAvatar name={state.peer.displayName} src={state.peer.avatar} size="xl" className="!size-[84px] !shadow-2xl grayscale-[0.5]" />
               <h2 className="text-[22px] font-black drop-shadow">{status}</h2>
+              {state.reason === "failed" && <p className="max-w-xs text-[12.5px] leading-6 text-white/70">{t("talk.calls.failedHint")}</p>}
               <p className="text-sm text-white/80">
                 {state.peer.displayName}
                 {seconds > 0 && (

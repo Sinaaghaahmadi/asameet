@@ -82,11 +82,8 @@ export function TalkShell({ onLogout, onAddAccount, onSwitch }: { onLogout: (all
         </AnimatePresence>
       </div>
 
-      {/* ---------- mobile: info covers the chat ---------- */}
-      {infoPanel && <div className="h-full w-full md:hidden" style={{ background: "var(--talk-bg)" }}>{infoPanel}</div>}
-
-      {/* ---------- center ---------- */}
-      <div className={cn("relative h-full min-w-0 flex-1", (sidePanel || infoPanel || !chat) && "hidden md:block")}>
+      {/* ---------- center (the info panel rides on top of it until there is room for a third column) ---------- */}
+      <div className={cn("relative h-full min-w-0 flex-1", (sidePanel || !chat) && "hidden md:block")}>
         {chat ? (
           <ChatView chat={chat} onBack={() => openChat(null)} onOpenInfo={() => setPanel({ kind: "info" })} />
         ) : (
@@ -103,19 +100,34 @@ export function TalkShell({ onLogout, onAddAccount, onSwitch }: { onLogout: (all
             />
           </div>
         )}
+        <AnimatePresence>
+          {infoPanel && (
+            <motion.div
+              key="info-overlay"
+              initial={{ x: 40, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 40, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="absolute inset-0 z-30 xl:hidden"
+              style={{ background: "var(--talk-bg)" }}
+            >
+              {infoPanel}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* ---------- right column (desktop info) ---------- */}
+      {/* ---------- third column: only when the chat keeps a usable width ---------- */}
       <AnimatePresence>
         {infoPanel && (
           <motion.aside
             initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 360, opacity: 1 }}
+            animate={{ width: 340, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.22 }}
-            className="tg-panel hidden h-full shrink-0 overflow-hidden border-s tg-line md:block"
+            className="tg-panel hidden h-full shrink-0 overflow-hidden border-s tg-line xl:block"
           >
-            <div className="h-full w-[360px]">{infoPanel}</div>
+            <div className="h-full w-[340px]">{infoPanel}</div>
           </motion.aside>
         )}
       </AnimatePresence>

@@ -207,7 +207,7 @@ export function MessageBubble({
               own ? "tg-bubble-out" : "tg-bubble-in",
               tail && "tg-tail",
               isMedia && "tg-bubble-media",
-              (msg.type === "sticker" || msg.type === "video_note") && "tg-bubble-sticker"
+              (isSticker || msg.type === "video_note") && "tg-bubble-sticker"
             )}
             onDoubleClick={() => actions.reply(msg)}
           >
@@ -230,9 +230,9 @@ export function MessageBubble({
               </button>
             )}
             {body}
-            {msg.type !== "sticker" && msg.type !== "video_note" && meta}
+            {!isSticker && msg.type !== "video_note" && meta}
           </div>
-          {(msg.type === "sticker" || msg.type === "video_note") && (
+          {(isSticker || msg.type === "video_note") && (
             <span className={cn("absolute bottom-1 text-[10px] opacity-70", own ? "start-1" : "end-1")}>
               {time} {own && (msg.isRead ? <CheckCheck className="inline size-3" /> : <Check className="inline size-3" />)}
             </span>

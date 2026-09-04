@@ -29,20 +29,15 @@ function iceServers(): RTCIceServer[] {
   const servers: RTCIceServer[] = [
     { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
   ];
+  // Only a configured TURN is added: unreachable relays slow ICE gathering
+  // down (each allocation has to time out) and can push the connection to
+  // "failed" on networks where the direct path would have worked.
   const turn = process.env.NEXT_PUBLIC_TURN_URL;
   if (turn) {
     servers.push({
       urls: turn.split(",").map((u) => u.trim()),
       username: process.env.NEXT_PUBLIC_TURN_USER,
       credential: process.env.NEXT_PUBLIC_TURN_PASS,
-    });
-  } else {
-    // Public relay so calls still connect behind strict NATs / mobile
-    // carriers when no private TURN is configured (best effort).
-    servers.push({
-      urls: ["turn:openrelay.metered.ca:80", "turn:openrelay.metered.ca:443", "turn:openrelay.metered.ca:443?transport=tcp"],
-      username: "openrelayproject",
-      credential: "openrelayproject",
     });
   }
   return servers;
@@ -110,6 +105,10 @@ export class CallSession {
   private alive = true;
   private pendingIce: RTCIceCandidateInit[] = [];
   private offerSent = false;
+  private negotiatedAt: number | null = null;
+  private restarts = 0;
+  private watchdog: number | null = null;
+  private dropTimer: number | null = null;
   phase: CallPhase = "ringing";
   video: boolean;
   startedAt: number | null = null;
@@ -261,7 +260,10 @@ export class CallSession {
 
   private ensurePeer(): RTCPeerConnection {
     if (this.pc) return this.pc;
-    const pc = new RTCPeerConnection({ iceServers: iceServers() });
+    // max-bundle keeps audio and video on a single ICE/DTLS transport: with a
+    // polled signalling channel that is both faster to connect and immune to a
+    // second, media-less m-line holding `connectionState` at "connecting".
+    const pc = new RTCPeerConnection({ iceServers: iceServers(), bundlePolicy: "max-bundle" });
     this.pc = pc;
     this.local?.getTracks().forEach((t) => pc.addTrack(t, this.local!));
     // Always negotiate a video m-line so either side can turn the camera on later.
@@ -282,27 +284,79 @@ export class CallSession {
       notify();
     };
     pc.onconnectionstatechange = () => {
-      if (pc.connectionState === "connected") {
-        this.startedAt ??= Date.now();
-        this.setPhase("connected");
-        void this.sendState();
-      } else if (pc.connectionState === "failed") {
-        this.finish("failed");
-      } else if (pc.connectionState === "disconnected") {
-        window.setTimeout(() => {
-          if (this.alive && pc.connectionState === "disconnected") this.finish("disconnected");
-        }, 8000);
-      }
+      if (pc.connectionState === "connected") this.markConnected();
+      else if (pc.connectionState === "failed") this.recover("failed");
+      else if (pc.connectionState === "disconnected") this.scheduleDrop();
+    };
+    // Some browsers keep `connectionState` at "connecting" even after media
+    // flows, so the ICE transport is the second (and earlier) signal.
+    pc.oniceconnectionstatechange = () => {
+      const st = pc.iceConnectionState;
+      if (st === "connected" || st === "completed") this.markConnected();
+      else if (st === "failed") this.recover("failed");
+      else if (st === "disconnected") this.scheduleDrop();
     };
     return pc;
   }
 
-  private async makeOffer() {
+  private markConnected() {
+    if (!this.alive) return;
+    if (this.dropTimer) {
+      window.clearTimeout(this.dropTimer);
+      this.dropTimer = null;
+    }
+    this.clearWatchdog();
+    this.startedAt ??= Date.now();
+    if (this.phase !== "connected") {
+      this.setPhase("connected");
+      void this.sendState();
+    }
+  }
+
+  private scheduleDrop() {
+    if (this.dropTimer || !this.alive) return;
+    this.dropTimer = window.setTimeout(() => {
+      this.dropTimer = null;
+      const st = this.pc?.iceConnectionState;
+      if (this.alive && (st === "disconnected" || st === "failed")) this.recover("disconnected");
+    }, 10_000);
+  }
+
+  /** A broken path is retried with an ICE restart before the call is dropped. */
+  private recover(reason: string) {
+    if (!this.alive) return;
+    if (this.restarts >= 2) return this.finish(reason);
+    this.restarts++;
+    this.armWatchdog();
+    if (this.isCaller) void this.makeOffer(true).catch(() => undefined);
+    else void talkApi.signal(this.call.id, { kind: "restart" } satisfies SignalPayload).catch(() => undefined);
+  }
+
+  /** Negotiation that never reaches a connected transport is retried, then failed. */
+  private armWatchdog() {
+    this.clearWatchdog();
+    this.negotiatedAt ??= Date.now();
+    this.watchdog = window.setTimeout(() => {
+      this.watchdog = null;
+      if (!this.alive || this.phase === "connected") return;
+      const waited = Date.now() - (this.negotiatedAt ?? Date.now());
+      if (this.restarts < 2 && waited < 45_000) this.recover("stalled");
+      else this.finish("failed");
+    }, 15_000);
+  }
+
+  private clearWatchdog() {
+    if (this.watchdog) window.clearTimeout(this.watchdog);
+    this.watchdog = null;
+  }
+
+  private async makeOffer(iceRestart = false) {
     const pc = this.ensurePeer();
-    const offer = await pc.createOffer();
+    const offer = await pc.createOffer(iceRestart ? { iceRestart: true } : undefined);
     await pc.setLocalDescription(offer);
     await talkApi.signal(this.call.id, { kind: "offer", sdp: offer.sdp ?? "" } satisfies SignalPayload);
     this.offerSent = true;
+    this.armWatchdog();
   }
 
   private async renegotiate() {
@@ -319,6 +373,7 @@ export class CallSession {
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
         await talkApi.signal(this.call.id, { kind: "answer", sdp: answer.sdp ?? "" } satisfies SignalPayload);
+        this.armWatchdog();
         break;
       }
       case "answer": {
@@ -337,6 +392,9 @@ export class CallSession {
       }
       case "state":
         this.ev.onPeerState({ muted: !!payload.muted, camera: !!payload.camera, screen: !!payload.screen });
+        break;
+      case "restart":
+        if (this.isCaller && this.phase !== "ended") await this.makeOffer(true).catch(() => undefined);
         break;
       case "bye":
         this.finish("remote");
@@ -387,6 +445,9 @@ export class CallSession {
     this.alive = false;
     if (this.pollTimer) window.clearTimeout(this.pollTimer);
     this.pollTimer = null;
+    this.clearWatchdog();
+    if (this.dropTimer) window.clearTimeout(this.dropTimer);
+    this.dropTimer = null;
     this.screenTrack?.stop();
     this.local?.getTracks().forEach((t) => t.stop());
     this.local = null;
