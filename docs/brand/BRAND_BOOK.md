@@ -123,6 +123,7 @@
 | گرادیان | Teal ۵۰۰ → ۷۰۰ (۴۵°) | Sky ۴۰۰ → ۷۰۰ (۴۵°) |
 | فایل | `public/brand/asameet-logo.svg` | `public/brand/asatalk-logo.svg` |
 | مارک تک‌رنگ | `public/brand/asa-mark.svg` (currentColor) | همان |
+| نسخه‌های تکمیلی آسامیت | `asameet-mark.svg`, `-mono`, `-reversed`، و آیکون‌های ماژول `asameet-meet/class/messenger/admin.svg` | — |
 
 **فضای امن (Clear space):** حداقل به اندازهٔ ارتفاع «جرقه» × ۲ از هر طرف.
 **حداقل اندازه:** ۲۴px دیجیتال / ۸mm چاپ (در این اندازه صندلی‌ها و دُم حذف می‌شوند؛ نسخهٔ «Mark only»).
