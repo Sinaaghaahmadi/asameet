@@ -28,6 +28,7 @@ import type { User } from "@/lib/types";
 import { useTalkStore } from "@/stores/talk-store";
 import { GBtn, TalkAvatar } from "./glass";
 import { Mascot } from "./mascots";
+import { TalkPortal } from "./portal";
 
 type Step =
   "lang" | "splash" | "signin" | "password" | "otp" | "profile" | "perm";
@@ -763,40 +764,42 @@ function PermissionSheets({ onDone }: { onDone: () => void }) {
       <div className="flex flex-1 flex-col items-center justify-center px-6 opacity-60">
         <Mascot pose="wave" size={150} />
       </div>
-      <div className="tg-sheet-backdrop" />
-      <div className="tg-sheet tg-glass-strong">
-        <span className="tg-sheet-handle" />
-        <Mascot pose={notif ? "bell" : "video"} size={120} />
-        <h2 className="text-[20px] font-black">
-          {t(notif ? "talk.onboard.notifTitle" : "talk.onboard.micTitle")}
-        </h2>
-        <p className="tg-muted text-body leading-6">
-          {t(notif ? "talk.onboard.notifSub" : "talk.onboard.micSub")}
-        </p>
-        <GBtn
-          variant="primary"
-          size="lg"
-          className="h-[52px] w-full"
-          disabled={busy}
-          onClick={() => void (notif ? allowNotif() : allowMedia())}
-        >
-          {busy ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : notif ? (
-            <Bell className="size-4" />
-          ) : (
-            <ScanFace className="size-4" />
-          )}
-          {t(notif ? "talk.onboard.turnOn" : "talk.onboard.allow")}
-        </GBtn>
-        <button
-          type="button"
-          className="tg-muted text-sm font-semibold"
-          onClick={() => (notif ? setStage("media") : onDone())}
-        >
-          {t("talk.onboard.notNow")}
-        </button>
-      </div>
+      <TalkPortal>
+        <div className="tg-sheet-backdrop" />
+        <div className="tg-sheet tg-glass-strong">
+          <span className="tg-sheet-handle" />
+          <Mascot pose={notif ? "bell" : "video"} size={120} />
+          <h2 className="text-[20px] font-black">
+            {t(notif ? "talk.onboard.notifTitle" : "talk.onboard.micTitle")}
+          </h2>
+          <p className="tg-muted text-body leading-6">
+            {t(notif ? "talk.onboard.notifSub" : "talk.onboard.micSub")}
+          </p>
+          <GBtn
+            variant="primary"
+            size="lg"
+            className="h-[52px] w-full"
+            disabled={busy}
+            onClick={() => void (notif ? allowNotif() : allowMedia())}
+          >
+            {busy ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : notif ? (
+              <Bell className="size-4" />
+            ) : (
+              <ScanFace className="size-4" />
+            )}
+            {t(notif ? "talk.onboard.turnOn" : "talk.onboard.allow")}
+          </GBtn>
+          <button
+            type="button"
+            className="tg-muted text-sm font-semibold"
+            onClick={() => (notif ? setStage("media") : onDone())}
+          >
+            {t("talk.onboard.notNow")}
+          </button>
+        </div>
+      </TalkPortal>
     </div>
   );
 }

@@ -12,6 +12,7 @@ import type { User } from "@/lib/types";
 import { GBtn, TalkAvatar, hueFor } from "./glass";
 import { Mascot } from "./mascots";
 import { useTalk } from "./talk-data";
+import { TalkPortal } from "./portal";
 import { useTalkStore } from "@/stores/talk-store";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -189,70 +190,72 @@ export function StatusViewer({
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="talk z-scrim inset-0 flex w-full flex-col text-white"
-      style={{
-        background: `linear-gradient(160deg, oklch(0.55 0.18 ${hue}), oklch(0.35 0.16 ${(hue + 40) % 360}))`,
-      }}
-      role="dialog"
-      onClick={onClose}
-    >
-      <div className="tg-safe-top px-3 pt-3">
-        <div className="h-[3px] overflow-hidden rounded-full bg-white/30">
-          <div
-            className="h-full bg-white transition-[width] duration-75"
-            style={{ width: `${progress * 100}%` }}
-          />
-        </div>
-        <div className="mt-3 flex items-center gap-2.5">
-          <TalkAvatar name={user.displayName} src={user.avatar} size="sm" />
-          <span className="text-item font-bold">{user.displayName}</span>
-          <span className="text-[12px] text-white/70">
-            {user.noteAt ? noteAge(user.noteAt, t, locale) : ""}
-          </span>
-          <button
-            type="button"
-            className="ms-auto rounded-full p-2 hover:bg-white/15"
-            aria-label={t("common.close")}
-            onClick={onClose}
-          >
-            <X className="size-5" />
-          </button>
-        </div>
-      </div>
-      <div className="flex flex-1 items-center justify-center px-8 text-center">
-        <p className="text-display leading-relaxed font-black drop-shadow">
-          {user.note}
-        </p>
-      </div>
-      <div
-        className="flex items-center gap-2 px-4 pb-8"
-        onClick={(e) => e.stopPropagation()}
+    <TalkPortal>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="talk z-call fixed inset-0 flex flex-col text-white"
+        style={{
+          background: `linear-gradient(160deg, oklch(0.55 0.18 ${hue}), oklch(0.35 0.16 ${(hue + 40) % 360}))`,
+        }}
+        role="dialog"
+        onClick={onClose}
       >
-        <input
-          value={reply}
-          onChange={(e) => setReply(e.target.value)}
-          placeholder={t("talk.home.replyToStatus")}
-          className="tg-glass h-11 flex-1 rounded-full bg-white/15 px-4 text-[13.5px] text-white outline-none placeholder:text-white/70"
-          onKeyDown={(e) =>
-            e.key === "Enter" && reply.trim() && void send(reply.trim())
-          }
-        />
-        {["❤️", "👏"].map((e) => (
-          <button
-            key={e}
-            type="button"
-            className="tg-glass flex size-11 items-center justify-center rounded-full text-[20px] transition hover:scale-110"
-            onClick={() => void send(e)}
-          >
-            {e}
-          </button>
-        ))}
-      </div>
-    </motion.div>
+        <div className="tg-safe-top px-3 pt-3">
+          <div className="h-[3px] overflow-hidden rounded-full bg-white/30">
+            <div
+              className="h-full bg-white transition-[width] duration-75"
+              style={{ width: `${progress * 100}%` }}
+            />
+          </div>
+          <div className="mt-3 flex items-center gap-2.5">
+            <TalkAvatar name={user.displayName} src={user.avatar} size="sm" />
+            <span className="text-item font-bold">{user.displayName}</span>
+            <span className="text-[12px] text-white/70">
+              {user.noteAt ? noteAge(user.noteAt, t, locale) : ""}
+            </span>
+            <button
+              type="button"
+              className="ms-auto rounded-full p-2 hover:bg-white/15"
+              aria-label={t("common.close")}
+              onClick={onClose}
+            >
+              <X className="size-5" />
+            </button>
+          </div>
+        </div>
+        <div className="flex flex-1 items-center justify-center px-8 text-center">
+          <p className="text-display leading-relaxed font-black drop-shadow">
+            {user.note}
+          </p>
+        </div>
+        <div
+          className="flex items-center gap-2 px-4 pb-8"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <input
+            value={reply}
+            onChange={(e) => setReply(e.target.value)}
+            placeholder={t("talk.home.replyToStatus")}
+            className="tg-glass h-11 flex-1 rounded-full bg-white/15 px-4 text-[13.5px] text-white outline-none placeholder:text-white/70"
+            onKeyDown={(e) =>
+              e.key === "Enter" && reply.trim() && void send(reply.trim())
+            }
+          />
+          {["❤️", "👏"].map((e) => (
+            <button
+              key={e}
+              type="button"
+              className="tg-glass flex size-11 items-center justify-center rounded-full text-[20px] transition hover:scale-110"
+              onClick={() => void send(e)}
+            >
+              {e}
+            </button>
+          ))}
+        </div>
+      </motion.div>
+    </TalkPortal>
   );
 }
 
@@ -281,7 +284,7 @@ export function NoteEditor({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <>
+    <TalkPortal>
       <div className="tg-sheet-backdrop" onClick={onClose} />
       <div className="tg-sheet tg-glass-strong">
         <span className="tg-sheet-handle" />
@@ -340,7 +343,7 @@ export function NoteEditor({ onClose }: { onClose: () => void }) {
           className="absolute end-6 -top-10 hidden md:block"
         />
       </div>
-    </>
+    </TalkPortal>
   );
 }
 

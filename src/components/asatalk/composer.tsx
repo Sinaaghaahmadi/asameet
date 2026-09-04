@@ -43,6 +43,7 @@ import type { Message, MessageMeta, MessageType, User } from "@/lib/types";
 import { useTalkStore } from "@/stores/talk-store";
 import { GBtn, TalkAvatar } from "./glass";
 import { STICKER_PACK, Sticker } from "./stickers";
+import { TalkPortal } from "./portal";
 
 export interface OutgoingMessage {
   content: string;
@@ -509,7 +510,7 @@ export function Composer({
 
       {/* attach sheet */}
       {attach && (
-        <>
+        <TalkPortal>
           <div className="tg-sheet-backdrop" onClick={() => setAttach(false)} />
           <div className="tg-sheet tg-glass-strong !gap-2">
             <span className="tg-sheet-handle" />
@@ -587,7 +588,7 @@ export function Composer({
               />
             </div>
           </div>
-        </>
+        </TalkPortal>
       )}
       {poll && (
         <PollComposer
@@ -937,7 +938,7 @@ function PollComposer({
   const [multi, setMulti] = useState(false);
   const valid = q.trim().length > 0 && opts.filter((o) => o.trim()).length >= 2;
   return (
-    <>
+    <TalkPortal>
       <div className="tg-sheet-backdrop" onClick={onClose} />
       <div className="tg-sheet tg-glass-strong !items-stretch !text-start">
         <span className="tg-sheet-handle self-center" />
@@ -1014,7 +1015,7 @@ function PollComposer({
           {t("talk.msg.create")}
         </GBtn>
       </div>
-    </>
+    </TalkPortal>
   );
 }
 
@@ -1036,7 +1037,7 @@ function ContactPicker({
       u.username.includes(q.toLowerCase()),
   );
   return (
-    <>
+    <TalkPortal>
       <div className="tg-sheet-backdrop" onClick={onClose} />
       <div className="tg-sheet tg-glass-strong !items-stretch !text-start">
         <span className="tg-sheet-handle self-center" />
@@ -1069,7 +1070,7 @@ function ContactPicker({
           ))}
         </div>
       </div>
-    </>
+    </TalkPortal>
   );
 }
 

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { ACCENTS, WALLPAPERS, useTalkStore } from "@/stores/talk-store";
 import { GBtn } from "./glass";
 import { useTalk } from "./talk-data";
+import { TalkPortal } from "./portal";
 
 const PRESETS: {
   id: string;
@@ -62,7 +63,7 @@ export function ChatThemeSheet({
   }
 
   return (
-    <>
+    <TalkPortal>
       <div className="tg-sheet-backdrop" onClick={onClose} />
       <div className="tg-sheet tg-glass-strong !items-stretch !text-start">
         <span className="tg-sheet-handle self-center" />
@@ -127,6 +128,6 @@ export function ChatThemeSheet({
           {t("talk.conv.themeDefault")}
         </GBtn>
       </div>
-    </>
+    </TalkPortal>
   );
 }
