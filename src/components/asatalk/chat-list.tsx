@@ -2,10 +2,7 @@
 
 /** Home: header, notes strip, folder chips, archive row, chat rows, FAB and drawer — per the design hand-off. */
 import { useMemo, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { useTheme } from "next-themes";
-import Link from "next/link";
-import { Archive, ArchiveRestore, ArrowLeft, ArrowRight, BellOff, Bookmark, Check, CheckCheck, Eye, Link2, LogOut, Megaphone, Menu, Moon, Pencil, Phone, Pin, PinOff, Plus, Search, Settings, Trash2, UserPlus, Users, Video, X } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowLeft, ArrowRight, BellOff, Bookmark, Check, CheckCheck, Eye, Link2, LogOut, Megaphone, Menu, Pencil, Pin, PinOff, Search, Trash2, UserPlus, Users, X } from "lucide-react";
 import { talkApi } from "@/lib/talk/api";
 import { chatDisplayName, isSavedChat, messagePreview, peerOf } from "@/lib/talk/format";
 import { useLocale, useT } from "@/lib/i18n";
@@ -13,21 +10,20 @@ import { cn, formatRelativeDay, toLocaleDigits } from "@/lib/utils";
 import type { Chat } from "@/lib/types";
 import { useTalkStore } from "@/stores/talk-store";
 import { JoinDialog } from "./dialogs";
-import { GBtn, GMenu, GMenuContent, GMenuItem, GMenuSeparator, GMenuTrigger, GSearch, GSwitch, TalkAvatar } from "./glass";
-import { AsatalkLogo, Mascot } from "./mascots";
+import { GBtn, GMenu, GMenuContent, GMenuItem, GMenuSeparator, GMenuTrigger, GSearch, TalkAvatar } from "./glass";
+import { Mascot } from "./mascots";
 import { StatusStrip } from "./status";
 import { useTalk } from "./talk-data";
 
-export function ChatList({ onLogout, onAddAccount, onSwitch }: { onLogout: () => void; onAddAccount: () => void; onSwitch: (userId: string) => void }) {
+export function ChatList() {
   const t = useT();
   const { locale, dir } = useLocale();
-  const { me, users, chats, loading, refreshChats, openSaved, showError } = useTalk();
-  const { activeChatId, openChat, folder, setFolder, setPanel, drawerOpen, setDrawer, settings, accounts, drafts } = useTalkStore();
+  const { me, users, chats, loading, refreshChats, showError } = useTalk();
+  const { activeChatId, openChat, folder, setFolder, setPanel, setDrawer, settings, drafts } = useTalkStore();
   const [q, setQ] = useState("");
   const [searching, setSearching] = useState(false);
   const [join, setJoin] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
-  const { resolvedTheme, setTheme } = useTheme();
 
   const folders = useMemo(() => {
     const base = [
@@ -199,79 +195,6 @@ export function ChatList({ onLogout, onAddAccount, onSwitch }: { onLogout: () =>
         </GMenuContent>
       </GMenu>
 
-      {/* ---------- drawer ---------- */}
-      <AnimatePresence>
-        {drawerOpen && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={() => setDrawer(false)} />
-            <motion.aside
-              initial={{ x: dir === "rtl" ? 320 : -320 }}
-              animate={{ x: 0 }}
-              exit={{ x: dir === "rtl" ? 320 : -320 }}
-              transition={{ type: "spring", stiffness: 380, damping: 36 }}
-              className="tg-glass-strong fixed inset-y-0 start-0 z-50 flex w-[310px] max-w-[86vw] flex-col"
-              role="dialog"
-            >
-              {/* gradient head */}
-              <div className="relative overflow-hidden px-5 pb-4 pt-[52px]" style={{ background: "linear-gradient(135deg, var(--talk), var(--talk-strong))" }}>
-                <div className="absolute -end-4 -top-6 opacity-25">
-                  <Mascot pose="wave" size={130} animate={false} />
-                </div>
-                <div className="relative flex items-end justify-between">
-                  <button type="button" className="rounded-full ring-[3px] ring-white/50" onClick={() => setPanel({ kind: "settings", page: "profile" })} aria-label={t("talk.settings.profile")}>
-                    <TalkAvatar name={me.displayName} src={me.avatar} size="xl" className="!size-16 !shadow-xl" />
-                  </button>
-                  <div className="flex items-center gap-1.5">
-                    {accounts
-                      .filter((a) => !a.current)
-                      .slice(0, 3)
-                      .map((a) => (
-                        <button key={a.user.id} type="button" onClick={() => onSwitch(a.user.id)} title={a.user.displayName} className="rounded-full ring-2 ring-white/50 transition hover:scale-110">
-                          <TalkAvatar name={a.user.displayName} src={a.user.avatar} size="sm" className="!size-[34px] !text-xs" />
-                        </button>
-                      ))}
-                    <button type="button" onClick={onAddAccount} aria-label={t("talk.menu.addAccount")} className="flex size-[34px] items-center justify-center rounded-full border-2 border-dashed border-white/70 text-white transition hover:bg-white/15">
-                      <Plus className="size-4" />
-                    </button>
-                  </div>
-                </div>
-                <p className="relative mt-3 truncate text-[17px] font-black text-white">{me.displayName}</p>
-                <p className="relative truncate text-[12px] text-white/85" dir="ltr">
-                  {me.username}@{me.phone ? ` · ${me.phone}` : me.email ? ` · ${me.email}` : ""}
-                </p>
-              </div>
-              <div className="tg-scroll flex-1 p-2">
-                <DrawerItem icon={<Users />} tint={240} label={t("talk.menu.newGroup")} onClick={() => setPanel({ kind: "newGroup" })} />
-                <DrawerItem icon={<Megaphone />} tint={55} label={t("talk.menu.newChannel")} onClick={() => setPanel({ kind: "newChannel" })} />
-                <DrawerItem icon={<UserPlus />} tint={295} label={t("talk.menu.contacts")} onClick={() => setPanel({ kind: "contacts" })} />
-                <DrawerItem icon={<Phone />} tint={150} label={t("talk.menu.calls")} onClick={() => setPanel({ kind: "calls" })} />
-                <DrawerItem icon={<Bookmark />} tint={200} label={t("talk.menu.savedMessages")} onClick={() => void openSaved().then(() => setDrawer(false)).catch(showError)} />
-                <DrawerItem icon={<Settings />} tint={270} label={t("talk.menu.settings")} onClick={() => setPanel({ kind: "settings", page: "root" })} />
-                <div className="tg-row text-[14px] font-medium">
-                  <span className="tg-item-icon" style={{ background: "oklch(0.55 0.15 280)" }}>
-                    <Moon className="size-[18px]" />
-                  </span>
-                  <span className="flex-1">{t("talk.menu.nightMode")}</span>
-                  <GSwitch on={resolvedTheme === "dark"} onChange={(v) => setTheme(v ? "dark" : "light")} label={t("talk.menu.nightMode")} />
-                </div>
-                <div className="my-1.5 h-px bg-[var(--talk-line)]" />
-                <Link href="/?login=1" className="tg-row text-[14px] font-medium">
-                  <span className="tg-item-icon" style={{ background: "oklch(0.6 0.13 175)" }}>
-                    <Video className="size-[18px]" />
-                  </span>
-                  {t("talk.menu.asameet")}
-                </Link>
-                <DrawerItem icon={<LogOut />} tint={20} label={t("talk.settings.logout")} onClick={onLogout} danger />
-              </div>
-              <div className="flex items-center gap-2 border-t tg-line px-4 py-3">
-                <AsatalkLogo size={24} />
-                <span className="tg-muted text-[11px] font-semibold">{t("talk.home.version")}</span>
-              </div>
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
-
       {join && <JoinDialog onClose={() => setJoin(false)} />}
     </section>
   );
@@ -291,17 +214,6 @@ function Skeleton() {
         </div>
       ))}
     </div>
-  );
-}
-
-function DrawerItem({ icon, label, onClick, danger, tint }: { icon: React.ReactNode; label: string; onClick: () => void; danger?: boolean; tint: number }) {
-  return (
-    <button type="button" className={cn("tg-row text-[14px] font-medium", danger && "text-red-500")} onClick={onClick}>
-      <span className="tg-item-icon [&_svg]:size-[18px]" style={{ background: danger ? "oklch(0.6 0.2 25)" : `oklch(0.6 0.15 ${tint})` }}>
-        {icon}
-      </span>
-      {label}
-    </button>
   );
 }
 

@@ -11,6 +11,7 @@ import { ChatInfo } from "./chat-info";
 import { ChatList } from "./chat-list";
 import { ChatView } from "./chat-view";
 import { ContactsPanel, Lightbox, NewChatPanel } from "./dialogs";
+import { TalkDrawer } from "./drawer";
 import { GBtn, GEmpty } from "./glass";
 import { Mascot } from "./mascots";
 import { SettingsPanel } from "./settings/settings-panel";
@@ -63,8 +64,8 @@ export function TalkShell({ onLogout, onAddAccount, onSwitch }: { onLogout: (all
       style={{ ["--talk-h" as string]: accent.h, ["--talk-c" as string]: accent.c, ["--talk-radius" as string]: `${settings.bubbleRadius}px`, ["--talk-font-size" as string]: `${settings.fontSize}px` }}
     >
       {/* ---------- left column: chat list + side panels sliding over it ---------- */}
-      <div className={cn("relative h-full w-full shrink-0 md:w-[360px] lg:w-[400px]", chat && !sidePanel && "hidden md:block")}>
-        <ChatList onLogout={() => onLogout(false)} onAddAccount={onAddAccount} onSwitch={onSwitch} />
+      <div className={cn("relative h-full w-full shrink-0 isolate md:w-[360px] lg:w-[400px]", chat && !sidePanel && "hidden md:block")}>
+        <ChatList />
         <AnimatePresence>
           {sidePanel && (
             <motion.div
@@ -83,7 +84,7 @@ export function TalkShell({ onLogout, onAddAccount, onSwitch }: { onLogout: (all
       </div>
 
       {/* ---------- center (the info panel rides on top of it until there is room for a third column) ---------- */}
-      <div className={cn("relative h-full min-w-0 flex-1", (sidePanel || !chat) && "hidden md:block")}>
+      <div className={cn("relative isolate h-full min-w-0 flex-1", (sidePanel || !chat) && "hidden md:block")}>
         {chat ? (
           <ChatView chat={chat} onBack={() => openChat(null)} onOpenInfo={() => setPanel({ kind: "info" })} />
         ) : (
@@ -132,6 +133,7 @@ export function TalkShell({ onLogout, onAddAccount, onSwitch }: { onLogout: (all
         )}
       </AnimatePresence>
 
+      <TalkDrawer onLogout={() => onLogout(false)} onAddAccount={onAddAccount} onSwitch={onSwitch} />
       <Lightbox />
     </div>
   );
