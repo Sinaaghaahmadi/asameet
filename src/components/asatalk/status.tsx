@@ -17,8 +17,12 @@ import { useTalkStore } from "@/stores/talk-store";
 const DAY = 24 * 60 * 60 * 1000;
 const SEEN_KEY = "asatalk-notes-seen";
 
-export function hasNote(u: User | undefined | null): u is User & { note: string; noteAt: string } {
-  return !!u?.note && !!u.noteAt && Date.now() - new Date(u.noteAt).getTime() < DAY;
+export function hasNote(
+  u: User | undefined | null,
+): u is User & { note: string; noteAt: string } {
+  return (
+    !!u?.note && !!u.noteAt && Date.now() - new Date(u.noteAt).getTime() < DAY
+  );
 }
 
 function readSeen(): Record<string, string> {
@@ -36,10 +40,18 @@ function markSeen(u: User) {
   } catch {}
 }
 
-export function noteAge(iso: string, t: (k: string) => string, locale: string): string {
-  const mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+export function noteAge(
+  iso: string,
+  t: (k: string) => string,
+  locale: string,
+): string {
+  const mins = Math.max(
+    0,
+    Math.round((Date.now() - new Date(iso).getTime()) / 60000),
+  );
   if (mins < 1) return t("talk.home.justNow");
-  if (mins < 60) return `${toLocaleDigits(mins, locale)} ${t("talk.home.minutesAgo")}`;
+  if (mins < 60)
+    return `${toLocaleDigits(mins, locale)} ${t("talk.home.minutesAgo")}`;
   return `${toLocaleDigits(Math.round(mins / 60), locale)} ${t("talk.home.hoursAgo")}`;
 }
 
@@ -50,36 +62,73 @@ export function StatusStrip() {
   const [viewing, setViewing] = useState<User | null>(null);
   const [editing, setEditing] = useState(false);
   const [seenTick, setSeenTick] = useState(0);
-  const withNotes = useMemo(() => userList.filter((u) => u.id !== me.id && hasNote(u)).sort((a, b) => (b.noteAt ?? "").localeCompare(a.noteAt ?? "")), [userList, me.id]);
-  const seen = useMemo(() => (typeof window === "undefined" ? {} : readSeen()), [seenTick]); // eslint-disable-line react-hooks/exhaustive-deps
+  const withNotes = useMemo(
+    () =>
+      userList
+        .filter((u) => u.id !== me.id && hasNote(u))
+        .sort((a, b) => (b.noteAt ?? "").localeCompare(a.noteAt ?? "")),
+    [userList, me.id],
+  );
+  const seen = useMemo(
+    () => (typeof window === "undefined" ? {} : readSeen()),
+    [seenTick],
+  ); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
       <div className="no-scrollbar flex gap-3.5 overflow-x-auto px-4 pb-2 pt-3">
-        <button type="button" className="flex w-[64px] shrink-0 flex-col items-center gap-1.5" onClick={() => setEditing(true)}>
+        <button
+          type="button"
+          className="flex w-[64px] shrink-0 flex-col items-center gap-1.5"
+          onClick={() => setEditing(true)}
+        >
           <span className="relative">
             {hasNote(me) ? (
               <span className="tg-status-ring">
-                <TalkAvatar name={me.displayName} src={me.avatar} size="lg" className="!size-full border-2 border-[var(--talk-bg)]" />
+                <TalkAvatar
+                  name={me.displayName}
+                  src={me.avatar}
+                  size="lg"
+                  className="!size-full border-2 border-[var(--talk-bg)]"
+                />
               </span>
             ) : (
               <span className="tg-status-add">
                 <Plus className="size-6" />
               </span>
             )}
-            {hasNote(me) && <span className="tg-note-bubble tg-glass-strong">{me.note}</span>}
+            {hasNote(me) && (
+              <span className="tg-note-bubble tg-glass-strong">{me.note}</span>
+            )}
           </span>
-          <span className="w-full truncate text-center text-[11px] font-semibold">{t("talk.home.yourStatus")}</span>
+          <span className="w-full truncate text-center text-[11px] font-semibold">
+            {t("talk.home.yourStatus")}
+          </span>
         </button>
         {withNotes.map((u) => (
-          <button key={u.id} type="button" className="flex w-[64px] shrink-0 flex-col items-center gap-1.5" onClick={() => setViewing(u)}>
+          <button
+            key={u.id}
+            type="button"
+            className="flex w-[64px] shrink-0 flex-col items-center gap-1.5"
+            onClick={() => setViewing(u)}
+          >
             <span className="relative">
-              <span className="tg-status-ring" data-seen={seen[u.id] === u.noteAt}>
-                <TalkAvatar name={u.displayName} src={u.avatar} size="lg" className="!size-full border-2 border-[var(--talk-bg)]" />
+              <span
+                className="tg-status-ring"
+                data-seen={seen[u.id] === u.noteAt}
+              >
+                <TalkAvatar
+                  name={u.displayName}
+                  src={u.avatar}
+                  size="lg"
+                  className="!size-full border-2 border-[var(--talk-bg)]"
+                />
               </span>
               <span className="tg-note-bubble tg-glass-strong">{u.note}</span>
             </span>
-            <span className="tg-muted w-full truncate text-center text-[11px] font-semibold">{u.displayName.split(" ")[0]}</span>
+            <span className="tg-muted w-full truncate text-center text-[11px] font-semibold">
+              {u.displayName.split(" ")[0]}
+            </span>
           </button>
         ))}
       </div>
@@ -101,7 +150,13 @@ export function StatusStrip() {
 }
 
 /* ---------- viewer ---------- */
-export function StatusViewer({ user, onClose }: { user: User; onClose: () => void }) {
+export function StatusViewer({
+  user,
+  onClose,
+}: {
+  user: User;
+  onClose: () => void;
+}) {
   const t = useT();
   const { locale } = useLocale();
   const { openPrivateChat, showError } = useTalk();
@@ -122,7 +177,10 @@ export function StatusViewer({ user, onClose }: { user: User; onClose: () => voi
   async function send(text: string) {
     try {
       const chat = await openPrivateChat(user.id);
-      await talkApi.send(chat.id, { content: text, meta: { statusReply: user.note ?? undefined } });
+      await talkApi.send(chat.id, {
+        content: text,
+        meta: { statusReply: user.note ?? undefined },
+      });
       toast.success(t("talk.chat.sent"));
       onClose();
     } catch (e) {
@@ -131,27 +189,65 @@ export function StatusViewer({ user, onClose }: { user: User; onClose: () => voi
   }
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="talk fixed inset-0 z-[70] flex flex-col text-white" style={{ background: `linear-gradient(160deg, oklch(0.55 0.18 ${hue}), oklch(0.35 0.16 ${(hue + 40) % 360}))` }} role="dialog" onClick={onClose}>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="talk w-full inset-0 z-[70] flex flex-col text-white"
+      style={{
+        background: `linear-gradient(160deg, oklch(0.55 0.18 ${hue}), oklch(0.35 0.16 ${(hue + 40) % 360}))`,
+      }}
+      role="dialog"
+      onClick={onClose}
+    >
       <div className="tg-safe-top px-3 pt-3">
         <div className="h-[3px] overflow-hidden rounded-full bg-white/30">
-          <div className="h-full bg-white transition-[width] duration-75" style={{ width: `${progress * 100}%` }} />
+          <div
+            className="h-full bg-white transition-[width] duration-75"
+            style={{ width: `${progress * 100}%` }}
+          />
         </div>
         <div className="mt-3 flex items-center gap-2.5">
           <TalkAvatar name={user.displayName} src={user.avatar} size="sm" />
           <span className="text-[14px] font-bold">{user.displayName}</span>
-          <span className="text-[12px] text-white/70">{user.noteAt ? noteAge(user.noteAt, t, locale) : ""}</span>
-          <button type="button" className="ms-auto rounded-full p-2 hover:bg-white/15" aria-label={t("common.close")} onClick={onClose}>
+          <span className="text-[12px] text-white/70">
+            {user.noteAt ? noteAge(user.noteAt, t, locale) : ""}
+          </span>
+          <button
+            type="button"
+            className="ms-auto rounded-full p-2 hover:bg-white/15"
+            aria-label={t("common.close")}
+            onClick={onClose}
+          >
             <X className="size-5" />
           </button>
         </div>
       </div>
       <div className="flex flex-1 items-center justify-center px-8 text-center">
-        <p className="text-[26px] font-black leading-relaxed drop-shadow">{user.note}</p>
+        <p className="text-[26px] font-black leading-relaxed drop-shadow">
+          {user.note}
+        </p>
       </div>
-      <div className="flex items-center gap-2 px-4 pb-8" onClick={(e) => e.stopPropagation()}>
-        <input value={reply} onChange={(e) => setReply(e.target.value)} placeholder={t("talk.home.replyToStatus")} className="tg-glass h-11 flex-1 rounded-full bg-white/15 px-4 text-[13.5px] text-white placeholder:text-white/70 outline-none" onKeyDown={(e) => e.key === "Enter" && reply.trim() && void send(reply.trim())} />
+      <div
+        className="flex items-center gap-2 px-4 pb-8"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <input
+          value={reply}
+          onChange={(e) => setReply(e.target.value)}
+          placeholder={t("talk.home.replyToStatus")}
+          className="tg-glass h-11 flex-1 rounded-full bg-white/15 px-4 text-[13.5px] text-white placeholder:text-white/70 outline-none"
+          onKeyDown={(e) =>
+            e.key === "Enter" && reply.trim() && void send(reply.trim())
+          }
+        />
         {["❤️", "👏"].map((e) => (
-          <button key={e} type="button" className="tg-glass flex size-11 items-center justify-center rounded-full text-[20px] transition hover:scale-110" onClick={() => void send(e)}>
+          <button
+            key={e}
+            type="button"
+            className="tg-glass flex size-11 items-center justify-center rounded-full text-[20px] transition hover:scale-110"
+            onClick={() => void send(e)}
+          >
             {e}
           </button>
         ))}
@@ -172,7 +268,9 @@ export function NoteEditor({ onClose }: { onClose: () => void }) {
   async function save(clear?: boolean) {
     setBusy(true);
     try {
-      const { user } = await talkApi.updateProfile(clear ? { clearNote: true } : { note: text.trim() });
+      const { user } = await talkApi.updateProfile(
+        clear ? { clearNote: true } : { note: text.trim() },
+      );
       setUser(user);
       onClose();
     } catch {
@@ -189,22 +287,58 @@ export function NoteEditor({ onClose }: { onClose: () => void }) {
         <span className="tg-sheet-handle" />
         <div className="relative">
           <TalkAvatar name={me.displayName} src={me.avatar} size="xl" />
-          <span className={cn("tg-note-bubble tg-glass-strong !-top-4 !max-w-[160px]", !text && "opacity-40")}>{text || "…"}</span>
+          <span
+            className={cn(
+              "tg-note-bubble tg-glass-strong !-top-4 !max-w-[160px]",
+              !text && "opacity-40",
+            )}
+          >
+            {text || "…"}
+          </span>
         </div>
         <h2 className="text-[18px] font-black">{t("talk.home.noteTitle")}</h2>
-        <input value={text} onChange={(e) => setText(e.target.value.slice(0, 60))} placeholder={t("talk.home.notePlaceholder")} className="tg-input w-full" autoFocus maxLength={60} />
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value.slice(0, 60))}
+          placeholder={t("talk.home.notePlaceholder")}
+          className="tg-input w-full"
+          autoFocus
+          maxLength={60}
+        />
         <p className="tg-hint">
-          {t("talk.home.noteHint")} <span dir="ltr">{toLocaleDigits(text.length, locale)}/{toLocaleDigits(60, locale)}</span>
+          {t("talk.home.noteHint")}{" "}
+          <span dir="ltr">
+            {toLocaleDigits(text.length, locale)}/{toLocaleDigits(60, locale)}
+          </span>
         </p>
-        <GBtn variant="primary" size="lg" className="w-full" disabled={busy || !text.trim()} onClick={() => void save()}>
-          {busy ? <Loader2 className="size-4 animate-spin" /> : <Heart className="size-4" />} {t("talk.home.noteSave")}
+        <GBtn
+          variant="primary"
+          size="lg"
+          className="w-full"
+          disabled={busy || !text.trim()}
+          onClick={() => void save()}
+        >
+          {busy ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Heart className="size-4" />
+          )}{" "}
+          {t("talk.home.noteSave")}
         </GBtn>
         {hasNote(me) && (
-          <button type="button" className="text-sm font-semibold text-red-500" onClick={() => void save(true)}>
+          <button
+            type="button"
+            className="text-sm font-semibold text-red-500"
+            onClick={() => void save(true)}
+          >
             {t("talk.home.noteClear")}
           </button>
         )}
-        <Mascot pose="love" size={80} className="absolute -top-10 end-6 hidden md:block" />
+        <Mascot
+          pose="love"
+          size={80}
+          className="absolute -top-10 end-6 hidden md:block"
+        />
       </div>
     </>
   );

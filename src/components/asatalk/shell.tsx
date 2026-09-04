@@ -74,7 +74,7 @@ export function TalkShell({ onLogout, onAddAccount, onSwitch }: { onLogout: (all
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: 40, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="absolute inset-0 z-20"
+              className="absolute inset-0 z-50"
               style={{ background: "var(--talk-bg)" }}
             >
               {sidePanel}
@@ -128,7 +128,7 @@ export function TalkShell({ onLogout, onAddAccount, onSwitch }: { onLogout: (all
             transition={{ duration: 0.22 }}
             className="tg-panel hidden h-full shrink-0 overflow-hidden border-s tg-line xl:block"
           >
-            <div className="h-full w-[340px]">{infoPanel}</div>
+            <div className="h-full w-[340px] z-50">{infoPanel}</div>
           </motion.aside>
         )}
       </AnimatePresence>

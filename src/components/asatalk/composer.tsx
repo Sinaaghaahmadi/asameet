@@ -293,7 +293,7 @@ export function Composer({
   const mentionHits = mention ? Array.from(users.values()).filter((u) => u.username.toLowerCase().startsWith(mention.q) || u.displayName.toLowerCase().includes(mention.q)).slice(0, 5) : [];
 
   return (
-    <div className="tg-safe-bottom relative px-2 pb-2 pt-1 md:px-4">
+    <div className="tg-safe-bottom relative px-2 pb-2 pt-1 mb-2 md:px-4">
       {/* pending media dialog */}
       <AnimatePresence>
         {pending && (

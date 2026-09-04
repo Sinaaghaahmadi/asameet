@@ -189,7 +189,7 @@ export function MessageBubble({
 
   return (
     <div
-      className={cn("group relative flex items-end gap-1.5 px-2", own ? "flex-row-reverse" : "flex-row", selected && "rounded-xl bg-[oklch(0.62_0.16_var(--talk-h)/0.12)]")}
+      className={cn("group relative flex items-end px-2", own ? "flex-row-reverse" : "flex-row", selected && "rounded-xl bg-[oklch(0.62_0.16_var(--talk-h)/0.12)]")}
       data-message-id={msg.id}
     >
       {!own && chat.type !== "private" && (
