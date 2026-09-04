@@ -34,6 +34,13 @@
   --asameet: #0d9488;
   --asameet-light: #14b8a6;
   --asameet-dark: #0f766e;
+  /* Brand book v2 additions */
+  --accent-signal: #d97706;      /* saffron: assistant, decisions, recording — one per view */
+  --success: #059669;
+  --warning: #d97706;
+  --bubble-own: #0d9488;
+  --bubble-own-foreground: #ffffff;
+  --bubble-other: #ffffff;
   --asameet-50: #f0fdfa;
 
   /* Glassmorphism */
@@ -77,6 +84,13 @@
   --asameet: #14b8a6;
   --asameet-light: #2dd4bf;
   --asameet-dark: #0d9488;
+  /* Brand book v2 additions */
+  --accent-signal: #fbbf24;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --bubble-own: #0f766e;
+  --bubble-own-foreground: #f0fdfa;
+  --bubble-other: #1a2c2a;
   --asameet-50: #042f2e;
 
   --glass-bg: rgba(17, 24, 39, 0.65);
