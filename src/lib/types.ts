@@ -7,6 +7,11 @@ export interface User {
   displayName: string;
   avatar: string | null;
   bio?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  note?: string | null;
+  noteAt?: string | null;
+  hasPassword?: boolean;
   role: Role;
   status: UserStatus;
   isOnline: boolean;
@@ -27,6 +32,8 @@ export interface Chat {
   myRole?: "owner" | "admin" | "member";
   isPinned: boolean;
   isMuted?: boolean;
+  isArchived?: boolean;
+  readCount?: number;
   memberIds: string[];
   adminIds?: string[];
   typingUserIds?: string[];
@@ -46,7 +53,10 @@ export type MessageType =
   | "video_note"
   | "sticker"
   | "call"
-  | "system";
+  | "system"
+  | "poll"
+  | "location"
+  | "contact";
 
 /** Free-form per-message metadata (duration, waveform, file name, …). */
 export interface MessageMeta {
@@ -58,6 +68,12 @@ export interface MessageMeta {
   height?: number;
   userId?: string;
   sticker?: string;
+  options?: string[];
+  multi?: boolean;
+  votes?: Record<string, number[]>;
+  lat?: number;
+  lng?: number;
+  statusReply?: string;
   [key: string]: unknown;
 }
 

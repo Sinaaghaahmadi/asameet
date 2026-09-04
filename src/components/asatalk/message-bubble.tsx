@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, CheckCheck, CornerUpLeft, Copy, Download, FileText, Forward, Pencil, Pin, PinOff, Play, Pause, Phone, PhoneMissed, PhoneOutgoing, SquareCheck, Trash2, SmilePlus } from "lucide-react";
+import { BarChart3, Check, CheckCheck, ChevronDown, CornerUpLeft, Copy, Download, FileText, Forward, MapPin, MessageCircle, Pencil, Pin, PinOff, Play, Pause, Phone, PhoneMissed, PhoneOutgoing, SquareCheck, Trash2, SmilePlus } from "lucide-react";
 import { toast } from "sonner";
 import { mediaUrl } from "@/lib/talk/api";
 import { QUICK_REACTIONS } from "@/lib/talk/emoji";
@@ -24,6 +24,8 @@ export interface BubbleActions {
   remove: (m: Message) => void;
   select: (m: Message) => void;
   jumpTo: (id: string) => void;
+  vote: (m: Message, option: number) => void;
+  openContact: (userId: string) => void;
 }
 
 export function MessageBubble({
@@ -37,6 +39,7 @@ export function MessageBubble({
   selected,
   actions,
   canPin,
+  seenBy,
 }: {
   msg: Message;
   chat: Chat;
@@ -48,6 +51,7 @@ export function MessageBubble({
   selected: boolean;
   actions: BubbleActions;
   canPin: boolean;
+  seenBy?: number;
 }) {
   const t = useT();
   const { locale } = useLocale();
@@ -60,6 +64,8 @@ export function MessageBubble({
   const isSticker = msg.type === "sticker" || (msg.type === "text" && isOnlyEmoji(msg.content));
   const time = formatTime(msg.createdAt, locale);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [allReactions, setAllReactions] = useState(false);
+  const senderRole = chat.type !== "private" ? (chat.createdBy === msg.senderId ? "owner" : chat.adminIds?.includes(msg.senderId) ? "admin" : null) : null;
 
   const meta = (
     <span className={cn("tg-meta", isMedia && !msg.content && "tg-meta-overlay")}>
@@ -103,7 +109,7 @@ export function MessageBubble({
       case "video_note":
         return <VideoNote src={mediaUrl(msg.mediaId!)} duration={msg.meta?.duration} />;
       case "voice":
-        return <VoicePlayer src={mediaUrl(msg.mediaId!)} duration={msg.meta?.duration ?? 0} waveform={msg.meta?.waveform ?? []} own={own} />;
+        return <VoicePlayer src={mediaUrl(msg.mediaId!)} duration={msg.meta?.duration ?? 0} waveform={msg.meta?.waveform ?? []} own={own} listened={own && msg.isRead} />;
       case "file":
         return (
           <a href={mediaUrl(msg.mediaId!)} download={msg.meta?.fileName ?? "file"} className="flex items-center gap-3 py-1 pe-2">
@@ -118,6 +124,44 @@ export function MessageBubble({
             </span>
           </a>
         );
+      case "poll":
+        return <PollBody msg={msg} me={me} onVote={(i) => actions.vote(msg, i)} />;
+      case "location":
+        return (
+          <a
+            href={`https://www.openstreetmap.org/?mlat=${msg.meta?.lat}&mlon=${msg.meta?.lng}#map=16/${msg.meta?.lat}/${msg.meta?.lng}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-[240px] overflow-hidden rounded-[12px]"
+          >
+            <span className="relative block h-[130px] bg-[linear-gradient(135deg,oklch(0.85_0.06_150),oklch(0.78_0.08_200))]">
+              <span className="absolute inset-0 opacity-40 [background-image:linear-gradient(oklch(1_0_0/0.5)_1px,transparent_1px),linear-gradient(90deg,oklch(1_0_0/0.5)_1px,transparent_1px)] [background-size:24px_24px]" />
+              <MapPin className="absolute start-1/2 top-1/2 size-9 -translate-x-1/2 -translate-y-full text-red-500 drop-shadow rtl:translate-x-1/2" />
+            </span>
+            <span className="flex items-center gap-2 px-2 py-1.5 text-[12.5px]">
+              <MapPin className="size-4 opacity-70" />
+              <span className="min-w-0 flex-1 truncate">{msg.content || t("talk.msg.location")}</span>
+              <span className="text-[11px] font-bold opacity-80">{t("talk.msg.openMap")}</span>
+            </span>
+          </a>
+        );
+      case "contact": {
+        const c = msg.meta?.userId ? users.get(msg.meta.userId) : undefined;
+        return (
+          <button type="button" className="flex items-center gap-3 py-1 pe-2 text-start" onClick={() => msg.meta?.userId && actions.openContact(msg.meta.userId)}>
+            <TalkAvatar name={c?.displayName ?? msg.content} src={c?.avatar} size="md" />
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-bold">{c?.displayName ?? msg.content}</span>
+              <span className="block text-xs opacity-75" dir="ltr">
+                {c ? `@${c.username}` : t("talk.msg.contact")}
+              </span>
+              <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-[var(--talk)]">
+                <MessageCircle className="size-3" /> {t("talk.conv.message")}
+              </span>
+            </span>
+          </button>
+        );
+      }
       case "call":
         return (
           <span className="flex items-center gap-2 py-1">
@@ -163,7 +207,7 @@ export function MessageBubble({
               own ? "tg-bubble-out" : "tg-bubble-in",
               tail && "tg-tail",
               isMedia && "tg-bubble-media",
-              (msg.type === "sticker" || msg.type === "video_note") && "tg-bubble-sticker"
+              (isSticker || msg.type === "video_note") && "tg-bubble-sticker"
             )}
             onDoubleClick={() => actions.reply(msg)}
           >
@@ -174,8 +218,9 @@ export function MessageBubble({
               </p>
             )}
             {showSender && !own && chat.type !== "private" && msg.type !== "sticker" && (
-              <p className="tg-sender" style={{ color: `oklch(0.55 0.17 ${hueOf(sender?.id ?? "")})` }}>
+              <p className="tg-sender flex items-center gap-1.5" style={{ color: `oklch(0.55 0.17 ${hueOf(sender?.id ?? "")})` }}>
                 {sender?.displayName}
+                {senderRole && <span className="tg-role-badge">{t(`talk.conv.${senderRole}`)}</span>}
               </p>
             )}
             {repliedTo && (
@@ -185,9 +230,9 @@ export function MessageBubble({
               </button>
             )}
             {body}
-            {msg.type !== "sticker" && msg.type !== "video_note" && meta}
+            {!isSticker && msg.type !== "video_note" && meta}
           </div>
-          {(msg.type === "sticker" || msg.type === "video_note") && (
+          {(isSticker || msg.type === "video_note") && (
             <span className={cn("absolute bottom-1 text-[10px] opacity-70", own ? "start-1" : "end-1")}>
               {time} {own && (msg.isRead ? <CheckCheck className="inline size-3" /> : <Check className="inline size-3" />)}
             </span>
@@ -201,6 +246,11 @@ export function MessageBubble({
                 </button>
               ))}
             </div>
+          )}
+          {own && seenBy != null && seenBy > 0 && chat.type === "group" && (
+            <p className="tg-seenby mt-0.5">
+              <CheckCheck className="size-3 text-[var(--talk)]" /> {t("talk.conv.seenBy").replace("{n}", toLocaleDigits(seenBy, locale))}
+            </p>
           )}
           {/* hover affordance (desktop); long-press / right-click opens the same menu */}
           <div
@@ -221,12 +271,17 @@ export function MessageBubble({
           </div>
         </div>
         <GMenuContent align={own ? "end" : "start"} className="max-w-[92vw]">
-          <div className="mb-1 flex max-w-[280px] flex-wrap gap-0.5 px-1">
-            {QUICK_REACTIONS.slice(0, 8).map((e) => (
-              <GMenuItem key={e} className="!p-1 text-xl hover:scale-125" onSelect={() => actions.react(msg, e)}>
+          <div className={cn("tg-quick-reactions mb-1 !px-2 !py-1", allReactions && "max-w-[300px] flex-wrap")}>
+            {QUICK_REACTIONS.slice(0, allReactions ? QUICK_REACTIONS.length : 6).map((e) => (
+              <GMenuItem key={e} className="!p-0.5 !text-[24px] hover:scale-125" onSelect={() => actions.react(msg, e)}>
                 {e}
               </GMenuItem>
             ))}
+            {!allReactions && (
+              <button type="button" className="tg-muted flex size-7 items-center justify-center rounded-full hover:bg-[oklch(0.5_0.05_var(--talk-h)/0.12)]" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAllReactions(true); }} aria-label="more">
+                <ChevronDown className="size-4" />
+              </button>
+            )}
           </div>
           <GMenuSeparator />
           <GMenuItem onSelect={() => actions.reply(msg)}>
@@ -305,7 +360,8 @@ function linkify(text: string) {
 
 /* ---------- Voice player with waveform ---------- */
 
-export function VoicePlayer({ src, duration, waveform, own }: { src: string; duration: number; waveform: number[]; own: boolean }) {
+export function VoicePlayer({ src, duration, waveform, own, listened }: { src: string; duration: number; waveform: number[]; own: boolean; listened?: boolean }) {
+  const t = useT();
   const { locale } = useLocale();
   const audio = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
@@ -365,10 +421,11 @@ export function VoicePlayer({ src, duration, waveform, own }: { src: string; dur
           ))}
         </div>
         <div className="mt-0.5 flex items-center gap-2 text-[11px] opacity-75">
-          <span>{toLocaleDigits(formatDuration(playing ? pos : total), locale)}</span>
+          <span dir="ltr">{toLocaleDigits(formatDuration(playing ? pos : total), locale)}</span>
+          {listened && <span>· {t("talk.conv.listened")}</span>}
           <button
             type="button"
-            className="rounded-full bg-current/15 px-1.5 text-[10px] font-bold"
+            className="tg-speed ms-auto"
             onClick={() => {
               const next = rate === 1 ? 1.5 : rate === 1.5 ? 2 : 1;
               setRate(next);
@@ -419,6 +476,45 @@ function VideoNote({ src, duration }: { src: string; duration?: number }) {
         </span>
       )}
       {duration ? <span className="tg-meta tg-meta-overlay !bottom-3 !inset-inline-end-auto !inset-inline-start-3">{toLocaleDigits(formatDuration(duration), locale)}</span> : null}
+    </div>
+  );
+}
+
+/* ---------- Poll ---------- */
+
+function PollBody({ msg, me, onVote }: { msg: Message; me: User; onVote: (i: number) => void }) {
+  const t = useT();
+  const { locale } = useLocale();
+  const options = msg.meta?.options ?? [];
+  const votes = msg.meta?.votes ?? {};
+  const mine = votes[me.id] ?? [];
+  const counts = options.map((_, i) => Object.values(votes).filter((v) => v.includes(i)).length);
+  const total = Object.values(votes).filter((v) => v.length > 0).length;
+  return (
+    <div className="w-[240px] max-w-full py-0.5">
+      <p className="flex items-center gap-1.5 text-[14px] font-bold">
+        <BarChart3 className="size-4 opacity-70" /> {msg.content}
+      </p>
+      <p className="mb-2 text-[11px] opacity-70">{msg.meta?.multi ? t("talk.msg.multiPoll") : t("talk.msg.anonymousPoll")}</p>
+      <div className="grid gap-1.5">
+        {options.map((o, i) => {
+          const pct = total ? Math.round((counts[i] / total) * 100) : 0;
+          const chosen = mine.includes(i);
+          return (
+            <button key={i} type="button" className="relative overflow-hidden rounded-xl border border-current/15 px-2.5 py-1.5 text-start text-[13px]" onClick={() => onVote(i)}>
+              <span className="absolute inset-y-0 start-0 bg-current/12 transition-[width] duration-500" style={{ width: `${pct}%` }} />
+              <span className="relative flex items-center gap-2">
+                <span className={cn("flex size-4 shrink-0 items-center justify-center rounded-full border-2 border-current/50", chosen && "border-transparent bg-[var(--talk)] text-white")}>{chosen && <Check className="size-3" strokeWidth={3} />}</span>
+                <span className="flex-1">{o}</span>
+                <span className="text-[11px] font-bold opacity-80">{toLocaleDigits(pct, locale)}٪</span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-1.5 text-[11px] opacity-70">
+        {toLocaleDigits(total, locale)} {t("talk.msg.votes")}
+      </p>
     </div>
   );
 }

@@ -27,6 +27,12 @@ export function messagePreview(m: Pick<Message, "type" | "content" | "meta">, t:
       return `${t("talk.msg.sticker")}`;
     case "call":
       return `📞 ${t("talk.msg.call")}`;
+    case "poll":
+      return `📊 ${m.content || t("talk.msg.poll")}`;
+    case "location":
+      return `📍 ${t("talk.msg.location")}`;
+    case "contact":
+      return `👤 ${m.content || t("talk.msg.contact")}`;
     case "system":
       return systemText(m.content, undefined, t);
     default:

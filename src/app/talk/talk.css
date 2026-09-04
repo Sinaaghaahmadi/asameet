@@ -705,13 +705,25 @@
     opacity: 0.2;
   }
 }
+/* the record-lock affordance floats above the mic button (plain CSS wins over
+   Tailwind's layered utilities, which .tg-btn's own position would override) */
+.tg-lock-fab {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  height: 2.25rem;
+  width: 2.25rem;
+  padding: 0;
+}
 .tg-mic-ring {
   position: absolute;
-  inset: -12px;
+  inset: -6px;
   border-radius: 50%;
-  background: oklch(0.62 var(--talk-c) var(--talk-h) / 0.25);
+  background: oklch(0.62 var(--talk-c) var(--talk-h) / 0.22);
   transform: scale(var(--level, 1));
   transition: transform 0.1s ease;
+  pointer-events: none;
 }
 
 /* ---------- Popovers / menus ---------- */
@@ -1057,8 +1069,9 @@
   }
 }
 .tg-emoji-big {
-  font-size: 3.2rem;
-  line-height: 1.2;
+  font-size: 3.4rem;
+  line-height: 1.15;
+  padding-bottom: 14px;
 }
 .tg-video-note {
   border-radius: 50%;
@@ -1137,4 +1150,356 @@
 }
 .tg-safe-bottom {
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ============================================================
+   HANDOFF ADDITIONS (Asatalk Screens.dc.html)
+   ============================================================ */
+
+/* dark is the product default; the handoff ground */
+.dark .talk {
+  --talk-bg: oklch(0.17 0.02 var(--talk-h));
+}
+
+@keyframes asa-twinkle {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  50% { transform: scale(1.35) rotate(20deg); opacity: 0.75; }
+}
+.asa-spark {
+  transform-origin: 100px 26px;
+  animation: asa-twinkle 2.6s ease-in-out infinite;
+}
+@keyframes asa-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+.asa-skel {
+  background: linear-gradient(90deg, oklch(0.5 0.02 var(--talk-h) / 0.18) 25%, oklch(0.5 0.02 var(--talk-h) / 0.32) 50%, oklch(0.5 0.02 var(--talk-h) / 0.18) 75%);
+  background-size: 200% 100%;
+  animation: asa-shimmer 1.4s linear infinite;
+  border-radius: 8px;
+  display: block;
+}
+
+/* phone-style status bar spacer + big page titles */
+.tg-title {
+  font-size: 18px;
+  font-weight: 900;
+}
+
+/* status / notes strip (WhatsApp status rings + Messenger notes) */
+.tg-status-ring {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  padding: 2.5px;
+  background: conic-gradient(var(--talk), oklch(0.78 0.16 70), var(--talk));
+}
+.tg-status-ring[data-seen="true"] {
+  background: oklch(0.4 0.02 var(--talk-h));
+}
+.tg-status-add {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 2px dashed var(--talk);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--talk);
+}
+.tg-note-bubble {
+  position: absolute;
+  top: -16px;
+  inset-inline-start: -8px;
+  border-radius: 14px 14px 14px 3px;
+  padding: 4px 9px;
+  font-size: 10.5px;
+  white-space: nowrap;
+  z-index: 2;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* language tiles */
+.tg-lang {
+  border-radius: 18px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s ease, transform 0.2s var(--talk-spring);
+}
+.tg-lang:active { transform: scale(0.98); }
+.tg-lang[data-active="true"] { border-color: var(--talk); }
+
+/* OTP boxes + numpad */
+.tg-otp {
+  width: 46px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 800;
+}
+.tg-otp[data-active="true"] {
+  border: 2px solid var(--talk);
+  box-shadow: 0 0 0 3px oklch(0.62 0.16 var(--talk-h) / 0.22);
+}
+.tg-caret {
+  width: 2px;
+  height: 26px;
+  background: var(--talk);
+  border-radius: 2px;
+  animation: tg-blink 1s step-end infinite;
+}
+.tg-numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+}
+.tg-numpad button {
+  height: 56px;
+  font-size: 23px;
+  font-weight: 700;
+  border-radius: 12px;
+}
+
+/* bottom sheet */
+.tg-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: oklch(0.1 0.02 var(--talk-h) / 0.55);
+  backdrop-filter: blur(2px);
+}
+.tg-sheet {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 61;
+  border-radius: 28px 28px 0 0;
+  padding: 14px 24px calc(34px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  animation: tg-sheet-in 0.32s var(--talk-ease);
+}
+@media (min-width: 768px) {
+  .tg-sheet { inset-inline: auto; left: 50%; transform: translateX(-50%); width: 420px; border-radius: 28px; bottom: 24px; }
+}
+.tg-sheet-handle {
+  width: 44px;
+  height: 5px;
+  border-radius: 99px;
+  background: var(--talk-line);
+}
+@keyframes tg-sheet-in {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@media (min-width: 768px) {
+  @keyframes tg-sheet-in {
+    from { transform: translate(-50%, 40px); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+  }
+}
+
+/* attach grid */
+.tg-attach-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  padding: 6px 16px 10px;
+  width: 100%;
+}
+.tg-attach-grid button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--talk-fg);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.tg-attach-grid .tg-item-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+}
+
+/* pinned bar indicator */
+.tg-pin-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.tg-pin-bars span {
+  width: 3px;
+  height: 8px;
+  background: var(--talk);
+  border-radius: 2px;
+}
+.tg-pin-bars span[data-dim="true"] { opacity: 0.4; }
+
+/* quick reactions row in the message menu */
+.tg-quick-reactions {
+  border-radius: 999px;
+  padding: 8px 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.tg-quick-reactions button {
+  font-size: 26px;
+  line-height: 1;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: transform 0.2s var(--talk-spring);
+}
+.tg-quick-reactions button:hover { transform: scale(1.25); }
+
+/* seen-by line, admin badge, mention menu */
+.tg-seenby {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  justify-content: flex-end;
+  font-size: 10.5px;
+  padding-inline-end: 8px;
+  color: var(--talk-muted);
+}
+.tg-role-badge {
+  font-size: 10px;
+  padding: 1px 7px;
+  border-radius: 99px;
+  background: oklch(0.62 0.16 var(--talk-h) / 0.18);
+  color: var(--talk);
+  font-weight: 700;
+}
+.tg-mention-menu {
+  position: absolute;
+  bottom: 100%;
+  inset-inline: 10px;
+  margin-bottom: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+/* speed pill on voice */
+.tg-speed {
+  font-size: 11px;
+  font-weight: 800;
+  border: 1px solid currentColor;
+  border-radius: 99px;
+  padding: 2px 7px;
+  opacity: 0.8;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* call screen extras */
+.tg-call-label {
+  font-size: 12px;
+  opacity: 0.8;
+}
+.tg-signal { display: inline-flex; align-items: center; gap: 6px; }
+
+/* channel post card */
+.tg-post {
+  max-width: 92%;
+  width: 100%;
+}
+.tg-post-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--talk-line);
+  color: var(--talk-muted);
+  font-size: 12px;
+}
+
+/* theme picker cards */
+.tg-theme-card {
+  border-radius: 18px;
+  border: 1px solid var(--talk-line);
+  overflow: hidden;
+  cursor: pointer;
+}
+.tg-theme-card[data-active="true"] { border: 2px solid var(--talk); }
+
+/* PIN dots */
+.tg-pin-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid var(--talk-muted);
+}
+.tg-pin-dot[data-on="true"] { background: var(--talk); border-color: var(--talk); }
+
+/* segmented control */
+.tg-seg {
+  display: flex;
+  gap: 4px;
+  background: oklch(0.5 0.04 var(--talk-h) / 0.15);
+  border-radius: 999px;
+  padding: 3px;
+}
+.tg-seg button {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--talk-muted);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.tg-seg button[data-active="true"] {
+  background: linear-gradient(135deg, var(--talk), var(--talk-strong));
+  color: #fff;
+  font-weight: 700;
+}
+
+/* range slider (chat settings) */
+.tg-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 99px;
+  background: linear-gradient(to right, var(--talk) var(--p, 50%), var(--talk-line) var(--p, 50%));
+  outline: none;
+}
+[dir="rtl"] .tg-range {
+  background: linear-gradient(to left, var(--talk) var(--p, 50%), var(--talk-line) var(--p, 50%));
+}
+.tg-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid var(--talk);
+  box-shadow: 0 2px 8px oklch(0 0 0 / 0.2);
+  cursor: pointer;
+}
+.tg-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid var(--talk);
+  cursor: pointer;
 }

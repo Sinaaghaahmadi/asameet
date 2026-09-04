@@ -49,6 +49,9 @@ export interface TalkSettings {
   forwards?: "everybody" | "contacts" | "nobody";
   groupsPrivacy?: "everybody" | "contacts" | "nobody";
   blocked?: string[];
+  pinLock?: string;
+  chatThemes?: Record<string, { accent?: string; wallpaper?: string }>;
+  onboarded?: boolean;
   autoDownloadPhotos?: boolean;
   autoDownloadVideos?: boolean;
   autoDownloadFiles?: boolean;
@@ -62,6 +65,9 @@ export const talkApi = {
   login: (username: string, password: string) => post<{ user: User }>("/api/auth", { username, password }),
   signup: (username: string, password: string, displayName: string) =>
     post<{ user: User }>("/api/auth", { mode: "signup", username, password, displayName }),
+  otpRequest: (identifier: string) => post<{ kind: "phone" | "email"; known: boolean; demoCode?: string; ttl: number }>("/api/auth/otp", { identifier }),
+  otpVerify: (identifier: string, code: string, displayName?: string) =>
+    post<{ user: User; isNew: boolean }>("/api/auth/otp", { identifier, code, displayName }),
   logoutCurrent: () => post<{ user: User | null }>("/api/auth?keep=1", undefined, "DELETE"),
   logoutAll: () => post<{ user: User | null }>("/api/auth", undefined, "DELETE"),
   accounts: () => json<{ accounts: { user: User; current: boolean }[] }>("/api/auth/accounts"),
@@ -71,7 +77,7 @@ export const talkApi = {
   terminateSession: (id?: string) =>
     post<object>(`/api/auth/sessions${id ? `?id=${encodeURIComponent(id)}` : ""}`, undefined, "DELETE"),
 
-  updateProfile: (body: { displayName?: string; username?: string; bio?: string; avatar?: string; clearAvatar?: boolean }) =>
+  updateProfile: (body: { displayName?: string; username?: string; bio?: string; avatar?: string; clearAvatar?: boolean; note?: string; clearNote?: boolean }) =>
     post<{ user: User }>("/api/profile", body, "PATCH"),
   updateSettings: (patch: TalkSettings) => post<{ settings: TalkSettings }>("/api/settings", patch, "PATCH"),
 
@@ -87,7 +93,7 @@ export const talkApi = {
   deleteChat: (id: string) => post<object>(`/api/chats/${id}`, undefined, "DELETE"),
   chatMembers: (id: string, action: "add" | "remove" | "promote" | "demote" | "leave" | "delete", userId?: string) =>
     post<{ chat?: Chat }>(`/api/chats/${id}/members`, { action, userId }),
-  chatPrefs: (id: string, prefs: { pinned?: boolean; muted?: boolean }) => post<object>(`/api/chats/${id}/prefs`, prefs),
+  chatPrefs: (id: string, prefs: { pinned?: boolean; muted?: boolean; archived?: boolean }) => post<object>(`/api/chats/${id}/prefs`, prefs),
   typing: (id: string) => post<object>(`/api/chats/${id}/typing`),
   join: (ref: string) => post<{ chat: Chat }>("/api/chats/join", { ref }),
   previewJoin: (ref: string) => post<{ preview: ChatPreview }>("/api/chats/join", { ref, preview: true }),
@@ -101,7 +107,7 @@ export const talkApi = {
     chatId: string,
     body: {
       messageId: string;
-      action: "pin" | "unpin" | "read" | "react" | "edit" | "delete" | "forward";
+      action: "pin" | "unpin" | "read" | "react" | "edit" | "delete" | "forward" | "vote";
       emoji?: string;
       text?: string;
       targetChatId?: string;
@@ -129,6 +135,7 @@ export type SignalPayload =
   | { kind: "answer"; sdp: string }
   | { kind: "ice"; candidate: RTCIceCandidateInit }
   | { kind: "state"; muted?: boolean; camera?: boolean; screen?: boolean }
+  | { kind: "restart" }
   | { kind: "bye" };
 
 export function mediaUrl(mediaId: string): string {

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowDown, BellOff, Forward, MoreVertical, Phone, Pin, Search, Trash2, Video, X, Eraser, LogOut, Ban, Pencil } from "lucide-react";
+import { ArrowDown, BellOff, Forward, MoreVertical, Palette, Phone, Pin, Search, Trash2, Video, X, Eraser, LogOut, Ban, Pencil, Bell } from "lucide-react";
 import { toast } from "sonner";
 import { talkApi } from "@/lib/talk/api";
 import { blobToBase64 } from "@/lib/talk/media";
@@ -12,10 +12,11 @@ import { playSent } from "@/lib/talk/sounds";
 import { useLocale, useT } from "@/lib/i18n";
 import { cn, toLocaleDigits } from "@/lib/utils";
 import type { Chat, Message } from "@/lib/types";
-import { useTalkStore } from "@/stores/talk-store";
+import { ACCENTS, useTalkStore } from "@/stores/talk-store";
 import { useCalls } from "./calls/call-provider";
 import { Composer, type OutgoingMessage } from "./composer";
 import { ConfirmDialog, ForwardPicker } from "./dialogs";
+import { ChatThemeSheet } from "./chat-theme";
 import { GBtn, GEmpty, GHeader, GMenu, GMenuContent, GMenuItem, GMenuSeparator, GMenuTrigger, GSearch, TalkAvatar } from "./glass";
 import { Mascot } from "./mascots";
 import { MessageBubble, type BubbleActions } from "./message-bubble";
@@ -25,13 +26,16 @@ export function ChatView({ chat, onBack, onOpenInfo }: { chat: Chat; onBack: () 
   const t = useT();
   const { locale } = useLocale();
   const qc = useQueryClient();
-  const { me, users, showError, refreshChats, isBlocked, toggleBlock } = useTalk();
+  const { me, users, showError, refreshChats, isBlocked, toggleBlock, openPrivateChat } = useTalk();
   const { startCall } = useCalls();
   const { replyTo, editing, setReplyTo, setEditing, selected, toggleSelected, clearSelected, settings, openChat } = useTalkStore();
   const [search, setSearch] = useState<string | null>(null);
   const [forward, setForward] = useState<Message[] | null>(null);
   const [confirm, setConfirm] = useState<{ title: string; danger?: boolean; action: () => Promise<void> } | null>(null);
   const [atBottom, setAtBottom] = useState(true);
+  const [themeSheet, setThemeSheet] = useState(false);
+  const chatTheme = settings.chatThemes?.[chat.id];
+  const themeAccent = chatTheme?.accent ? ACCENTS[chatTheme.accent] : null;
   const listRef = useRef<HTMLDivElement>(null);
   const firstUnreadRef = useRef<string | null>(null);
 
@@ -136,8 +140,10 @@ export function ChatView({ chat, onBack, onOpenInfo }: { chat: Chat; onBack: () 
       remove: (m) => setConfirm({ title: t("talk.msg.deleteConfirm"), danger: true, action: () => act({ messageId: m.id, action: "delete" }) }),
       select: (m) => toggleSelected(m.id),
       jumpTo,
+      vote: (m, option) => void act({ messageId: m.id, action: "vote", text: String(option) }),
+      openContact: (userId) => void openPrivateChat(userId).catch(showError),
     }),
-    [act, setReplyTo, setEditing, toggleSelected, jumpTo, t]
+    [act, setReplyTo, setEditing, toggleSelected, jumpTo, t, openPrivateChat, showError]
   );
 
   const typingNames = (chat.typingUserIds ?? []).map((id) => users.get(id)?.displayName).filter(Boolean) as string[];
@@ -158,7 +164,12 @@ export function ChatView({ chat, onBack, onOpenInfo }: { chat: Chat; onBack: () 
   const filtered = search ? messages.filter((m) => m.type !== "system" && m.content.toLowerCase().includes(search.toLowerCase())) : messages;
 
   return (
-    <section className="tg-wall flex h-full min-w-0 flex-1 flex-col" data-wall={settings.wallpaper} aria-label={title}>
+    <section
+      className="tg-wall flex h-full min-w-0 flex-1 flex-col"
+      data-wall={chatTheme?.wallpaper ?? settings.wallpaper}
+      style={themeAccent ? { ["--talk-h" as string]: themeAccent.h, ["--talk-c" as string]: themeAccent.c } : undefined}
+      aria-label={title}
+    >
       {/* ---------- header ---------- */}
       {selected.length > 0 ? (
         <GHeader
@@ -213,18 +224,18 @@ export function ChatView({ chat, onBack, onOpenInfo }: { chat: Chat; onBack: () 
             </button>
           }
           title={
-            <button type="button" onClick={onOpenInfo} className="max-w-full truncate text-start">
+            <button type="button" onClick={onOpenInfo} className="max-w-full truncate text-start text-[14.5px] font-extrabold">
               {title}
               {chat.isMuted && <BellOff className="ms-1 inline size-3 opacity-60" />}
             </button>
           }
           subtitle={
             typingNames.length ? (
-              <span className="text-[var(--talk)]">
-                {subtitle} <span className="tg-typing-dot" /> <span className="tg-typing-dot" /> <span className="tg-typing-dot" />
+              <span className="text-[11.5px] text-[var(--talk)]">
+                {subtitle} <span className="tg-typing-dot" /> <span className="tg-typing-dot" style={{ animationDelay: "0.15s" }} /> <span className="tg-typing-dot" style={{ animationDelay: "0.3s" }} />
               </span>
             ) : (
-              <span className={peer?.isOnline ? "text-[var(--talk)]" : undefined}>{subtitle}</span>
+              <span className={cn("text-[11.5px]", peer?.isOnline && "text-[var(--talk)]")}>{subtitle}</span>
             )
           }
           right={
@@ -260,6 +271,9 @@ export function ChatView({ chat, onBack, onOpenInfo }: { chat: Chat; onBack: () 
                   </GMenuItem>
                   <GMenuItem onSelect={() => void talkApi.chatPrefs(chat.id, { pinned: !chat.isPinned }).then(refreshChats)}>
                     <Pin /> {chat.isPinned ? t("talk.chat.unpin") : t("talk.chat.pin")}
+                  </GMenuItem>
+                  <GMenuItem onSelect={() => setThemeSheet(true)}>
+                    <Palette /> {t("talk.conv.chatTheme")}
                   </GMenuItem>
                   {peerId && !saved && (
                     <GMenuItem onSelect={() => void toggleBlock(peerId)}>
@@ -314,25 +328,31 @@ export function ChatView({ chat, onBack, onOpenInfo }: { chat: Chat; onBack: () 
       {pinned.length > 0 && !search && (
         <button
           type="button"
-          className="tg-panel z-[5] flex items-center gap-2 border-b tg-line px-3 py-1.5 text-start text-xs"
+          className="tg-panel z-[5] flex h-11 items-center gap-2.5 border-b tg-line px-3 text-start text-xs"
           onClick={() => {
             const m = pinned[pinIdx % pinned.length];
             jumpTo(m.id);
             setPinIdx((i) => i + 1);
           }}
         >
-          <span className="h-7 w-0.5 rounded bg-[var(--talk)]" />
-          <span className="min-w-0 flex-1">
-            <span className="block font-bold text-[var(--talk)]">
-              {t("talk.chat.pinnedMessage")}
-              {pinned.length > 1 ? ` #${toLocaleDigits((pinIdx % pinned.length) + 1, locale)}` : ""}
-            </span>
-            <span className="tg-muted block truncate">{pinned[pinIdx % pinned.length].content || t(`talk.msg.${pinned[pinIdx % pinned.length].type === "image" ? "photo" : pinned[pinIdx % pinned.length].type}`)}</span>
+          <span className="tg-pin-bars">
+            {pinned.slice(0, 3).map((m, i) => (
+              <span key={m.id} data-dim={i !== pinIdx % Math.min(3, pinned.length)} />
+            ))}
           </span>
-          {canPin && (
+          <span className="min-w-0 flex-1">
+            <span className="block text-[11.5px] font-bold text-[var(--talk)]">
+              {pinned.length > 1
+                ? t("talk.conv.pinnedOf").replace("{i}", toLocaleDigits((pinIdx % pinned.length) + 1, locale)).replace("{n}", toLocaleDigits(pinned.length, locale))
+                : t("talk.chat.pinnedMessage")}
+            </span>
+            <span className="tg-muted block truncate text-[12px]">{pinned[pinIdx % pinned.length].content || t(`talk.msg.${pinned[pinIdx % pinned.length].type === "image" ? "photo" : pinned[pinIdx % pinned.length].type}`)}</span>
+          </span>
+          {canPin ? (
             <span
               role="button"
-              className="tg-btn tg-btn-ghost tg-icon !h-7 !w-7"
+              className="tg-btn tg-btn-ghost tg-icon !h-8 !w-8"
+              aria-label={t("talk.msg.unpin")}
               onClick={(e) => {
                 e.stopPropagation();
                 void act({ messageId: pinned[pinIdx % pinned.length].id, action: "unpin" });
@@ -340,6 +360,8 @@ export function ChatView({ chat, onBack, onOpenInfo }: { chat: Chat; onBack: () 
             >
               <X className="size-4" />
             </span>
+          ) : (
+            <Pin className="size-4 rotate-45 opacity-50" />
           )}
         </button>
       )}
@@ -389,6 +411,7 @@ export function ChatView({ chat, onBack, onOpenInfo }: { chat: Chat; onBack: () 
                   selected={selected.includes(m.id)}
                   actions={actions}
                   canPin={canPin}
+                  seenBy={chat.type === "group" && m.senderId === me.id && i === filtered.length - 1 ? chat.readCount : undefined}
                 />
               </div>
             );
@@ -401,7 +424,7 @@ export function ChatView({ chat, onBack, onOpenInfo }: { chat: Chat; onBack: () 
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
               type="button"
-              className="tg-btn tg-icon sticky bottom-2 z-[4] ms-auto me-1 !h-11 !w-11"
+              className="tg-btn tg-icon sticky bottom-2 z-[4] me-auto ms-1 !h-11 !w-11 !rounded-full"
               onClick={() => listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" })}
               aria-label={t("talk.chat.jumpToBottom")}
             >
@@ -421,8 +444,13 @@ export function ChatView({ chat, onBack, onOpenInfo }: { chat: Chat; onBack: () 
           </GBtn>
         </div>
       ) : !canPost ? (
-        <div className="tg-panel border-t tg-line px-4 py-3 text-center text-sm">
-          <span className="tg-muted">{t("talk.chat.broadcast")}</span>
+        <div className="tg-safe-bottom flex items-center gap-3 px-3 pb-3 pt-1">
+          <div className="tg-composer flex h-12 flex-1 items-center justify-center px-4 text-[13px]">
+            <span className="tg-muted">{t("talk.chat.broadcast")}</span>
+          </div>
+          <GBtn className="h-12 !rounded-full px-4 text-[13px]" onClick={() => void talkApi.chatPrefs(chat.id, { muted: !chat.isMuted }).then(refreshChats)}>
+            {chat.isMuted ? <Bell className="size-4" /> : <BellOff className="size-4" />} {chat.isMuted ? t("talk.conv.unmute") : t("talk.conv.mute")}
+          </GBtn>
         </div>
       ) : (
         <Composer
@@ -435,9 +463,11 @@ export function ChatView({ chat, onBack, onOpenInfo }: { chat: Chat; onBack: () 
           onCancelReply={() => setReplyTo(null)}
           onCancelEdit={() => setEditing(null)}
           onTyping={() => void talkApi.typing(chat.id).catch(() => undefined)}
+          chatType={chat.type}
         />
       )}
 
+      {themeSheet && <ChatThemeSheet chatId={chat.id} onClose={() => setThemeSheet(false)} />}
       {forward && (
         <ForwardPicker
           messages={forward}

@@ -20,6 +20,7 @@ interface TalkData {
   users: Map<string, User>;
   userList: User[];
   chats: Chat[];
+  loading: boolean;
   chatById: (id: string) => Chat | undefined;
   refreshChats: () => Promise<unknown>;
   refreshUsers: () => Promise<unknown>;
@@ -158,6 +159,7 @@ export function TalkDataProvider({ me, children }: { me: User; children: React.R
       users,
       userList: usersQ.data?.users ?? [],
       chats,
+      loading: chatsQ.isLoading,
       chatById: (id) => chats.find((c) => c.id === id),
       refreshChats: () => qc.invalidateQueries({ queryKey: ["talk", "chats"] }),
       refreshUsers: () => qc.invalidateQueries({ queryKey: ["talk", "users"] }),
@@ -168,7 +170,7 @@ export function TalkDataProvider({ me, children }: { me: User; children: React.R
       openSaved,
       showError,
     }),
-    [me, users, usersQ.data, chats, qc, saveSettings, isBlocked, toggleBlock, openPrivateChat, openSaved, showError]
+    [me, users, usersQ.data, chats, chatsQ.isLoading, qc, saveSettings, isBlocked, toggleBlock, openPrivateChat, openSaved, showError]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
