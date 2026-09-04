@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
-import { accountTokens, attachAccounts, errorResponse, rpc, sessionToken } from "@/lib/server/api";
+import {
+  accountTokens,
+  attachAccounts,
+  errorResponse,
+  rpc,
+  sessionToken,
+} from "@/lib/server/api";
 import type { User } from "@/lib/types";
 
 /** Every account signed in on this browser; expired ones are pruned. */
@@ -10,7 +16,9 @@ export async function GET() {
     const accounts: { user: User; current: boolean }[] = [];
     const alive: string[] = [];
     for (const t of tokens) {
-      const who = await rpc<{ user: User }>("api_me", { p_token: t }).catch(() => null);
+      const who = await rpc<{ user: User }>("api_me", { p_token: t }).catch(
+        () => null,
+      );
       if (!who) continue;
       if (accounts.some((a) => a.user.id === who.user.id)) continue;
       alive.push(t);

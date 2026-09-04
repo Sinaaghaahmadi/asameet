@@ -5,7 +5,14 @@
  * Polling keeps everything fresh (the platform API is request/response); the
  * intervals double as the presence heartbeat.
  */
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { talkApi, TalkApiError, type TalkSettings } from "@/lib/talk/api";
@@ -40,7 +47,13 @@ export function useTalk(): TalkData {
   return ctx;
 }
 
-export function TalkDataProvider({ me, children }: { me: User; children: React.ReactNode }) {
+export function TalkDataProvider({
+  me,
+  children,
+}: {
+  me: User;
+  children: React.ReactNode;
+}) {
   const qc = useQueryClient();
   const t = useT();
   const { settings, patchSettings, openChat, activeChatId } = useTalkStore();
@@ -56,13 +69,17 @@ export function TalkDataProvider({ me, children }: { me: User; children: React.R
     refetchInterval: 4_000,
   });
 
-  const users = useMemo(() => new Map((usersQ.data?.users ?? []).map((u) => [u.id, u])), [usersQ.data]);
+  const users = useMemo(
+    () => new Map((usersQ.data?.users ?? []).map((u) => [u.id, u])),
+    [usersQ.data],
+  );
   const chats = useMemo(() => chatsQ.data?.chats ?? [], [chatsQ.data]);
 
   // Directory refresh when a chat references someone we have not loaded yet.
   useEffect(() => {
     if (!usersQ.data) return;
-    if (chats.some((c) => c.memberIds.some((id) => !users.has(id)))) void usersQ.refetch();
+    if (chats.some((c) => c.memberIds.some((id) => !users.has(id))))
+      void usersQ.refetch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chats, usersQ.data]);
 
@@ -76,20 +93,41 @@ export function TalkDataProvider({ me, children }: { me: User; children: React.R
       const key = `${c.lastMessageAt ?? ""}:${c.lastMessageSenderId ?? ""}`;
       next.set(c.id, key);
       const prev = seen.current.get(c.id);
-      const fresh = primed.current && prev !== undefined && prev !== key && c.lastMessageSenderId && c.lastMessageSenderId !== me.id;
+      const fresh =
+        primed.current &&
+        prev !== undefined &&
+        prev !== key &&
+        c.lastMessageSenderId &&
+        c.lastMessageSenderId !== me.id;
       if (!fresh || c.isMuted) continue;
-      const allowed = c.type === "private" ? settings.notifPrivate : c.type === "group" ? settings.notifGroups : settings.notifChannels;
+      const allowed =
+        c.type === "private"
+          ? settings.notifPrivate
+          : c.type === "group"
+            ? settings.notifGroups
+            : settings.notifChannels;
       if (!allowed) continue;
       if (settings.notifSound) playIncomingMessage();
-      const hidden = typeof document !== "undefined" && (document.hidden || activeChatId !== c.id);
-      if (hidden && typeof Notification !== "undefined" && Notification.permission === "granted") {
-        const sender = users.get(c.lastMessageSenderId ?? "")?.displayName ?? "";
+      const hidden =
+        typeof document !== "undefined" &&
+        (document.hidden || activeChatId !== c.id);
+      if (
+        hidden &&
+        typeof Notification !== "undefined" &&
+        Notification.permission === "granted"
+      ) {
+        const sender =
+          users.get(c.lastMessageSenderId ?? "")?.displayName ?? "";
         const title = c.type === "private" ? sender : `${c.name ?? ""}`;
         const body = settings.notifPreview
           ? `${c.type !== "private" && sender ? `${sender}: ` : ""}${messagePreview({ type: c.lastMessageType ?? "text", content: c.lastMessage ?? "", meta: {} }, t)}`
           : t("talk.name");
         try {
-          const n = new Notification(title || t("talk.name"), { body, tag: c.id, icon: `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/asatalk/icons/icon-192.png` });
+          const n = new Notification(title || t("talk.name"), {
+            body,
+            tag: c.id,
+            icon: `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/asatalk/icons/icon-192.png`,
+          });
           n.onclick = () => {
             window.focus();
             openChat(c.id);
@@ -112,7 +150,7 @@ export function TalkDataProvider({ me, children }: { me: User; children: React.R
       const msg = t(key);
       toast.error(msg === key ? t("talk.errors.generic") : msg);
     },
-    [t]
+    [t],
   );
 
   const saveSettings = useCallback(
@@ -124,26 +162,36 @@ export function TalkDataProvider({ me, children }: { me: User; children: React.R
         showError(e);
       }
     },
-    [patchSettings, showError]
+    [patchSettings, showError],
   );
 
-  const isBlocked = useCallback((userId: string) => (settings.blocked ?? []).includes(userId), [settings.blocked]);
+  const isBlocked = useCallback(
+    (userId: string) => (settings.blocked ?? []).includes(userId),
+    [settings.blocked],
+  );
   const toggleBlock = useCallback(
     async (userId: string) => {
       const list = settings.blocked ?? [];
-      await saveSettings({ blocked: list.includes(userId) ? list.filter((x) => x !== userId) : [...list, userId] });
+      await saveSettings({
+        blocked: list.includes(userId)
+          ? list.filter((x) => x !== userId)
+          : [...list, userId],
+      });
     },
-    [saveSettings, settings.blocked]
+    [saveSettings, settings.blocked],
   );
 
   const openPrivateChat = useCallback(
     async (userId: string) => {
-      const { chat } = await talkApi.createChat({ type: "private", memberIds: [userId] });
+      const { chat } = await talkApi.createChat({
+        type: "private",
+        memberIds: [userId],
+      });
       await qc.invalidateQueries({ queryKey: ["talk", "chats"] });
       openChat(chat.id);
       return chat;
     },
-    [openChat, qc]
+    [openChat, qc],
   );
 
   const openSaved = useCallback(async () => {
@@ -170,7 +218,20 @@ export function TalkDataProvider({ me, children }: { me: User; children: React.R
       openSaved,
       showError,
     }),
-    [me, users, usersQ.data, chats, chatsQ.isLoading, qc, saveSettings, isBlocked, toggleBlock, openPrivateChat, openSaved, showError]
+    [
+      me,
+      users,
+      usersQ.data,
+      chats,
+      chatsQ.isLoading,
+      qc,
+      saveSettings,
+      isBlocked,
+      toggleBlock,
+      openPrivateChat,
+      openSaved,
+      showError,
+    ],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

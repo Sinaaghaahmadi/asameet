@@ -71,13 +71,19 @@ export async function POST(req: NextRequest) {
     const others: string[] = [];
     for (const t of existing) {
       if (t === data.token) continue;
-      const who = await rpc<{ user: User }>("api_me", { p_token: t }).catch(() => null);
+      const who = await rpc<{ user: User }>("api_me", { p_token: t }).catch(
+        () => null,
+      );
       if (who && who.user.id !== data.user.id) others.push(t);
     }
-    if (others.length >= MAX_ACCOUNTS) throw new ApiError("too_many_accounts", 409);
+    if (others.length >= MAX_ACCOUNTS)
+      throw new ApiError("too_many_accounts", 409);
 
     // The token travels only in the httpOnly cookie, never in the body.
-    const res = attachSession(NextResponse.json({ user: data.user }), data.token);
+    const res = attachSession(
+      NextResponse.json({ user: data.user }),
+      data.token,
+    );
     return attachAccounts(res, [data.token, ...others]);
   } catch (e) {
     return errorResponse(e);
@@ -88,7 +94,10 @@ export async function POST(req: NextRequest) {
 export async function GET() {
   try {
     const token = await requireToken();
-    const data = await rpc<{ user: User; settings: Record<string, unknown> }>("api_me", { p_token: token });
+    const data = await rpc<{ user: User; settings: Record<string, unknown> }>(
+      "api_me",
+      { p_token: token },
+    );
     return NextResponse.json(data);
   } catch (e) {
     return errorResponse(e);
@@ -105,14 +114,21 @@ export async function DELETE(req: NextRequest) {
     const token = await sessionToken();
     const keep = req.nextUrl.searchParams.get("keep") === "1";
     const tokens = await accountTokens();
-    if (token) await rpc("api_logout", { p_token: token }).catch(() => undefined);
+    if (token)
+      await rpc("api_logout", { p_token: token }).catch(() => undefined);
     const rest = tokens.filter((t) => t !== token);
     if (!keep) {
-      for (const t of rest) await rpc("api_logout", { p_token: t }).catch(() => undefined);
-      return attachAccounts(clearSession(NextResponse.json({ user: null })), []);
+      for (const t of rest)
+        await rpc("api_logout", { p_token: t }).catch(() => undefined);
+      return attachAccounts(
+        clearSession(NextResponse.json({ user: null })),
+        [],
+      );
     }
     for (const next of rest) {
-      const who = await rpc<{ user: User }>("api_me", { p_token: next }).catch(() => null);
+      const who = await rpc<{ user: User }>("api_me", { p_token: next }).catch(
+        () => null,
+      );
       if (who) {
         const res = attachSession(NextResponse.json({ user: who.user }), next);
         return attachAccounts(res, rest);

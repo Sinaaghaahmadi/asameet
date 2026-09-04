@@ -50,6 +50,37 @@ mobile/asatalk/     پوستهٔ اندروید (Capacitor)
 docs/               مستندات محصول، دیزاین سیستم و برندبوک
 ```
 
+## کلاس‌های تیلویند اختصاصی
+
+توکن‌های دیزاین در `src/app/globals.css` (بلوک `@theme inline`) به تیلویند وصل شده‌اند، پس به‌جای مقدارهای دستی مثل `text-[var(--talk)]` یا `bg-[oklch(0.5_0.05_var(--talk-h)/0.12)]` مستقیم از این‌ها استفاده کنید. چون `inline` هستند، با تغییر رنگ اصلی کاربر و تم هر گفت‌وگو خودکار عوض می‌شوند.
+
+**رنگ‌ها** — با هر پیشوندی (`text-`, `bg-`, `border-`, `ring-`, `fill-`, …):
+
+| کلاس | یعنی |
+| --- | --- |
+| `talk` / `talk-strong` / `talk-soft` | رنگ اصلی، تیره‌تر، روشن‌تر |
+| `talk-fg` / `talk-muted` | متن اصلی / متن کم‌رنگ |
+| `talk-bg` / `talk-surface` / `talk-line` | زمینه / سطح / خط جداکننده |
+| `talk-glass` / `talk-glass-strong` | سطح شیشه‌ای |
+| `talk-wash` / `talk-wash-2` | لایهٔ نازک رنگ اصلی (نقل‌قول، انتخاب) |
+| `talk-hover` | زمینهٔ هاور ردیف‌ها و دکمه‌ها |
+| `talk-neutral` | خاکستری هم‌خانوادهٔ رنگ اصلی |
+
+**اندازهٔ متن** (از هندآف موبایل): `text-meta` ۱۰ · `text-caption` ۱۱ · `text-label` ۱۱.۵ · `text-preview` ۱۲.۵ · `text-body` ۱۳ · `text-item` ۱۴ · `text-name` ۱۴.۵ · `text-title` ۱۸ · `text-heading` ۲۲ · `text-display` ۲۶
+
+**لایه‌بندی (z-index)** — ترتیب کامل در یک جا؛ هر پوشش جدید باید از همین فهرست لایه بگیرد تا دوباره زیر حباب‌ها نیفتد:
+
+`z-chrome` ۱۰ → `z-panel` ۵۰ → `z-info` ۵۵ → `z-menu` ۶۰ → `z-scrim` ۷۰ → `z-drawer` ۷۱ → `z-sheet` ۸۰ → `z-pip` ۸۵ → `z-modal` ۸۸ → `z-call` ۹۰ → `z-lightbox` ۹۵ → `z-lock` ۱۰۰
+
+**بقیه**: `rounded-bubble` (گردی حباب، از تنظیمات کاربر) · `shadow-talk` / `shadow-talk-sm` · `ease-talk` / `ease-spring`
+
+### فرمت کد
+
+```bash
+npm run format        # Prettier + مرتب‌سازی خودکار کلاس‌های تیلویند
+npm run format:check
+```
+
 ## مستندات
 
 - [`docs/ASATALK.md`](docs/ASATALK.md) — راهنمای کامل محصول

@@ -5,7 +5,8 @@ export const de: typeof fa = {
   meta: {
     name: "Asameet",
     tagline: "Die intelligente Gesprächsplattform",
-    description: "Asameet — Messaging, Sprach- und Videoanrufe, Online-Meetings und virtuelle Klassenzimmer, alles auf einer intelligenten und sicheren Plattform.",
+    description:
+      "Asameet — Messaging, Sprach- und Videoanrufe, Online-Meetings und virtuelle Klassenzimmer, alles auf einer intelligenten und sicheren Plattform.",
   },
   common: {
     save: "Speichern",
@@ -76,28 +77,51 @@ export const de: typeof fa = {
       badge: "Version 1.0 ist da",
       title1: "Die intelligente",
       title2: "Gesprächsplattform",
-      rotating: "Nachrichten schreiben,Anrufe führen,Meetings halten,Kurse geben,Protokolle erhalten",
-      subtitle: "Chat, Anrufe, Meetings und Online-Kurse auf einer einzigen Plattform — mit einem Assistenten, der das Gesagte in Protokolle und Entscheidungen verwandelt.",
+      rotating:
+        "Nachrichten schreiben,Anrufe führen,Meetings halten,Kurse geben,Protokolle erhalten",
+      subtitle:
+        "Chat, Anrufe, Meetings und Online-Kurse auf einer einzigen Plattform — mit einem Assistenten, der das Gesagte in Protokolle und Entscheidungen verwandelt.",
       ctaPrimary: "Kostenlos starten",
       ctaSecondary: "Demo ansehen",
-      trust: "Keine Kreditkarte erforderlich • Als PWA installierbar • Auf deinem eigenen Server hostbar",
+      trust:
+        "Keine Kreditkarte erforderlich • Als PWA installierbar • Auf deinem eigenen Server hostbar",
       scroll: "Scrollen",
       liveBadge: "Live",
     },
     features: {
       title: "Eine Plattform, alle Gespräche",
-      subtitle: "Von der kurzen Nachricht bis zur Konferenz mit hundert Teilnehmern — ohne Werkzeugwechsel.",
-      messaging: { title: "Instant Messaging", desc: "Einzel- und Gruppenchats mit Antworten, Weiterleiten, Anpinnen, Reaktionen und Lesebestätigungen — schnell und ohne Verzögerung." },
-      calls: { title: "Sprach- und Videoanrufe", desc: "Glasklare, stabile Einzel- und Gruppenanrufe in HD mit effizientem Datenverbrauch." },
-      meetings: { title: "Meetings und Konferenzen", desc: "Meetingräume mit Bildschirmfreigabe, Handheben, Chat während des Meetings und vollständiger Aufzeichnung per Klick." },
-      classes: { title: "Online-Klassenzimmer", desc: "Interaktives Whiteboard, automatische Anwesenheitserfassung und Werkzeuge zur Schülerverwaltung für Lehrkräfte." },
-      ai: { title: "KI-Assistent", desc: "Automatische Protokolle und Zusammenfassungen, herausgelöste Entscheidungen und smartes Brainstorming während des Gesprächs." },
-      security: { title: "Erweiterte Sicherheit", desc: "Verschlüsselte Kommunikation, rollenbasierte Zugriffskontrolle und die Möglichkeit, alles auf deiner eigenen Infrastruktur zu hosten." },
+      subtitle:
+        "Von der kurzen Nachricht bis zur Konferenz mit hundert Teilnehmern — ohne Werkzeugwechsel.",
+      messaging: {
+        title: "Instant Messaging",
+        desc: "Einzel- und Gruppenchats mit Antworten, Weiterleiten, Anpinnen, Reaktionen und Lesebestätigungen — schnell und ohne Verzögerung.",
+      },
+      calls: {
+        title: "Sprach- und Videoanrufe",
+        desc: "Glasklare, stabile Einzel- und Gruppenanrufe in HD mit effizientem Datenverbrauch.",
+      },
+      meetings: {
+        title: "Meetings und Konferenzen",
+        desc: "Meetingräume mit Bildschirmfreigabe, Handheben, Chat während des Meetings und vollständiger Aufzeichnung per Klick.",
+      },
+      classes: {
+        title: "Online-Klassenzimmer",
+        desc: "Interaktives Whiteboard, automatische Anwesenheitserfassung und Werkzeuge zur Schülerverwaltung für Lehrkräfte.",
+      },
+      ai: {
+        title: "KI-Assistent",
+        desc: "Automatische Protokolle und Zusammenfassungen, herausgelöste Entscheidungen und smartes Brainstorming während des Gesprächs.",
+      },
+      security: {
+        title: "Erweiterte Sicherheit",
+        desc: "Verschlüsselte Kommunikation, rollenbasierte Zugriffskontrolle und die Möglichkeit, alles auf deiner eigenen Infrastruktur zu hosten.",
+      },
       exploreAll: "Alle Funktionen",
     },
     stats: {
       title: "Asameet auf einen Blick",
-      subtitle: "Live-Zahlen der Plattform, jeden Tag zum Tagesende aktualisiert",
+      subtitle:
+        "Live-Zahlen der Plattform, jeden Tag zum Tagesende aktualisiert",
       users: "Aktive Nutzer",
       calls: "Anrufe täglich",
       meetings: "Erfolgreiche Meetings",
@@ -105,22 +129,57 @@ export const de: typeof fa = {
     },
     how: {
       title: "In drei Schritten starten",
-      subtitle: "Von der Anmeldung bis zum ersten Meeting in unter zwei Minuten.",
-      step1: { title: "Konto erstellen", desc: "Registriere dich mit einem einfachen Benutzernamen; ohne Telefonnummer, ohne Umwege." },
-      step2: { title: "Team einladen", desc: "Lade Kolleginnen, Kollegen und Freunde mit einem einzigen Link zu Gruppen und Meetings ein." },
-      step3: { title: "Gespräch starten", desc: "Schreibe Nachrichten, telefoniere, halte Meetings ab — und lass den Assistenten das Protokoll schreiben." },
+      subtitle:
+        "Von der Anmeldung bis zum ersten Meeting in unter zwei Minuten.",
+      step1: {
+        title: "Konto erstellen",
+        desc: "Registriere dich mit einem einfachen Benutzernamen; ohne Telefonnummer, ohne Umwege.",
+      },
+      step2: {
+        title: "Team einladen",
+        desc: "Lade Kolleginnen, Kollegen und Freunde mit einem einzigen Link zu Gruppen und Meetings ein.",
+      },
+      step3: {
+        title: "Gespräch starten",
+        desc: "Schreibe Nachrichten, telefoniere, halte Meetings ab — und lass den Assistenten das Protokoll schreiben.",
+      },
     },
     testimonials: {
       title: "Von Menschen, die es jeden Tag nutzen",
-      subtitle: "Wir haben die Stimmen nicht geglättet — die Kritik steht ebenfalls hier.",
+      subtitle:
+        "Wir haben die Stimmen nicht geglättet — die Kritik steht ebenfalls hier.",
       prev: "Zurück",
       next: "Weiter",
-      t1: { name: "Sara", role: "Produktmanagerin", text: "Endlich müssen wir nicht mehr zwischen Messenger und Meeting-Tool wechseln. Die automatischen Protokolle verschaffen uns beim nächsten Meeting echte Zeit." },
-      t2: { name: "Amir", role: "Programmierdozent", text: "Ich habe meine Kurse komplett verlagert; Whiteboard und automatische Anwesenheitserfassung waren genau das, was mir gefehlt hat." },
-      t3: { name: "Negar", role: "Startup-CTO", text: "Unser Team ist über drei Kontinente verteilt. Volle Unterstützung für Persisch und Rechts-nach-links, ohne Qualitätsverlust im Englischen, war für uns ausschlaggebend." },
-      t4: { name: "Babak", role: "Infrastruktur-Ingenieur", text: "Ich war der schärfste Kritiker: In den ersten zwei Wochen wirkte die Oberfläche auf mich überladen, und die Einstiegsanleitung ist schwach. Doch als ich mich daran gewöhnt hatte, wurden unsere Meetings ein Drittel kürzer — heute empfehle ich es selbst weiter." },
-      t5: { name: "Yasmin", role: "Operations-Managerin", text: "Der Admin-Bereich zeigt mir genau die Sicht, die ich für den Wochenbericht brauche; der Excel-Export erledigt den Rest." },
-      t6: { name: "Kian", role: "Frontend-Entwickler", text: "Ich habe es als PWA auf dem Handy installiert und es ist praktisch nicht von einer nativen App zu unterscheiden. Die Startgeschwindigkeit hat mich überrascht." },
+      t1: {
+        name: "Sara",
+        role: "Produktmanagerin",
+        text: "Endlich müssen wir nicht mehr zwischen Messenger und Meeting-Tool wechseln. Die automatischen Protokolle verschaffen uns beim nächsten Meeting echte Zeit.",
+      },
+      t2: {
+        name: "Amir",
+        role: "Programmierdozent",
+        text: "Ich habe meine Kurse komplett verlagert; Whiteboard und automatische Anwesenheitserfassung waren genau das, was mir gefehlt hat.",
+      },
+      t3: {
+        name: "Negar",
+        role: "Startup-CTO",
+        text: "Unser Team ist über drei Kontinente verteilt. Volle Unterstützung für Persisch und Rechts-nach-links, ohne Qualitätsverlust im Englischen, war für uns ausschlaggebend.",
+      },
+      t4: {
+        name: "Babak",
+        role: "Infrastruktur-Ingenieur",
+        text: "Ich war der schärfste Kritiker: In den ersten zwei Wochen wirkte die Oberfläche auf mich überladen, und die Einstiegsanleitung ist schwach. Doch als ich mich daran gewöhnt hatte, wurden unsere Meetings ein Drittel kürzer — heute empfehle ich es selbst weiter.",
+      },
+      t5: {
+        name: "Yasmin",
+        role: "Operations-Managerin",
+        text: "Der Admin-Bereich zeigt mir genau die Sicht, die ich für den Wochenbericht brauche; der Excel-Export erledigt den Rest.",
+      },
+      t6: {
+        name: "Kian",
+        role: "Frontend-Entwickler",
+        text: "Ich habe es als PWA auf dem Handy installiert und es ist praktisch nicht von einer nativen App zu unterscheiden. Die Startgeschwindigkeit hat mich überrascht.",
+      },
     },
     pricing: {
       title: "Einfache, transparente Preise",
@@ -132,9 +191,25 @@ export const de: typeof fa = {
       perYear: "pro Jahr",
       yearlyNote: "Bei jährlicher Zahlung gehen zwei Monate auf uns.",
       popular: "Am beliebtesten",
-      free: { name: "Kostenlos", price: "0", priceYearly: "0", desc: "Für den Einstieg und die private Nutzung" },
-      pro: { name: "Pro", price: "9", priceYearly: "90", unit: "EUR", desc: "Für wachsende Teams" },
-      enterprise: { name: "Enterprise", price: "Kontaktiere uns", priceYearly: "Kontaktiere uns", desc: "Für große Organisationen" },
+      free: {
+        name: "Kostenlos",
+        price: "0",
+        priceYearly: "0",
+        desc: "Für den Einstieg und die private Nutzung",
+      },
+      pro: {
+        name: "Pro",
+        price: "9",
+        priceYearly: "90",
+        unit: "EUR",
+        desc: "Für wachsende Teams",
+      },
+      enterprise: {
+        name: "Enterprise",
+        price: "Kontaktiere uns",
+        priceYearly: "Kontaktiere uns",
+        desc: "Für große Organisationen",
+      },
       features: {
         chat: "Unbegrenzter Chat",
         oneToOne: "1-zu-1-Anrufe",
@@ -179,16 +254,34 @@ export const de: typeof fa = {
     },
     about: {
       title: "Über uns",
-      subtitle: "Ein 17-köpfiges Team aus aller Welt mit einem gemeinsamen Traum",
-      text1: "Asameet ist unser lang gehegter Traum: eine Gesprächsplattform, die zugleich flüssig und schön ist und die Kraft professioneller Meetings und KI an einem Ort vereint — ohne dass jemand zwischen mehreren Werkzeugen wechseln muss.",
-      text2: "Wir sind 17 Menschen — Entwickler, Designer und Infrastruktur-Ingenieure — und arbeiten vollständig remote, von Teheran bis Toronto, von Berlin bis Sydney. Die Entfernung hat uns nicht aufgehalten; sie hat uns inspiriert, das beste Remote-Work-Tool selbst zu bauen.",
-      text3: "Wir halten unsere eigenen Meetings, Chats und Code-Reviews jeden Tag über Asameet ab. Was wir selbst nicht nutzen würden, veröffentlichen wir nicht.",
-      stats: { members: "Teammitglieder", countries: "Länder", timezones: "Zeitzonen", remote: "Remote" },
+      subtitle:
+        "Ein 17-köpfiges Team aus aller Welt mit einem gemeinsamen Traum",
+      text1:
+        "Asameet ist unser lang gehegter Traum: eine Gesprächsplattform, die zugleich flüssig und schön ist und die Kraft professioneller Meetings und KI an einem Ort vereint — ohne dass jemand zwischen mehreren Werkzeugen wechseln muss.",
+      text2:
+        "Wir sind 17 Menschen — Entwickler, Designer und Infrastruktur-Ingenieure — und arbeiten vollständig remote, von Teheran bis Toronto, von Berlin bis Sydney. Die Entfernung hat uns nicht aufgehalten; sie hat uns inspiriert, das beste Remote-Work-Tool selbst zu bauen.",
+      text3:
+        "Wir halten unsere eigenen Meetings, Chats und Code-Reviews jeden Tag über Asameet ab. Was wir selbst nicht nutzen würden, veröffentlichen wir nicht.",
+      stats: {
+        members: "Teammitglieder",
+        countries: "Länder",
+        timezones: "Zeitzonen",
+        remote: "Remote",
+      },
       values: {
         title: "Unsere Werte",
-        v1: { title: "Nutzer zuerst", desc: "Jede Entscheidung beginnt mit einer Frage: Macht das das Leben der Nutzer einfacher?" },
-        v2: { title: "Transparenz", desc: "Sauberer Code, transparente Preise und ehrliche Kommunikation mit den Nutzern." },
-        v3: { title: "Iranisches Handwerk, globaler Standard", desc: "Mit Liebe im Iran entworfen, für die ganze Welt gebaut." },
+        v1: {
+          title: "Nutzer zuerst",
+          desc: "Jede Entscheidung beginnt mit einer Frage: Macht das das Leben der Nutzer einfacher?",
+        },
+        v2: {
+          title: "Transparenz",
+          desc: "Sauberer Code, transparente Preise und ehrliche Kommunikation mit den Nutzern.",
+        },
+        v3: {
+          title: "Iranisches Handwerk, globaler Standard",
+          desc: "Mit Liebe im Iran entworfen, für die ganze Welt gebaut.",
+        },
       },
     },
     contact: {
@@ -203,17 +296,23 @@ export const de: typeof fa = {
     },
     design: {
       title: "Designsystem",
-      subtitle: "Die Tokens, Materialien und Bewegungen, die sich im gesamten Produkt identisch wiederholen.",
+      subtitle:
+        "Die Tokens, Materialien und Bewegungen, die sich im gesamten Produkt identisch wiederholen.",
       colors: "Farbe",
-      colorsDesc: "Die Palette basiert auf OKLCH, damit die wahrgenommene Helligkeit im hellen wie im dunklen Modus gleichmäßig bleibt.",
+      colorsDesc:
+        "Die Palette basiert auf OKLCH, damit die wahrgenommene Helligkeit im hellen wie im dunklen Modus gleichmäßig bleibt.",
       typography: "Typografie",
-      typographyDesc: "Vazirmatn in sechs Schnitten; die Überschriftenskala ist auf Persisch abgestimmt, damit die Zeilen im rechtsläufigen Text sitzen.",
+      typographyDesc:
+        "Vazirmatn in sechs Schnitten; die Überschriftenskala ist auf Persisch abgestimmt, damit die Zeilen im rechtsläufigen Text sitzen.",
       surfaces: "Glasflächen",
-      surfacesDesc: "Drei Transparenzebenen mit Hintergrundunschärfe: dezent, Standard und kräftig.",
+      surfacesDesc:
+        "Drei Transparenzebenen mit Hintergrundunschärfe: dezent, Standard und kräftig.",
       depth: "3D-Tiefe",
-      depthDesc: "Mehrschichtige Schatten und eine sanfte Perspektive; Tiefe führt den Blick, sie schmückt nicht.",
+      depthDesc:
+        "Mehrschichtige Schatten und eine sanfte Perspektive; Tiefe führt den Blick, sie schmückt nicht.",
       motion: "Bewegung",
-      motionDesc: "Jede Bewegung bleibt unter 400 ms, folgt einer weichen Kurve und respektiert immer die Systemeinstellung für reduzierte Bewegung.",
+      motionDesc:
+        "Jede Bewegung bleibt unter 400 ms, folgt einer weichen Kurve und respektiert immer die Systemeinstellung für reduzierte Bewegung.",
       radius: "Eckenradius",
       principles: "Prinzipien",
       p1: "Inhalt zuerst; ein Effekt steht der Lesbarkeit nie im Weg.",
@@ -224,7 +323,8 @@ export const de: typeof fa = {
     },
     cta: {
       title: "Mach deine Gespräche noch heute intelligent",
-      subtitle: "Schließe dich den Teams an, die ihre Zeit nicht in ergebnislose Meetings stecken.",
+      subtitle:
+        "Schließe dich den Teams an, die ihre Zeit nicht in ergebnislose Meetings stecken.",
       button: "Kostenlos starten",
     },
     footer: {
@@ -258,18 +358,22 @@ export const de: typeof fa = {
     displayName: "Anzeigename",
     submit: "Anmelden",
     signupSubmit: "Konto erstellen",
-    firstAdminNote: "Das erste auf dieser Plattform erstellte Konto wird ihr Administrator.",
+    firstAdminNote:
+      "Das erste auf dieser Plattform erstellte Konto wird ihr Administrator.",
     welcome: "Willkommen",
     networkError: "Netzwerkfehler, bitte erneut versuchen",
     errors: {
       invalid_credentials: "Benutzername oder Passwort falsch",
       username_taken: "Dieser Benutzername ist bereits vergeben",
-      invalid_username: "Benutzernamen: Kleinbuchstaben, Ziffern oder Unterstrich (3–32 Zeichen)",
+      invalid_username:
+        "Benutzernamen: Kleinbuchstaben, Ziffern oder Unterstrich (3–32 Zeichen)",
       weak_password: "Das Passwort muss mindestens 8 Zeichen lang sein",
       invalid_display_name: "Bitte einen Anzeigenamen eingeben",
-      too_many_attempts: "Zu viele Fehlversuche; bitte in ein paar Minuten erneut versuchen",
+      too_many_attempts:
+        "Zu viele Fehlversuche; bitte in ein paar Minuten erneut versuchen",
       suspended: "Dieses Konto wurde von einem Administrator gesperrt",
-      server_error: "Auf dem Server ist ein Fehler aufgetreten; bitte erneut versuchen",
+      server_error:
+        "Auf dem Server ist ein Fehler aufgetreten; bitte erneut versuchen",
     },
   },
   messenger: {
@@ -279,7 +383,12 @@ export const de: typeof fa = {
     newChat: "Neuer Chat",
     noOtherUsers: "Noch niemand anderes hat sich registriert",
     newGroup: "Neue Gruppe",
-    filters: { all: "Alle", unread: "Ungelesen", groups: "Gruppen", channels: "Kanäle" },
+    filters: {
+      all: "Alle",
+      unread: "Ungelesen",
+      groups: "Gruppen",
+      channels: "Kanäle",
+    },
     typeMessage: "Nachricht schreiben...",
     typing: "schreibt...",
     reply: "Antworten",
@@ -295,8 +404,14 @@ export const de: typeof fa = {
     file: "Datei",
     members: "Mitglieder",
     selectChat: "Wähle eine Unterhaltung",
-    selectChatDesc: "Wähle einen Chat aus der Liste oder starte eine neue Unterhaltung.",
-    mediaFilters: { all: "Alle", images: "Bilder", files: "Dateien", links: "Links" },
+    selectChatDesc:
+      "Wähle einen Chat aus der Liste oder starte eine neue Unterhaltung.",
+    mediaFilters: {
+      all: "Alle",
+      images: "Bilder",
+      files: "Dateien",
+      links: "Links",
+    },
     sent: "Gesendet",
     delivered: "Zugestellt",
     read: "Gelesen",
@@ -444,8 +559,21 @@ export const de: typeof fa = {
     platform: "Plattform",
     nodeVersion: "Node-Version",
     healthy: "Betriebsbereit",
-    roles: { user: "Nutzer", teacher: "Lehrkraft", host: "Host", admin: "Administrator" },
-    days: { sat: "Sa", sun: "So", mon: "Mo", tue: "Di", wed: "Mi", thu: "Do", fri: "Fr" },
+    roles: {
+      user: "Nutzer",
+      teacher: "Lehrkraft",
+      host: "Host",
+      admin: "Administrator",
+    },
+    days: {
+      sat: "Sa",
+      sun: "So",
+      mon: "Mo",
+      tue: "Di",
+      wed: "Mi",
+      thu: "Do",
+      fri: "Fr",
+    },
     messagesLabel: "Nachrichten",
     meetingsLabel: "Meetings",
     callsLabel: "Anrufe",

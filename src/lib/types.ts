@@ -139,7 +139,12 @@ export interface AdminStats {
   totalMeetings: number;
   activeCalls: number;
   totalMessages: number;
-  weeklyActivity: { day: string; messages: number; meetings: number; calls: number }[];
+  weeklyActivity: {
+    day: string;
+    messages: number;
+    meetings: number;
+    calls: number;
+  }[];
   roleDistribution: { role: Role; count: number }[];
 }
 

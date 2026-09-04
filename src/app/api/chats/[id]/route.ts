@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { assertSameOrigin, errorResponse, requireToken, rpc } from "@/lib/server/api";
+import {
+  assertSameOrigin,
+  errorResponse,
+  requireToken,
+  rpc,
+} from "@/lib/server/api";
 
 /** Edit group/channel info (admins). */
-export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> },
+) {
   try {
     assertSameOrigin(req);
     const { id } = await ctx.params;
@@ -32,7 +40,10 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
 }
 
 /** Delete a private chat for both sides / clear a group's history (admins). */
-export async function DELETE(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> },
+) {
   try {
     assertSameOrigin(req);
     const { id } = await ctx.params;

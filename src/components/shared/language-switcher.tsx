@@ -10,7 +10,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LOCALES, useLocale } from "@/lib/i18n";
 
-export function LanguageSwitcher({ variant = "ghost" }: { variant?: "ghost" | "glass" }) {
+export function LanguageSwitcher({
+  variant = "ghost",
+}: {
+  variant?: "ghost" | "glass";
+}) {
   const { locale, setLocale } = useLocale();
   return (
     <DropdownMenu>
@@ -24,7 +28,7 @@ export function LanguageSwitcher({ variant = "ghost" }: { variant?: "ghost" | "g
           <DropdownMenuItem key={l.code} onClick={() => setLocale(l.code)}>
             <span className="text-base leading-none">{l.flag}</span>
             <span className="flex-1">{l.label}</span>
-            {locale === l.code && <Check className="size-4 text-primary" />}
+            {locale === l.code && <Check className="text-primary size-4" />}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

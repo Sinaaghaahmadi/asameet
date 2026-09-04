@@ -11,7 +11,9 @@ import { NextResponse, type NextRequest } from "next/server";
  */
 
 const SUPABASE_URL =
-  process.env.ASATALK_SUPABASE_URL ?? process.env.ASAMEET_SUPABASE_URL ?? "https://gqrmsybhjibhhfzfthfh.supabase.co";
+  process.env.ASATALK_SUPABASE_URL ??
+  process.env.ASAMEET_SUPABASE_URL ??
+  "https://gqrmsybhjibhhfzfthfh.supabase.co";
 const SUPABASE_ANON_KEY =
   process.env.ASATALK_SUPABASE_ANON_KEY ??
   process.env.ASAMEET_SUPABASE_ANON_KEY ??
@@ -27,7 +29,7 @@ const SESSION_MAX_AGE = 60 * 60 * 24 * 30; // matches the DB session lifetime
 export class ApiError extends Error {
   constructor(
     public code: string,
-    public status: number
+    public status: number,
   ) {
     super(code);
   }
@@ -49,7 +51,10 @@ const ERROR_STATUS: Record<string, number> = {
 };
 
 /** Call a database RPC; throws ApiError with a stable code on failure. */
-export async function rpc<T>(fn: string, params: Record<string, unknown>): Promise<T> {
+export async function rpc<T>(
+  fn: string,
+  params: Record<string, unknown>,
+): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
@@ -103,7 +108,8 @@ export function assertSameOrigin(req: NextRequest): void {
   if (!origin) return;
   const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host");
   try {
-    if (host && new URL(origin).host !== host) throw new ApiError("forbidden", 403);
+    if (host && new URL(origin).host !== host)
+      throw new ApiError("forbidden", 403);
   } catch (e) {
     if (e instanceof ApiError) throw e;
     throw new ApiError("forbidden", 403); // unparsable Origin
@@ -115,7 +121,9 @@ export function attachSession(res: NextResponse, token: string): NextResponse {
     httpOnly: true,
     sameSite: "lax",
     // Self-hosted plain-HTTP (no TLS yet) can opt out; never do this on a public host.
-    secure: process.env.NODE_ENV === "production" && process.env.ASAMEET_INSECURE_COOKIE !== "1",
+    secure:
+      process.env.NODE_ENV === "production" &&
+      process.env.ASAMEET_INSECURE_COOKIE !== "1",
     path: "/",
     maxAge: SESSION_MAX_AGE,
   });
@@ -137,12 +145,17 @@ export async function accountTokens(): Promise<string[]> {
   return Array.from(new Set(list)).slice(0, MAX_ACCOUNTS);
 }
 
-export function attachAccounts(res: NextResponse, tokens: string[]): NextResponse {
+export function attachAccounts(
+  res: NextResponse,
+  tokens: string[],
+): NextResponse {
   const value = tokens.slice(0, MAX_ACCOUNTS).join("|");
   res.cookies.set(ACCOUNTS_COOKIE, value, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production" && process.env.ASAMEET_INSECURE_COOKIE !== "1",
+    secure:
+      process.env.NODE_ENV === "production" &&
+      process.env.ASAMEET_INSECURE_COOKIE !== "1",
     path: "/",
     maxAge: value ? SESSION_MAX_AGE : 0,
   });

@@ -5,11 +5,25 @@
  * ones while idle, and renders the full-screen call UI (or the floating
  * mini window when minimised).
  */
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { talkApi } from "@/lib/talk/api";
-import { playCallEnd, playConnected, primeAudio, startDialTone, startRingtone } from "@/lib/talk/sounds";
+import {
+  playCallEnd,
+  playConnected,
+  primeAudio,
+  startDialTone,
+  startRingtone,
+} from "@/lib/talk/sounds";
 import { CallSession, type CallPhase, type PeerState } from "@/lib/talk/webrtc";
 import { useT } from "@/lib/i18n";
 import type { Call, User } from "@/lib/types";
@@ -45,7 +59,15 @@ export function useCalls() {
   return c;
 }
 
-export function CallProvider({ me, users, children }: { me: User; users: Map<string, User>; children: React.ReactNode }) {
+export function CallProvider({
+  me,
+  users,
+  children,
+}: {
+  me: User;
+  users: Map<string, User>;
+  children: React.ReactNode;
+}) {
   const t = useT();
   const qc = useQueryClient();
   const settings = useTalkStore((s) => s.settings);
@@ -55,7 +77,10 @@ export function CallProvider({ me, users, children }: { me: User; users: Map<str
   const activeRef = useRef<ActiveCall | null>(null);
   activeRef.current = active;
 
-  const patch = useCallback((p: Partial<ActiveCall>) => setActive((a) => (a ? { ...a, ...p } : a)), []);
+  const patch = useCallback(
+    (p: Partial<ActiveCall>) => setActive((a) => (a ? { ...a, ...p } : a)),
+    [],
+  );
 
   const attach = useCallback(
     (call: Call, peer: User, incoming: boolean) => {
@@ -70,11 +95,18 @@ export function CallProvider({ me, users, children }: { me: User; users: Map<str
             stopSound.current();
             if (settings.inAppSounds) playCallEnd();
             void qc.invalidateQueries({ queryKey: ["talk", "calls"] });
-            window.setTimeout(() => setActive((a) => (a?.session === session ? null : a)), 1600);
+            window.setTimeout(
+              () => setActive((a) => (a?.session === session ? null : a)),
+              1600,
+            );
           }
         },
         onRemoteStream: (remote) => patch({ remote }),
-        onLocalStream: (local) => patch({ local, camera: !!local?.getVideoTracks().some((v) => v.enabled) }),
+        onLocalStream: (local) =>
+          patch({
+            local,
+            camera: !!local?.getVideoTracks().some((v) => v.enabled),
+          }),
         onPeerState: (peerState) => patch({ peerState }),
         onCall: (c) => patch({ call: c }),
       });
@@ -85,7 +117,11 @@ export function CallProvider({ me, users, children }: { me: User; users: Map<str
         phase: "ringing",
         local: null,
         remote: null,
-        peerState: { muted: false, camera: call.type === "video", screen: false },
+        peerState: {
+          muted: false,
+          camera: call.type === "video",
+          screen: false,
+        },
         muted: false,
         camera: call.type === "video",
         screen: false,
@@ -93,10 +129,11 @@ export function CallProvider({ me, users, children }: { me: User; users: Map<str
         minimized: false,
       });
       stopSound.current();
-      if (settings.inAppSounds) stopSound.current = incoming ? startRingtone() : startDialTone();
+      if (settings.inAppSounds)
+        stopSound.current = incoming ? startRingtone() : startDialTone();
       return session;
     },
-    [me.id, patch, qc, settings.inAppSounds]
+    [me.id, patch, qc, settings.inAppSounds],
   );
 
   const startCall = useCallback(
@@ -112,12 +149,16 @@ export function CallProvider({ me, users, children }: { me: User; users: Map<str
         const session = attach(call, peer, false);
         await session.begin();
       } catch (e) {
-        toast.error(e instanceof DOMException ? t("talk.calls.permission") : t("talk.calls.failed"));
+        toast.error(
+          e instanceof DOMException
+            ? t("talk.calls.permission")
+            : t("talk.calls.failed"),
+        );
         setActive(null);
         stopSound.current();
       }
     },
-    [attach, t]
+    [attach, t],
   );
 
   // Idle poll: is someone calling me?
@@ -184,7 +225,11 @@ export function CallProvider({ me, users, children }: { me: User; users: Map<str
               patch({ camera: false });
             }
           }}
-          onSwitchCamera={() => void active.session.switchCamera().then(() => patch({ local: active.session.localStream }))}
+          onSwitchCamera={() =>
+            void active.session
+              .switchCamera()
+              .then(() => patch({ local: active.session.localStream }))
+          }
           onScreen={async (on) => {
             const ok = await active.session.shareScreen(on);
             patch({ screen: on && ok });

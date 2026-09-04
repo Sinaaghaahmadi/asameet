@@ -47,7 +47,28 @@ export const EMOJI_GROUPS: { key: string; icon: string; list: string }[] = [
   },
 ];
 
-export const QUICK_REACTIONS = ["👍", "❤️", "🔥", "🥰", "👏", "😁", "🤔", "🤯", "😱", "🤬", "😢", "🎉", "🤩", "🙏", "👌", "🕊️", "🤡", "🥱", "🥴", "😍"];
+export const QUICK_REACTIONS = [
+  "👍",
+  "❤️",
+  "🔥",
+  "🥰",
+  "👏",
+  "😁",
+  "🤔",
+  "🤯",
+  "😱",
+  "🤬",
+  "😢",
+  "🎉",
+  "🤩",
+  "🙏",
+  "👌",
+  "🕊️",
+  "🤡",
+  "🥱",
+  "🥴",
+  "😍",
+];
 
 export function emojiList(group: string): string[] {
   return EMOJI_GROUPS.find((g) => g.key === group)?.list.split(" ") ?? [];

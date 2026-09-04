@@ -14,7 +14,7 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
         defaultOptions: {
           queries: { staleTime: 10_000, refetchOnWindowFocus: false, retry: 1 },
         },
-      })
+      }),
   );
 
   useEffect(() => {
@@ -28,7 +28,12 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="dark"
+        enableSystem
+        disableTransitionOnChange
+      >
         <I18nProvider>
           <TooltipProvider delayDuration={300}>
             {children}

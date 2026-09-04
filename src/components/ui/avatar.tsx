@@ -33,18 +33,29 @@ const sizeClasses = {
   xl: "size-24 text-3xl",
 };
 
-export function Avatar({ name, src, size = "md", online, className, ...props }: AvatarProps) {
+export function Avatar({
+  name,
+  src,
+  size = "md",
+  online,
+  className,
+  ...props
+}: AvatarProps) {
   return (
     <div className={cn("relative shrink-0", className)} {...props}>
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt={name} className={cn("rounded-full object-cover", sizeClasses[size])} />
+        <img
+          src={src}
+          alt={name}
+          className={cn("rounded-full object-cover", sizeClasses[size])}
+        />
       ) : (
         <div
           className={cn(
             "flex items-center justify-center rounded-full bg-gradient-to-br font-bold text-white shadow-inner",
             gradientFor(name),
-            sizeClasses[size]
+            sizeClasses[size],
           )}
           aria-label={name}
         >
@@ -54,8 +65,8 @@ export function Avatar({ name, src, size = "md", online, className, ...props }: 
       {online !== undefined && (
         <span
           className={cn(
-            "absolute bottom-0 end-0 block size-3 rounded-full border-2 border-background",
-            online ? "bg-emerald-500 animate-pulse-ring" : "bg-zinc-400"
+            "border-background absolute end-0 bottom-0 block size-3 rounded-full border-2",
+            online ? "animate-pulse-ring bg-emerald-500" : "bg-zinc-400",
           )}
         />
       )}

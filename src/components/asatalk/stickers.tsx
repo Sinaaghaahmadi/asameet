@@ -18,7 +18,15 @@ export const STICKER_PACK: { id: string; pose: MascotPose; hue?: number }[] = [
   { id: "angry", pose: "angry", hue: 25 },
 ];
 
-export function Sticker({ id, size = 160, animate = true }: { id: string; size?: number; animate?: boolean }) {
+export function Sticker({
+  id,
+  size = 160,
+  animate = true,
+}: {
+  id: string;
+  size?: number;
+  animate?: boolean;
+}) {
   const s = STICKER_PACK.find((x) => x.id === id) ?? STICKER_PACK[0];
   return <Mascot pose={s.pose} hue={s.hue} size={size} animate={animate} />;
 }

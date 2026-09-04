@@ -17,7 +17,13 @@ function audio(): AudioContext | null {
   }
 }
 
-function tone(freq: number, at: number, dur: number, gain = 0.08, type: OscillatorType = "sine") {
+function tone(
+  freq: number,
+  at: number,
+  dur: number,
+  gain = 0.08,
+  type: OscillatorType = "sine",
+) {
   const ac = audio();
   if (!ac) return;
   const osc = ac.createOscillator();

@@ -11,7 +11,9 @@
     "prebuild": "node scripts/prepare-assets.mjs",
     "build": "next build && node scripts/postbuild-nft-guard.mjs",
     "start": "next start",
-    "icons": "node scripts/generate-asatalk-icons.mjs"
+    "icons": "node scripts/generate-asatalk-icons.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.4",
@@ -38,6 +40,8 @@
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "prettier": "^3.9.6",
+    "prettier-plugin-tailwindcss": "^0.8.1",
     "sharp": "^0.33.5",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.0"

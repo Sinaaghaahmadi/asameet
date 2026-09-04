@@ -1,6 +1,13 @@
 "use client";
 
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { fa } from "./locales/fa";
 import { en } from "./locales/en";
 import { fr } from "./locales/fr";
@@ -33,10 +40,17 @@ interface I18nContextValue {
 
 const I18nContext = createContext<I18nContextValue | null>(null);
 
-function resolve(dict: Record<string, unknown>, key: string): string | undefined {
+function resolve(
+  dict: Record<string, unknown>,
+  key: string,
+): string | undefined {
   let node: unknown = dict;
   for (const part of key.split(".")) {
-    if (node && typeof node === "object" && part in (node as Record<string, unknown>)) {
+    if (
+      node &&
+      typeof node === "object" &&
+      part in (node as Record<string, unknown>)
+    ) {
       node = (node as Record<string, unknown>)[part];
     } else {
       return undefined;
@@ -74,11 +88,20 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   }, [locale, dir]);
 
   const t = useCallback(
-    (key: string) => resolve(dictionaries[locale] as unknown as Record<string, unknown>, key) ?? resolve(fa as unknown as Record<string, unknown>, key) ?? key,
-    [locale]
+    (key: string) =>
+      resolve(
+        dictionaries[locale] as unknown as Record<string, unknown>,
+        key,
+      ) ??
+      resolve(fa as unknown as Record<string, unknown>, key) ??
+      key,
+    [locale],
   );
 
-  const value = useMemo(() => ({ locale, dir, setLocale, t }), [locale, dir, setLocale, t]);
+  const value = useMemo(
+    () => ({ locale, dir, setLocale, t }),
+    [locale, dir, setLocale, t],
+  );
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }

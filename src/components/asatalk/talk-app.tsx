@@ -22,8 +22,20 @@ import { TalkDataProvider, useTalk } from "./talk-data";
 export function TalkApp({ joinRef }: { joinRef?: string }) {
   const qc = useQueryClient();
   const params = useSearchParams();
-  const { user, setUser, setSettings, setAccounts, openChat, setPanel, settings } = useTalkStore();
-  const [unlocked, setUnlocked] = useState<string | null>(() => (typeof window !== "undefined" ? window.sessionStorage.getItem("asatalk-unlocked") : null));
+  const {
+    user,
+    setUser,
+    setSettings,
+    setAccounts,
+    openChat,
+    setPanel,
+    settings,
+  } = useTalkStore();
+  const [unlocked, setUnlocked] = useState<string | null>(() =>
+    typeof window !== "undefined"
+      ? window.sessionStorage.getItem("asatalk-unlocked")
+      : null,
+  );
   const [ready, setReady] = useState(false);
   const [addingAccount, setAddingAccount] = useState(false);
 
@@ -76,12 +88,14 @@ export function TalkApp({ joinRef }: { joinRef?: string }) {
       setPanel({ kind: "none" });
       await boot();
     },
-    [qc, setUser, openChat, setPanel, boot]
+    [qc, setUser, openChat, setPanel, boot],
   );
 
   const onLogout = useCallback(
     async (all?: boolean) => {
-      const res = all ? await talkApi.logoutAll().catch(() => ({ user: null })) : await talkApi.logoutCurrent().catch(() => ({ user: null }));
+      const res = all
+        ? await talkApi.logoutAll().catch(() => ({ user: null }))
+        : await talkApi.logoutCurrent().catch(() => ({ user: null }));
       qc.clear();
       openChat(null);
       setPanel({ kind: "none" });
@@ -91,7 +105,7 @@ export function TalkApp({ joinRef }: { joinRef?: string }) {
         setAccounts([]);
       }
     },
-    [qc, openChat, setPanel, boot, setUser, setAccounts]
+    [qc, openChat, setPanel, boot, setUser, setAccounts],
   );
 
   const onSwitch = useCallback(
@@ -107,7 +121,7 @@ export function TalkApp({ joinRef }: { joinRef?: string }) {
         void loadAccounts();
       }
     },
-    [qc, openChat, setPanel, boot, loadAccounts]
+    [qc, openChat, setPanel, boot, loadAccounts],
   );
 
   if (!ready) {
@@ -119,7 +133,13 @@ export function TalkApp({ joinRef }: { joinRef?: string }) {
   }
 
   if (!user || addingAccount) {
-    return <Onboarding onLogin={onLogin} addAccount={addingAccount} onCancel={addingAccount ? () => setAddingAccount(false) : undefined} />;
+    return (
+      <Onboarding
+        onLogin={onLogin}
+        addAccount={addingAccount}
+        onCancel={addingAccount ? () => setAddingAccount(false) : undefined}
+      />
+    );
   }
 
   if (settings.pinLock && unlocked !== settings.pinLock) {
@@ -141,7 +161,11 @@ export function TalkApp({ joinRef }: { joinRef?: string }) {
   return (
     <TalkDataProvider me={user}>
       <WithCalls me={user}>
-        <TalkShell onLogout={(all) => void onLogout(all)} onAddAccount={() => setAddingAccount(true)} onSwitch={(id) => void onSwitch(id)} />
+        <TalkShell
+          onLogout={(all) => void onLogout(all)}
+          onAddAccount={() => setAddingAccount(true)}
+          onSwitch={(id) => void onSwitch(id)}
+        />
         {joinRef && <JoinRoute joinRef={joinRef} />}
       </WithCalls>
     </TalkDataProvider>
@@ -165,7 +189,11 @@ function JoinRoute({ joinRef }: { joinRef: string }) {
       initial={joinRef}
       onClose={() => {
         setOpen(false);
-        window.history.replaceState(null, "", `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/`);
+        window.history.replaceState(
+          null,
+          "",
+          `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/`,
+        );
       }}
     />
   );

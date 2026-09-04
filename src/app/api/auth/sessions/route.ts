@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { assertSameOrigin, errorResponse, requireToken, rpc } from "@/lib/server/api";
+import {
+  assertSameOrigin,
+  errorResponse,
+  requireToken,
+  rpc,
+} from "@/lib/server/api";
 
 /** Active devices of the signed-in account. */
 export async function GET() {
@@ -16,7 +21,10 @@ export async function DELETE(req: NextRequest) {
   try {
     assertSameOrigin(req);
     const token = await requireToken();
-    await rpc("api_session_terminate", { p_token: token, p_id: req.nextUrl.searchParams.get("id") });
+    await rpc("api_session_terminate", {
+      p_token: token,
+      p_id: req.nextUrl.searchParams.get("id"),
+    });
     return NextResponse.json({});
   } catch (e) {
     return errorResponse(e);

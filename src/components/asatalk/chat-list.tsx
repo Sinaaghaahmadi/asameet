@@ -132,7 +132,7 @@ export function ChatList() {
 
   return (
     <section
-      className="tg-panel relative flex h-full w-full flex-col md:border-e md:tg-line"
+      className="tg-panel md:tg-line relative flex h-full w-full flex-col md:border-e"
       aria-label={t("talk.list.chats")}
     >
       {/* ---------- header (52px) ---------- */}
@@ -230,7 +230,7 @@ export function ChatList() {
                   <span
                     className={cn(
                       "tg-badge !h-4 !min-w-4 !text-[9px]",
-                      folder === f.id && "!bg-white !text-[var(--talk-strong)]",
+                      folder === f.id && "!text-talk-strong !bg-white",
                     )}
                   >
                     {toLocaleDigits(unread, locale)}
@@ -291,11 +291,11 @@ export function ChatList() {
               name={t("talk.home.archive")}
               size="lg"
               icon={<Archive className="size-6" />}
-              className="!bg-[oklch(0.6_0.02_var(--talk-h))]"
+              className="!bg-talk-neutral"
             />
             <span className="min-w-0 flex-1">
               <span className="flex items-center gap-1">
-                <span className="truncate text-[14.5px] font-bold">
+                <span className="text-name truncate font-bold">
                   {t("talk.home.archive")}
                 </span>
                 <span className="tg-time ms-auto">
@@ -309,7 +309,7 @@ export function ChatList() {
                 </span>
               </span>
               <span className="mt-0.5 flex items-center gap-2">
-                <span className="tg-muted line-clamp-1 flex-1 text-[12.5px]">
+                <span className="tg-muted text-preview line-clamp-1 flex-1">
                   {archived
                     .slice(0, 2)
                     .map((c) => chatDisplayName(c, users, me.id, t))
@@ -330,7 +330,7 @@ export function ChatList() {
           </button>
         )}
         {!loading && list.length === 0 && !peopleHits.length && (
-          <div className="flex flex-col items-center gap-2 px-8 pb-8 pt-10 text-center">
+          <div className="flex flex-col items-center gap-2 px-8 pt-10 pb-8 text-center">
             <Mascot
               pose={q ? "search" : chats.length ? "think" : "sleep"}
               size={170}
@@ -339,9 +339,7 @@ export function ChatList() {
               {q ? t("talk.list.noResults") : t("talk.list.noChats")}
             </p>
             {!q && (
-              <p className="tg-muted text-[13px]">
-                {t("talk.list.noChatsDesc")}
-              </p>
+              <p className="tg-muted text-body">{t("talk.list.noChatsDesc")}</p>
             )}
             {!q && !showArchive && (
               <GBtn
@@ -371,7 +369,7 @@ export function ChatList() {
           <GBtn
             variant="primary"
             size="fab"
-            className="absolute bottom-6 start-[22px] z-10"
+            className="z-chrome absolute start-[22px] bottom-6"
             aria-label={t("common.new")}
           >
             <Pencil className="size-5" />
@@ -447,7 +445,7 @@ function ChatRow({
   const delivered = (chat.readCount ?? 0) > 0;
 
   const preview = typing ? (
-    <span className="flex items-center gap-1 text-[var(--talk)]">
+    <span className="text-talk flex items-center gap-1">
       <span className="flex gap-0.5">
         <span className="tg-typing-dot" />
         <span className="tg-typing-dot" style={{ animationDelay: "0.15s" }} />
@@ -468,10 +466,7 @@ function ChatRow({
     <span>
       {senderName && (
         <span
-          className={cn(
-            "font-semibold",
-            active ? "text-white" : "text-[var(--talk)]",
-          )}
+          className={cn("font-semibold", active ? "text-white" : "text-talk")}
         >
           {senderName}:{" "}
         </span>
@@ -532,7 +527,7 @@ function ChatRow({
               {chat.type === "channel" && (
                 <Megaphone className="size-3.5 shrink-0 opacity-60" />
               )}
-              <span className="truncate text-[14.5px] font-bold">{title}</span>
+              <span className="text-name truncate font-bold">{title}</span>
               {chat.isMuted && (
                 <BellOff className="size-3 shrink-0 opacity-50" />
               )}
@@ -542,10 +537,7 @@ function ChatRow({
                   !saved &&
                   (delivered ? (
                     <CheckCheck
-                      className={cn(
-                        "size-3.5",
-                        !active && "text-[var(--talk)]",
-                      )}
+                      className={cn("size-3.5", !active && "text-talk")}
                     />
                   ) : (
                     <Check className="size-3.5" />
@@ -560,7 +552,7 @@ function ChatRow({
               </span>
             </span>
             <span className="mt-0.5 flex items-center gap-2">
-              <span className="tg-muted line-clamp-1 flex-1 text-[12.5px]">
+              <span className="tg-muted text-preview line-clamp-1 flex-1">
                 {preview}
               </span>
               {chat.unreadCount > 0 ? (

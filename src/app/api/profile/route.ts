@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { assertSameOrigin, errorResponse, requireToken, rpc } from "@/lib/server/api";
+import {
+  assertSameOrigin,
+  errorResponse,
+  requireToken,
+  rpc,
+} from "@/lib/server/api";
 
 export async function PATCH(req: NextRequest) {
   try {

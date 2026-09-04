@@ -50,7 +50,7 @@ export function TalkDrawer({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[70] bg-black/40 backdrop-blur-sm"
+            className="z-scrim fixed inset-0 bg-black/40 backdrop-blur-sm"
             onClick={() => setDrawer(false)}
           />
           <motion.aside
@@ -58,12 +58,12 @@ export function TalkDrawer({
             animate={{ x: 0 }}
             exit={{ x: dir === "rtl" ? 320 : -320 }}
             transition={{ type: "spring", stiffness: 380, damping: 36 }}
-            className="tg-glass-strong fixed inset-y-0 start-0 z-[71] flex w-[310px] max-w-[86vw] flex-col"
+            className="tg-glass-strong z-drawer fixed inset-y-0 start-0 flex w-[310px] max-w-[86vw] flex-col"
             role="dialog"
           >
             {/* gradient head */}
             <div
-              className="relative overflow-hidden px-5 pb-4 pt-[52px]"
+              className="relative overflow-hidden px-5 pt-[52px] pb-4"
               style={{
                 background:
                   "linear-gradient(135deg, var(--talk), var(--talk-strong))",
@@ -121,7 +121,7 @@ export function TalkDrawer({
               <p className="relative mt-3 truncate text-[17px] font-black text-white">
                 {me.displayName}
               </p>
-              <div className="flex justify-between flex-row-reverse">
+              <div className="flex flex-row-reverse justify-between">
                 <p className="relative truncate text-[12px] text-white/85">
                   {me.username}@
                 </p>
@@ -178,7 +178,7 @@ export function TalkDrawer({
                 label={t("talk.menu.settings")}
                 onClick={() => setPanel({ kind: "settings", page: "root" })}
               />
-              <div className="tg-row text-[14px] font-medium">
+              <div className="tg-row text-item font-medium">
                 <span
                   className="tg-item-icon"
                   style={{ background: "oklch(0.55 0.15 280)" }}
@@ -192,13 +192,13 @@ export function TalkDrawer({
                   label={t("talk.menu.nightMode")}
                 />
               </div>
-              <div className="my-1.5 h-px bg-[var(--talk-line)]" />
+              <div className="bg-talk-line my-1.5 h-px" />
               {asameetUrl && (
                 <a
                   href={asameetUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="tg-row text-[14px] font-medium"
+                  className="tg-row text-item font-medium"
                 >
                   <span
                     className="tg-item-icon"
@@ -217,9 +217,9 @@ export function TalkDrawer({
                 danger
               />
             </div>
-            <div className="flex items-center gap-2 border-t tg-line px-4 py-3">
+            <div className="tg-line flex items-center gap-2 border-t px-4 py-3">
               <AsatalkLogo size={24} />
-              <span className="tg-muted text-[11px] font-semibold">
+              <span className="tg-muted text-caption font-semibold">
                 {t("talk.home.version")}
               </span>
             </div>
@@ -246,7 +246,7 @@ function DrawerItem({
   return (
     <button
       type="button"
-      className={cn("tg-row text-[14px] font-medium", danger && "text-red-500")}
+      className={cn("tg-row text-item font-medium", danger && "text-red-500")}
       onClick={onClick}
     >
       <span

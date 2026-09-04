@@ -1,13 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { assertSameOrigin, errorResponse, requireToken, rpc } from "@/lib/server/api";
+import {
+  assertSameOrigin,
+  errorResponse,
+  requireToken,
+  rpc,
+} from "@/lib/server/api";
 
 /** Per-member chat preferences: pin, mute. */
-export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+export async function POST(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> },
+) {
   try {
     assertSameOrigin(req);
     const { id } = await ctx.params;
     const token = await requireToken();
-    const body = (await req.json().catch(() => null)) as { pinned?: boolean; muted?: boolean; archived?: boolean } | null;
+    const body = (await req.json().catch(() => null)) as {
+      pinned?: boolean;
+      muted?: boolean;
+      archived?: boolean;
+    } | null;
     await rpc("api_chat_prefs", {
       p_token: token,
       p_chat_id: id,

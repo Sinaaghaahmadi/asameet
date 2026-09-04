@@ -14,11 +14,16 @@ import type { User } from "@/lib/types";
 export async function POST(req: NextRequest) {
   try {
     assertSameOrigin(req);
-    const body = (await req.json().catch(() => null)) as { userId?: string } | null;
+    const body = (await req.json().catch(() => null)) as {
+      userId?: string;
+    } | null;
     if (!body?.userId) throw new ApiError("bad_request", 400);
     const tokens = await accountTokens();
     for (const t of tokens) {
-      const who = await rpc<{ user: User; settings: Record<string, unknown> }>("api_me", { p_token: t }).catch(() => null);
+      const who = await rpc<{ user: User; settings: Record<string, unknown> }>(
+        "api_me",
+        { p_token: t },
+      ).catch(() => null);
       if (who && who.user.id === body.userId) {
         const res = attachSession(NextResponse.json(who), t);
         return attachAccounts(res, [t, ...tokens.filter((x) => x !== t)]);

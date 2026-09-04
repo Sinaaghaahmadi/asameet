@@ -12,10 +12,13 @@ const buttonVariants = cva(
       variant: {
         default: "btn-glass-primary ripple",
         glass: "btn-glass ripple text-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
-        outline: "border border-border bg-transparent hover:bg-accent hover:text-accent-foreground",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm",
+        outline:
+          "border border-border bg-transparent hover:bg-accent hover:text-accent-foreground",
+        destructive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
@@ -27,23 +30,40 @@ const buttonVariants = cva(
       },
     },
     defaultVariants: { variant: "default", size: "default" },
-  }
+  },
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   /** Render the child element (e.g. a Link) with button styling. */
   asChild?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, type = "button", asChild = false, ...props }, ref) => {
+  (
+    { className, variant, size, type = "button", asChild = false, ...props },
+    ref,
+  ) => {
     if (asChild) {
-      return <Slot ref={ref} className={cn(buttonVariants({ variant, size, className }))} {...props} />;
+      return (
+        <Slot
+          ref={ref}
+          className={cn(buttonVariants({ variant, size, className }))}
+          {...props}
+        />
+      );
     }
-    return <button ref={ref} type={type} className={cn(buttonVariants({ variant, size, className }))} {...props} />;
-  }
+    return (
+      <button
+        ref={ref}
+        type={type}
+        className={cn(buttonVariants({ variant, size, className }))}
+        {...props}
+      />
+    );
+  },
 );
 Button.displayName = "Button";
 

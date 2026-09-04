@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { assertSameOrigin, errorResponse, requireToken, rpc } from "@/lib/server/api";
+import {
+  assertSameOrigin,
+  errorResponse,
+  requireToken,
+  rpc,
+} from "@/lib/server/api";
 
 /** "Saved Messages" — a private chat with yourself, created on first use. */
 export async function POST(req: NextRequest) {

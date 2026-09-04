@@ -22,19 +22,34 @@ export function formatTime(date: string | Date, locale: string): string {
   }).format(d);
 }
 
-export function formatRelativeDay(date: string | Date, locale: string, todayLabel: string, yesterdayLabel: string): string {
+export function formatRelativeDay(
+  date: string | Date,
+  locale: string,
+  todayLabel: string,
+  yesterdayLabel: string,
+): string {
   const d = typeof date === "string" ? new Date(date) : date;
   const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const diffDays = Math.floor((startOfToday.getTime() - d.getTime()) / 86400000) + 1;
+  const startOfToday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+  );
+  const diffDays =
+    Math.floor((startOfToday.getTime() - d.getTime()) / 86400000) + 1;
   if (d >= startOfToday) return formatTime(d, locale);
   if (diffDays <= 1) return yesterdayLabel;
-  return new Intl.DateTimeFormat(locale === "fa" ? "fa-IR" : locale, { month: "short", day: "numeric" }).format(d);
+  return new Intl.DateTimeFormat(locale === "fa" ? "fa-IR" : locale, {
+    month: "short",
+    day: "numeric",
+  }).format(d);
 }
 
 export function toLocaleDigits(value: number | string, locale: string): string {
-  if (locale === "fa") return String(value).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]);
-  if (locale === "ar") return String(value).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number(d)]);
+  if (locale === "fa")
+    return String(value).replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]);
+  if (locale === "ar")
+    return String(value).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[Number(d)]);
   return String(value);
 }
 

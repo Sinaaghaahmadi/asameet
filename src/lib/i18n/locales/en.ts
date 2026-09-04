@@ -4,7 +4,8 @@ export const en: typeof fa = {
   meta: {
     name: "Asameet",
     tagline: "The Intelligent Conversation Platform",
-    description: "Asameet — messaging, voice & video calls, online meetings and virtual classrooms, all in one intelligent and secure platform.",
+    description:
+      "Asameet — messaging, voice & video calls, online meetings and virtual classrooms, all in one intelligent and secure platform.",
   },
   common: {
     save: "Save",
@@ -75,23 +76,45 @@ export const en: typeof fa = {
       badge: "Version 1.0 is here",
       title1: "The Intelligent",
       title2: "Conversation Platform",
-      rotating: "Send messages,Make calls,Host meetings,Run classes,Get the minutes",
-      subtitle: "Chat, calls, meetings and online classes on a single platform — with an assistant that turns what was said into minutes and decisions.",
+      rotating:
+        "Send messages,Make calls,Host meetings,Run classes,Get the minutes",
+      subtitle:
+        "Chat, calls, meetings and online classes on a single platform — with an assistant that turns what was said into minutes and decisions.",
       ctaPrimary: "Start for free",
       ctaSecondary: "Watch demo",
-      trust: "No credit card required • Installable PWA • Host it on your own server",
+      trust:
+        "No credit card required • Installable PWA • Host it on your own server",
       scroll: "Scroll",
       liveBadge: "Live",
     },
     features: {
       title: "One platform, every conversation",
-      subtitle: "From a quick message to a hundred-person conference — without switching tools.",
-      messaging: { title: "Instant Messaging", desc: "Private and group chats with replies, forwards, pins, reactions and read receipts — fast and lag-free." },
-      calls: { title: "Voice & Video Calls", desc: "Crystal-clear, reliable one-to-one and group calls in HD with efficient bandwidth usage." },
-      meetings: { title: "Meetings & Conferences", desc: "Meeting rooms with screen sharing, raised hands, in-meeting chat and one-click full recording." },
-      classes: { title: "Online Classrooms", desc: "Interactive whiteboard, automatic attendance and student-management tools for teachers." },
-      ai: { title: "AI Assistant", desc: "Automatic minutes and summaries, extracted decisions and smart brainstorming during the conversation." },
-      security: { title: "Advanced Security", desc: "Encrypted communications, role-based access control, and the option to self-host entirely on your own infrastructure." },
+      subtitle:
+        "From a quick message to a hundred-person conference — without switching tools.",
+      messaging: {
+        title: "Instant Messaging",
+        desc: "Private and group chats with replies, forwards, pins, reactions and read receipts — fast and lag-free.",
+      },
+      calls: {
+        title: "Voice & Video Calls",
+        desc: "Crystal-clear, reliable one-to-one and group calls in HD with efficient bandwidth usage.",
+      },
+      meetings: {
+        title: "Meetings & Conferences",
+        desc: "Meeting rooms with screen sharing, raised hands, in-meeting chat and one-click full recording.",
+      },
+      classes: {
+        title: "Online Classrooms",
+        desc: "Interactive whiteboard, automatic attendance and student-management tools for teachers.",
+      },
+      ai: {
+        title: "AI Assistant",
+        desc: "Automatic minutes and summaries, extracted decisions and smart brainstorming during the conversation.",
+      },
+      security: {
+        title: "Advanced Security",
+        desc: "Encrypted communications, role-based access control, and the option to self-host entirely on your own infrastructure.",
+      },
       exploreAll: "All features",
     },
     stats: {
@@ -105,21 +128,54 @@ export const en: typeof fa = {
     how: {
       title: "Get started in three steps",
       subtitle: "From sign-up to your first meeting in under two minutes.",
-      step1: { title: "Create an account", desc: "Sign up with a simple username; no phone number, no friction." },
-      step2: { title: "Invite your team", desc: "Invite colleagues and friends to groups and meetings with a single link." },
-      step3: { title: "Start talking", desc: "Message, call, meet — and let the assistant write the minutes." },
+      step1: {
+        title: "Create an account",
+        desc: "Sign up with a simple username; no phone number, no friction.",
+      },
+      step2: {
+        title: "Invite your team",
+        desc: "Invite colleagues and friends to groups and meetings with a single link.",
+      },
+      step3: {
+        title: "Start talking",
+        desc: "Message, call, meet — and let the assistant write the minutes.",
+      },
     },
     testimonials: {
       title: "From people who use it every day",
       subtitle: "We haven't edited the reviews — the criticism stays too.",
       prev: "Previous",
       next: "Next",
-      t1: { name: "Sara", role: "Product Manager", text: "We finally stopped juggling a messenger and a meeting tool. The automatic minutes genuinely free up the next meeting." },
-      t2: { name: "Amir", role: "Programming Instructor", text: "I moved my classes over entirely; the whiteboard and automatic attendance were exactly what I had been missing." },
-      t3: { name: "Negar", role: "Startup CTO", text: "Our team spans three continents. Full Persian and RTL support, with no drop in quality in English, was decisive for us." },
-      t4: { name: "Babak", role: "Infrastructure Engineer", text: "I was its harshest critic: for the first two weeks the interface felt cluttered to me, and the getting-started guide is weak. But once I got used to it, our meetings became a third shorter — now I recommend it myself." },
-      t5: { name: "Yasmin", role: "Operations Manager", text: "The admin panel gives me exactly the view I need for the weekly report; the Excel export finishes the job." },
-      t6: { name: "Kian", role: "Frontend Developer", text: "I installed it on my phone as a PWA and it is practically indistinguishable from a native app. Its launch speed took me by surprise." },
+      t1: {
+        name: "Sara",
+        role: "Product Manager",
+        text: "We finally stopped juggling a messenger and a meeting tool. The automatic minutes genuinely free up the next meeting.",
+      },
+      t2: {
+        name: "Amir",
+        role: "Programming Instructor",
+        text: "I moved my classes over entirely; the whiteboard and automatic attendance were exactly what I had been missing.",
+      },
+      t3: {
+        name: "Negar",
+        role: "Startup CTO",
+        text: "Our team spans three continents. Full Persian and RTL support, with no drop in quality in English, was decisive for us.",
+      },
+      t4: {
+        name: "Babak",
+        role: "Infrastructure Engineer",
+        text: "I was its harshest critic: for the first two weeks the interface felt cluttered to me, and the getting-started guide is weak. But once I got used to it, our meetings became a third shorter — now I recommend it myself.",
+      },
+      t5: {
+        name: "Yasmin",
+        role: "Operations Manager",
+        text: "The admin panel gives me exactly the view I need for the weekly report; the Excel export finishes the job.",
+      },
+      t6: {
+        name: "Kian",
+        role: "Frontend Developer",
+        text: "I installed it on my phone as a PWA and it is practically indistinguishable from a native app. Its launch speed took me by surprise.",
+      },
     },
     pricing: {
       title: "Simple, transparent pricing",
@@ -131,9 +187,25 @@ export const en: typeof fa = {
       perYear: "per year",
       yearlyNote: "Pay yearly and two months are on us.",
       popular: "Most popular",
-      free: { name: "Free", price: "0", priceYearly: "0", desc: "For getting started and personal use" },
-      pro: { name: "Pro", price: "9", priceYearly: "90", unit: "USD", desc: "For growing teams" },
-      enterprise: { name: "Enterprise", price: "Contact us", priceYearly: "Contact us", desc: "For large organizations" },
+      free: {
+        name: "Free",
+        price: "0",
+        priceYearly: "0",
+        desc: "For getting started and personal use",
+      },
+      pro: {
+        name: "Pro",
+        price: "9",
+        priceYearly: "90",
+        unit: "USD",
+        desc: "For growing teams",
+      },
+      enterprise: {
+        name: "Enterprise",
+        price: "Contact us",
+        priceYearly: "Contact us",
+        desc: "For large organizations",
+      },
       features: {
         chat: "Unlimited chat",
         oneToOne: "1-to-1 calls",
@@ -178,16 +250,34 @@ export const en: typeof fa = {
     },
     about: {
       title: "About us",
-      subtitle: "A 17-person team from all over the world, with one shared dream",
-      text1: "Asameet is our long-held dream: a conversation platform that is smooth and beautiful at the same time, bringing together the power of professional meetings and AI in one place — without forcing anyone to switch between several tools.",
-      text2: "We are 17 people — developers, designers and infrastructure engineers — working fully remotely from Tehran to Toronto, from Berlin to Sydney. Distance didn't stop us; it inspired us to build the best remote-work tool ourselves.",
-      text3: "We run our own meetings, chats and code reviews on Asameet every day. If we wouldn't use it, we wouldn't ship it.",
-      stats: { members: "Team members", countries: "Countries", timezones: "Time zones", remote: "Remote" },
+      subtitle:
+        "A 17-person team from all over the world, with one shared dream",
+      text1:
+        "Asameet is our long-held dream: a conversation platform that is smooth and beautiful at the same time, bringing together the power of professional meetings and AI in one place — without forcing anyone to switch between several tools.",
+      text2:
+        "We are 17 people — developers, designers and infrastructure engineers — working fully remotely from Tehran to Toronto, from Berlin to Sydney. Distance didn't stop us; it inspired us to build the best remote-work tool ourselves.",
+      text3:
+        "We run our own meetings, chats and code reviews on Asameet every day. If we wouldn't use it, we wouldn't ship it.",
+      stats: {
+        members: "Team members",
+        countries: "Countries",
+        timezones: "Time zones",
+        remote: "Remote",
+      },
       values: {
         title: "Our values",
-        v1: { title: "Users first", desc: "Every decision starts with one question: does this make the user's life simpler?" },
-        v2: { title: "Transparency", desc: "Clean code, transparent pricing, honest communication with users." },
-        v3: { title: "Iranian craft, global standard", desc: "Designed with love in Iran, built for the whole world." },
+        v1: {
+          title: "Users first",
+          desc: "Every decision starts with one question: does this make the user's life simpler?",
+        },
+        v2: {
+          title: "Transparency",
+          desc: "Clean code, transparent pricing, honest communication with users.",
+        },
+        v3: {
+          title: "Iranian craft, global standard",
+          desc: "Designed with love in Iran, built for the whole world.",
+        },
       },
     },
     contact: {
@@ -202,17 +292,23 @@ export const en: typeof fa = {
     },
     design: {
       title: "Design system",
-      subtitle: "The tokens, textures and motion that repeat identically across the whole product.",
+      subtitle:
+        "The tokens, textures and motion that repeat identically across the whole product.",
       colors: "Color",
-      colorsDesc: "The palette is built on OKLCH so perceived lightness stays even in both light and dark mode.",
+      colorsDesc:
+        "The palette is built on OKLCH so perceived lightness stays even in both light and dark mode.",
       typography: "Typography",
-      typographyDesc: "Vazirmatn in six weights; the heading scale is tuned for Persian so lines settle properly in right-to-left text.",
+      typographyDesc:
+        "Vazirmatn in six weights; the heading scale is tuned for Persian so lines settle properly in right-to-left text.",
       surfaces: "Glass surfaces",
-      surfacesDesc: "Three layers of translucency with background blur: subtle, base and strong.",
+      surfacesDesc:
+        "Three layers of translucency with background blur: subtle, base and strong.",
       depth: "3D depth",
-      depthDesc: "Layered shadows and a gentle perspective; depth guides the eye rather than decorating.",
+      depthDesc:
+        "Layered shadows and a gentle perspective; depth guides the eye rather than decorating.",
       motion: "Motion",
-      motionDesc: "Every movement stays under 400 ms on a soft curve, and always respects the system's reduced-motion setting.",
+      motionDesc:
+        "Every movement stays under 400 ms on a soft curve, and always respects the system's reduced-motion setting.",
       radius: "Corner radius",
       principles: "Principles",
       p1: "Content first; an effect never gets in the way of legibility.",
@@ -223,7 +319,8 @@ export const en: typeof fa = {
     },
     cta: {
       title: "Make your conversations intelligent today",
-      subtitle: "Join the teams that don't give their time to meetings that go nowhere.",
+      subtitle:
+        "Join the teams that don't give their time to meetings that go nowhere.",
       button: "Start for free",
     },
     footer: {
@@ -251,19 +348,22 @@ export const en: typeof fa = {
     loginTab: "Sign in",
     signupTab: "Create account",
     username: "Username",
-    usernameHint: "Lowercase letters, digits and underscore — 3 to 32 characters",
+    usernameHint:
+      "Lowercase letters, digits and underscore — 3 to 32 characters",
     password: "Password",
     passwordHint: "At least 8 characters",
     displayName: "Display name",
     submit: "Sign in",
     signupSubmit: "Create account",
-    firstAdminNote: "The first account created on this platform becomes its administrator.",
+    firstAdminNote:
+      "The first account created on this platform becomes its administrator.",
     welcome: "Welcome",
     networkError: "Network error, please try again",
     errors: {
       invalid_credentials: "Wrong username or password",
       username_taken: "That username is already taken",
-      invalid_username: "Usernames are lowercase letters, digits or underscore (3–32 characters)",
+      invalid_username:
+        "Usernames are lowercase letters, digits or underscore (3–32 characters)",
       weak_password: "The password must be at least 8 characters",
       invalid_display_name: "Please enter a display name",
       too_many_attempts: "Too many failed attempts; try again in a few minutes",
@@ -278,7 +378,12 @@ export const en: typeof fa = {
     newChat: "New chat",
     noOtherUsers: "No one else has signed up yet",
     newGroup: "New group",
-    filters: { all: "All", unread: "Unread", groups: "Groups", channels: "Channels" },
+    filters: {
+      all: "All",
+      unread: "Unread",
+      groups: "Groups",
+      channels: "Channels",
+    },
     typeMessage: "Write a message...",
     typing: "typing...",
     reply: "Reply",
@@ -295,7 +400,12 @@ export const en: typeof fa = {
     members: "members",
     selectChat: "Select a conversation",
     selectChatDesc: "Pick a chat from the list or start a new conversation.",
-    mediaFilters: { all: "All", images: "Images", files: "Files", links: "Links" },
+    mediaFilters: {
+      all: "All",
+      images: "Images",
+      files: "Files",
+      links: "Links",
+    },
     sent: "Sent",
     delivered: "Delivered",
     read: "Read",
@@ -444,7 +554,15 @@ export const en: typeof fa = {
     nodeVersion: "Node version",
     healthy: "Healthy",
     roles: { user: "User", teacher: "Teacher", host: "Host", admin: "Admin" },
-    days: { sat: "Sat", sun: "Sun", mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri" },
+    days: {
+      sat: "Sat",
+      sun: "Sun",
+      mon: "Mon",
+      tue: "Tue",
+      wed: "Wed",
+      thu: "Thu",
+      fri: "Fri",
+    },
     messagesLabel: "Messages",
     meetingsLabel: "Meetings",
     callsLabel: "Calls",
@@ -489,11 +607,13 @@ export const en: typeof fa = {
       username: "Username (optional) — @negar",
       usernameHint: "You can set a username later in Settings.",
       notifTitle: "Turn on notifications",
-      notifSub: "Know when a message arrives. Sounds and previews can be tuned later.",
+      notifSub:
+        "Know when a message arrives. Sounds and previews can be tuned later.",
       turnOn: "Turn on",
       notNow: "Not now",
       micTitle: "Microphone and camera",
-      micSub: "Voice/video calls and voice messages need the microphone and camera.",
+      micSub:
+        "Voice/video calls and voice messages need the microphone and camera.",
       allow: "Allow",
       wrongCode: "Wrong code",
       slide1: "Fast messaging with glass bubbles",
@@ -513,7 +633,8 @@ export const en: typeof fa = {
       notePlaceholder: "What's up? (up to 60 chars)",
       noteSave: "Save",
       noteClear: "Remove note",
-      noteHint: "Your note shows on your avatar to everyone and disappears after 24 hours.",
+      noteHint:
+        "Your note shows on your avatar to everyone and disappears after 24 hours.",
       replyToStatus: "Reply to status…",
       ago: "ago",
       hoursAgo: "h ago",
@@ -570,13 +691,16 @@ export const en: typeof fa = {
     },
     onboarding: {
       s1Title: "Asatalk",
-      s1Desc: "The fastest way to talk with friends, family and teammates — with the familiar feel you love.",
+      s1Desc:
+        "The fastest way to talk with friends, family and teammates — with the familiar feel you love.",
       s2Title: "Voice & video calls",
       s2Desc: "Crisp, reliable calls, screen sharing and round video messages.",
       s3Title: "Groups & channels",
-      s3Desc: "Groups up to 200 people, public channels with their own link, owners and admins.",
+      s3Desc:
+        "Groups up to 200 people, public channels with their own link, owners and admins.",
       s4Title: "Many accounts, one app",
-      s4Desc: "Up to 5 accounts at once, chat folders, themes and glassy wallpapers.",
+      s4Desc:
+        "Up to 5 accounts at once, chat folders, themes and glassy wallpapers.",
       start: "Start messaging",
       login: "Log in",
       signup: "Create account",
@@ -601,7 +725,14 @@ export const en: typeof fa = {
       accounts: "Accounts",
       joinByLink: "Join via link",
     },
-    folders: { all: "All", personal: "Personal", groups: "Groups", channels: "Channels", unread: "Unread", edit: "Edit folders" },
+    folders: {
+      all: "All",
+      personal: "Personal",
+      groups: "Groups",
+      channels: "Channels",
+      unread: "Unread",
+      edit: "Edit folders",
+    },
     list: {
       search: "Search",
       noChats: "No chats yet",
@@ -620,7 +751,8 @@ export const en: typeof fa = {
       subscribers: "subscribers",
       online: "online",
       selectChat: "Select a chat to start messaging",
-      selectChatDesc: "Open a chat from the list or start a new one with the pencil button.",
+      selectChatDesc:
+        "Open a chat from the list or start a new one with the pencil button.",
       pinnedMessage: "Pinned message",
       searchInChat: "Search this chat",
       mute: "Mute",
@@ -727,7 +859,13 @@ export const en: typeof fa = {
       added: "added",
       removed: "removed",
     },
-    status: { justNow: "last seen just now", lastSeen: "last seen", minAgo: "min ago", hourAgo: "h ago", recently: "recently" },
+    status: {
+      justNow: "last seen just now",
+      lastSeen: "last seen",
+      minAgo: "min ago",
+      hourAgo: "h ago",
+      recently: "recently",
+    },
     info: {
       title: "User info",
       groupInfo: "Group info",
@@ -750,7 +888,8 @@ export const en: typeof fa = {
       name: "Name",
       description: "Description",
       publicLink: "Public link",
-      publicLinkHint: "With a username anyone can find this chat by @name and join.",
+      publicLinkHint:
+        "With a username anyone can find this chat by @name and join.",
       save: "Save",
       promote: "Promote to admin",
       demote: "Dismiss admin",
@@ -799,7 +938,14 @@ export const en: typeof fa = {
       create: "Create channel",
       hint: "Channels broadcast to an unlimited audience; only admins post.",
     },
-    join: { title: "Join via link", placeholder: "Invite link or @username", preview: "Preview", join: "Join", notFound: "No such group or channel", open: "Open" },
+    join: {
+      title: "Join via link",
+      placeholder: "Invite link or @username",
+      preview: "Preview",
+      join: "Join",
+      notFound: "No such group or channel",
+      open: "Open",
+    },
     calls: {
       title: "Calls",
       recent: "Recent",
@@ -818,7 +964,8 @@ export const en: typeof fa = {
       busy: "Busy",
       noAnswer: "No answer",
       failed: "Could not connect",
-      failedHint: "The network blocked a direct connection. Try another Wi‑Fi, or configure a TURN server.",
+      failedHint:
+        "The network blocked a direct connection. Try another Wi‑Fi, or configure a TURN server.",
       declinedMsg: "Call declined",
       mute: "Mute",
       unmute: "Unmute",
@@ -855,7 +1002,8 @@ export const en: typeof fa = {
       removePhoto: "Remove photo",
       name: "Name",
       username: "Username",
-      usernameHint: "People can find you by @username. Lowercase letters, digits and underscore; 3–32 characters.",
+      usernameHint:
+        "People can find you by @username. Lowercase letters, digits and underscore; 3–32 characters.",
       bio: "Bio",
       bioHint: "A few words about you — up to 140 characters.",
       save: "Save",
@@ -888,7 +1036,8 @@ export const en: typeof fa = {
         desc: "Choose which chats notify you.",
         section: "Message notifications",
         browser: "Browser notifications",
-        browserHint: "Allow notifications to be alerted when the tab is in the background.",
+        browserHint:
+          "Allow notifications to be alerted when the tab is in the background.",
         allow: "Enable",
         allowed: "Enabled",
         denied: "Blocked by the browser",
@@ -923,7 +1072,8 @@ export const en: typeof fa = {
         fontSize: "Text size",
         animations: "Animations",
         sendOnEnter: "Send with Enter",
-        sendOnEnterHint: "When off, Enter adds a new line and Ctrl+Enter sends.",
+        sendOnEnterHint:
+          "When off, Enter adds a new line and Ctrl+Enter sends.",
         preview: "Preview",
         previewIn: "Hey! Have you seen Asatalk? 😍",
         previewOut: "Yes, just installed it 🚀",
@@ -989,7 +1139,11 @@ export const en: typeof fa = {
       invalid_credentials: "Wrong username or password",
       generic: "Something went wrong",
     },
-    install: { title: "Install Asatalk", desc: "Add Asatalk to your home screen or desktop.", button: "Install" },
+    install: {
+      title: "Install Asatalk",
+      desc: "Add Asatalk to your home screen or desktop.",
+      button: "Install",
+    },
     stickers: {
       wave: "Hi!",
       love: "Love",

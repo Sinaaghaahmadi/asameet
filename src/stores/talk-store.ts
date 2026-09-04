@@ -39,7 +39,14 @@ export const ACCENTS: Record<string, { name: string; h: number; c: number }> = {
   indigo: { name: "Indigo", h: 270, c: 0.17 },
 };
 
-export const WALLPAPERS = ["bubbles", "doodle", "gradient", "waves", "plain", "stars"] as const;
+export const WALLPAPERS = [
+  "bubbles",
+  "doodle",
+  "gradient",
+  "waves",
+  "plain",
+  "stars",
+] as const;
 export type Wallpaper = (typeof WALLPAPERS)[number];
 
 export const DEFAULT_SETTINGS: Required<
@@ -150,7 +157,8 @@ export const useTalkStore = create<TalkState>()(
 
       setUser: (user) => set({ user }),
       setSettings: (s) => set({ settings: { ...DEFAULT_SETTINGS, ...s } }),
-      patchSettings: (s) => set((st) => ({ settings: { ...st.settings, ...s } })),
+      patchSettings: (s) =>
+        set((st) => ({ settings: { ...st.settings, ...s } })),
       setAccounts: (accounts) => set({ accounts }),
       openChat: (activeChatId) =>
         set((st) => ({
@@ -158,25 +166,39 @@ export const useTalkStore = create<TalkState>()(
           replyTo: null,
           editing: null,
           selected: [],
-          panel: activeChatId && st.panel.kind === "info" ? st.panel : st.panel.kind === "info" ? { kind: "none" } : st.panel,
+          panel:
+            activeChatId && st.panel.kind === "info"
+              ? st.panel
+              : st.panel.kind === "info"
+                ? { kind: "none" }
+                : st.panel,
           drawerOpen: false,
         })),
       setFolder: (folder) => set({ folder }),
       setPanel: (panel) => set({ panel, drawerOpen: false }),
       setDrawer: (drawerOpen) => set({ drawerOpen }),
-      setDraft: (chatId, text) => set((st) => ({ drafts: { ...st.drafts, [chatId]: text } })),
+      setDraft: (chatId, text) =>
+        set((st) => ({ drafts: { ...st.drafts, [chatId]: text } })),
       setReplyTo: (replyTo) => set({ replyTo, editing: null }),
       setEditing: (editing) => set({ editing, replyTo: null }),
       toggleSelected: (id) =>
-        set((st) => ({ selected: st.selected.includes(id) ? st.selected.filter((x) => x !== id) : [...st.selected, id] })),
+        set((st) => ({
+          selected: st.selected.includes(id)
+            ? st.selected.filter((x) => x !== id)
+            : [...st.selected, id],
+        })),
       clearSelected: () => set({ selected: [] }),
       setLightbox: (lightbox) => set({ lightbox }),
       setHydrated: (hydrated) => set({ hydrated }),
     }),
     {
       name: "asatalk-ui",
-      partialize: (s) => ({ settings: s.settings, folder: s.folder, drafts: s.drafts }),
+      partialize: (s) => ({
+        settings: s.settings,
+        folder: s.folder,
+        drafts: s.drafts,
+      }),
       onRehydrateStorage: () => (state) => state?.setHydrated(true),
-    }
-  )
+    },
+  ),
 );

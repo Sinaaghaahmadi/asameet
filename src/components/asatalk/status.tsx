@@ -76,7 +76,7 @@ export function StatusStrip() {
 
   return (
     <>
-      <div className="no-scrollbar flex gap-3.5 overflow-x-auto px-4 pb-2 pt-3">
+      <div className="no-scrollbar flex gap-3.5 overflow-x-auto px-4 pt-3 pb-2">
         <button
           type="button"
           className="flex w-[64px] shrink-0 flex-col items-center gap-1.5"
@@ -89,7 +89,7 @@ export function StatusStrip() {
                   name={me.displayName}
                   src={me.avatar}
                   size="lg"
-                  className="!size-full border-2 border-[var(--talk-bg)]"
+                  className="border-talk-bg !size-full border-2"
                 />
               </span>
             ) : (
@@ -101,7 +101,7 @@ export function StatusStrip() {
               <span className="tg-note-bubble tg-glass-strong">{me.note}</span>
             )}
           </span>
-          <span className="w-full truncate text-center text-[11px] font-semibold">
+          <span className="text-caption w-full truncate text-center font-semibold">
             {t("talk.home.yourStatus")}
           </span>
         </button>
@@ -121,12 +121,12 @@ export function StatusStrip() {
                   name={u.displayName}
                   src={u.avatar}
                   size="lg"
-                  className="!size-full border-2 border-[var(--talk-bg)]"
+                  className="border-talk-bg !size-full border-2"
                 />
               </span>
               <span className="tg-note-bubble tg-glass-strong">{u.note}</span>
             </span>
-            <span className="tg-muted w-full truncate text-center text-[11px] font-semibold">
+            <span className="tg-muted text-caption w-full truncate text-center font-semibold">
               {u.displayName.split(" ")[0]}
             </span>
           </button>
@@ -193,7 +193,7 @@ export function StatusViewer({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="talk w-full inset-0 z-[70] flex flex-col text-white"
+      className="talk z-scrim inset-0 flex w-full flex-col text-white"
       style={{
         background: `linear-gradient(160deg, oklch(0.55 0.18 ${hue}), oklch(0.35 0.16 ${(hue + 40) % 360}))`,
       }}
@@ -209,7 +209,7 @@ export function StatusViewer({
         </div>
         <div className="mt-3 flex items-center gap-2.5">
           <TalkAvatar name={user.displayName} src={user.avatar} size="sm" />
-          <span className="text-[14px] font-bold">{user.displayName}</span>
+          <span className="text-item font-bold">{user.displayName}</span>
           <span className="text-[12px] text-white/70">
             {user.noteAt ? noteAge(user.noteAt, t, locale) : ""}
           </span>
@@ -224,7 +224,7 @@ export function StatusViewer({
         </div>
       </div>
       <div className="flex flex-1 items-center justify-center px-8 text-center">
-        <p className="text-[26px] font-black leading-relaxed drop-shadow">
+        <p className="text-display leading-relaxed font-black drop-shadow">
           {user.note}
         </p>
       </div>
@@ -236,7 +236,7 @@ export function StatusViewer({
           value={reply}
           onChange={(e) => setReply(e.target.value)}
           placeholder={t("talk.home.replyToStatus")}
-          className="tg-glass h-11 flex-1 rounded-full bg-white/15 px-4 text-[13.5px] text-white placeholder:text-white/70 outline-none"
+          className="tg-glass h-11 flex-1 rounded-full bg-white/15 px-4 text-[13.5px] text-white outline-none placeholder:text-white/70"
           onKeyDown={(e) =>
             e.key === "Enter" && reply.trim() && void send(reply.trim())
           }
@@ -296,7 +296,7 @@ export function NoteEditor({ onClose }: { onClose: () => void }) {
             {text || "…"}
           </span>
         </div>
-        <h2 className="text-[18px] font-black">{t("talk.home.noteTitle")}</h2>
+        <h2 className="text-title font-black">{t("talk.home.noteTitle")}</h2>
         <input
           value={text}
           onChange={(e) => setText(e.target.value.slice(0, 60))}
@@ -337,7 +337,7 @@ export function NoteEditor({ onClose }: { onClose: () => void }) {
         <Mascot
           pose="love"
           size={80}
-          className="absolute -top-10 end-6 hidden md:block"
+          className="absolute end-6 -top-10 hidden md:block"
         />
       </div>
     </>

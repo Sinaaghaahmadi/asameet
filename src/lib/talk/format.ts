@@ -1,17 +1,26 @@
 import type { Chat, Message, User } from "@/lib/types";
 
-export function lastSeenLabel(user: User | undefined, t: (k: string) => string, locale: string): string {
+export function lastSeenLabel(
+  user: User | undefined,
+  t: (k: string) => string,
+  locale: string,
+): string {
   if (!user) return "";
   if (user.isOnline) return t("common.online");
   const d = new Date(user.lastSeen);
   const diff = (Date.now() - d.getTime()) / 1000;
   if (diff < 60) return t("talk.status.justNow");
-  if (diff < 3600) return `${t("talk.status.lastSeen")} ${Math.floor(diff / 60)} ${t("talk.status.minAgo")}`;
-  if (diff < 86400) return `${t("talk.status.lastSeen")} ${Math.floor(diff / 3600)} ${t("talk.status.hourAgo")}`;
+  if (diff < 3600)
+    return `${t("talk.status.lastSeen")} ${Math.floor(diff / 60)} ${t("talk.status.minAgo")}`;
+  if (diff < 86400)
+    return `${t("talk.status.lastSeen")} ${Math.floor(diff / 3600)} ${t("talk.status.hourAgo")}`;
   return `${t("talk.status.lastSeen")} ${new Intl.DateTimeFormat(locale === "fa" ? "fa-IR" : locale, { month: "short", day: "numeric" }).format(d)}`;
 }
 
-export function messagePreview(m: Pick<Message, "type" | "content" | "meta">, t: (k: string) => string): string {
+export function messagePreview(
+  m: Pick<Message, "type" | "content" | "meta">,
+  t: (k: string) => string,
+): string {
   switch (m.type) {
     case "image":
       return `🖼 ${m.content || t("talk.msg.photo")}`;
@@ -40,22 +49,36 @@ export function messagePreview(m: Pick<Message, "type" | "content" | "meta">, t:
   }
 }
 
-export function systemText(code: string, who: string | undefined, t: (k: string) => string): string {
+export function systemText(
+  code: string,
+  who: string | undefined,
+  t: (k: string) => string,
+): string {
   const key = `talk.system.${code}`;
   const text = t(key);
   if (text === key) return code;
   return who ? `${who} ${text}` : text;
 }
 
-export function chatDisplayName(chat: Chat, users: Map<string, User>, myId: string, t: (k: string) => string): string {
+export function chatDisplayName(
+  chat: Chat,
+  users: Map<string, User>,
+  myId: string,
+  t: (k: string) => string,
+): string {
   if (chat.type !== "private") return chat.name ?? "—";
-  if (chat.memberIds.length === 1 && chat.memberIds[0] === myId) return t("talk.savedMessages");
+  if (chat.memberIds.length === 1 && chat.memberIds[0] === myId)
+    return t("talk.savedMessages");
   const peer = chat.memberIds.find((m) => m !== myId);
   return (peer && users.get(peer)?.displayName) || t("talk.deletedAccount");
 }
 
 export function isSavedChat(chat: Chat, myId: string): boolean {
-  return chat.type === "private" && chat.memberIds.length === 1 && chat.memberIds[0] === myId;
+  return (
+    chat.type === "private" &&
+    chat.memberIds.length === 1 &&
+    chat.memberIds[0] === myId
+  );
 }
 
 export function peerOf(chat: Chat, myId: string): string | null {
@@ -68,7 +91,12 @@ export function dayKey(iso: string): string {
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 }
 
-export function dayLabel(iso: string, locale: string, today: string, yesterday: string): string {
+export function dayLabel(
+  iso: string,
+  locale: string,
+  today: string,
+  yesterday: string,
+): string {
   const d = new Date(iso);
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -89,7 +117,10 @@ export function splitLinks(text: string): { text: string; href?: string }[] {
     const i = m.index ?? 0;
     if (i > last) out.push({ text: text.slice(last, i) });
     const raw = m[0];
-    out.push({ text: raw, href: raw.startsWith("http") ? raw : `https://${raw}` });
+    out.push({
+      text: raw,
+      href: raw.startsWith("http") ? raw : `https://${raw}`,
+    });
     last = i + raw.length;
   }
   if (last < text.length) out.push({ text: text.slice(last) });

@@ -7,7 +7,10 @@ export const MAX_UPLOAD_BYTES = 3 * 1024 * 1024;
 
 /** "audio/webm;codecs=opus" → "audio/webm": the container type is what the server stores and streams back. */
 export function baseMime(mime: string): string {
-  return (mime.split(";")[0] || "").trim().toLowerCase() || "application/octet-stream";
+  return (
+    (mime.split(";")[0] || "").trim().toLowerCase() ||
+    "application/octet-stream"
+  );
 }
 
 export function blobToBase64(blob: Blob): Promise<string> {
@@ -32,7 +35,7 @@ export function blobToDataUrl(blob: Blob): Promise<string> {
 export async function compressImage(
   file: Blob,
   maxSide = 1600,
-  quality = 0.85
+  quality = 0.85,
 ): Promise<{ blob: Blob; width: number; height: number }> {
   const bitmap = await createImageBitmap(file).catch(() => null);
   if (!bitmap) return { blob: file, width: 0, height: 0 };
@@ -46,12 +49,17 @@ export async function compressImage(
   if (!ctx) return { blob: file, width: bitmap.width, height: bitmap.height };
   ctx.drawImage(bitmap, 0, 0, width, height);
   bitmap.close();
-  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, "image/jpeg", quality),
+  );
   return { blob: blob ?? file, width, height };
 }
 
 /** Square avatar, small enough to live inline in the users table. */
-export async function makeAvatarDataUrl(file: Blob, size = 320): Promise<string> {
+export async function makeAvatarDataUrl(
+  file: Blob,
+  size = 320,
+): Promise<string> {
   const bitmap = await createImageBitmap(file);
   const side = Math.min(bitmap.width, bitmap.height);
   const sx = (bitmap.width - side) / 2;
@@ -99,17 +107,30 @@ export class VoiceRecorder {
   onLevel?: (level: number) => void;
 
   async start(): Promise<void> {
-    this.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
-    this.mime = pickMimeType(["audio/webm;codecs=opus", "audio/ogg;codecs=opus", "audio/mp4", "audio/webm"]);
+    this.stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true },
+    });
+    this.mime = pickMimeType([
+      "audio/webm;codecs=opus",
+      "audio/ogg;codecs=opus",
+      "audio/mp4",
+      "audio/webm",
+    ]);
     try {
-      this.recorder = new MediaRecorder(this.stream, this.mime ? { mimeType: this.mime, audioBitsPerSecond: 48_000 } : undefined);
+      this.recorder = new MediaRecorder(
+        this.stream,
+        this.mime
+          ? { mimeType: this.mime, audioBitsPerSecond: 48_000 }
+          : undefined,
+      );
     } catch {
       this.mime = "";
       this.recorder = new MediaRecorder(this.stream);
     }
     this.chunks = [];
     this.levels = [];
-    this.recorder.ondataavailable = (e) => e.data.size > 0 && this.chunks.push(e.data);
+    this.recorder.ondataavailable = (e) =>
+      e.data.size > 0 && this.chunks.push(e.data);
     this.audioCtx = new AudioContext();
     const src = this.audioCtx.createMediaStreamSource(this.stream);
     const analyser = this.audioCtx.createAnalyser();
@@ -134,19 +155,32 @@ export class VoiceRecorder {
 
   async stop(): Promise<Recording> {
     const rec = this.recorder;
-    const duration = Math.max(1, Math.round((Date.now() - this.startedAt) / 1000));
+    const duration = Math.max(
+      1,
+      Math.round((Date.now() - this.startedAt) / 1000),
+    );
     const blob = await new Promise<Blob>((resolve) => {
-      if (!rec || rec.state === "inactive") return resolve(new Blob(this.chunks, { type: this.mime || "audio/webm" }));
-      rec.onstop = () => resolve(new Blob(this.chunks, { type: this.mime || "audio/webm" }));
+      if (!rec || rec.state === "inactive")
+        return resolve(
+          new Blob(this.chunks, { type: this.mime || "audio/webm" }),
+        );
+      rec.onstop = () =>
+        resolve(new Blob(this.chunks, { type: this.mime || "audio/webm" }));
       rec.stop();
     });
     this.cleanup();
-    return { blob, mime: baseMime(this.mime || blob.type || "audio/webm"), duration, waveform: downsample(this.levels, 48) };
+    return {
+      blob,
+      mime: baseMime(this.mime || blob.type || "audio/webm"),
+      duration,
+      waveform: downsample(this.levels, 48),
+    };
   }
 
   cancel(): void {
     try {
-      if (this.recorder && this.recorder.state !== "inactive") this.recorder.stop();
+      if (this.recorder && this.recorder.state !== "inactive")
+        this.recorder.stop();
     } catch {
       /* ignore */
     }
@@ -174,18 +208,34 @@ export class VideoNoteRecorder {
 
   async start(): Promise<MediaStream> {
     this.stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "user", width: { ideal: 480 }, height: { ideal: 480 }, frameRate: { ideal: 24 } },
+      video: {
+        facingMode: "user",
+        width: { ideal: 480 },
+        height: { ideal: 480 },
+        frameRate: { ideal: 24 },
+      },
       audio: true,
     });
-    this.mime = pickMimeType(["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/mp4", "video/webm"]);
+    this.mime = pickMimeType([
+      "video/webm;codecs=vp9,opus",
+      "video/webm;codecs=vp8,opus",
+      "video/mp4",
+      "video/webm",
+    ]);
     try {
-      this.recorder = new MediaRecorder(this.stream, this.mime ? { mimeType: this.mime, videoBitsPerSecond: 600_000 } : undefined);
+      this.recorder = new MediaRecorder(
+        this.stream,
+        this.mime
+          ? { mimeType: this.mime, videoBitsPerSecond: 600_000 }
+          : undefined,
+      );
     } catch {
       this.mime = "";
       this.recorder = new MediaRecorder(this.stream);
     }
     this.chunks = [];
-    this.recorder.ondataavailable = (e) => e.data.size > 0 && this.chunks.push(e.data);
+    this.recorder.ondataavailable = (e) =>
+      e.data.size > 0 && this.chunks.push(e.data);
     this.startedAt = Date.now();
     this.recorder.start(500);
     return this.stream;
@@ -193,19 +243,31 @@ export class VideoNoteRecorder {
 
   async stop(): Promise<{ blob: Blob; mime: string; duration: number }> {
     const rec = this.recorder;
-    const duration = Math.max(1, Math.round((Date.now() - this.startedAt) / 1000));
+    const duration = Math.max(
+      1,
+      Math.round((Date.now() - this.startedAt) / 1000),
+    );
     const blob = await new Promise<Blob>((resolve) => {
-      if (!rec || rec.state === "inactive") return resolve(new Blob(this.chunks, { type: this.mime || "video/webm" }));
-      rec.onstop = () => resolve(new Blob(this.chunks, { type: this.mime || "video/webm" }));
+      if (!rec || rec.state === "inactive")
+        return resolve(
+          new Blob(this.chunks, { type: this.mime || "video/webm" }),
+        );
+      rec.onstop = () =>
+        resolve(new Blob(this.chunks, { type: this.mime || "video/webm" }));
       rec.stop();
     });
     this.cleanup();
-    return { blob, mime: baseMime(this.mime || blob.type || "video/webm"), duration };
+    return {
+      blob,
+      mime: baseMime(this.mime || blob.type || "video/webm"),
+      duration,
+    };
   }
 
   cancel(): void {
     try {
-      if (this.recorder && this.recorder.state !== "inactive") this.recorder.stop();
+      if (this.recorder && this.recorder.state !== "inactive")
+        this.recorder.stop();
     } catch {
       /* ignore */
     }
@@ -224,7 +286,10 @@ export function downsample(values: number[], buckets: number): number[] {
   const out: number[] = [];
   for (let i = 0; i < buckets; i++) {
     const from = Math.floor((i * values.length) / buckets);
-    const to = Math.max(from + 1, Math.floor(((i + 1) * values.length) / buckets));
+    const to = Math.max(
+      from + 1,
+      Math.floor(((i + 1) * values.length) / buckets),
+    );
     let max = 0;
     for (let j = from; j < to; j++) max = Math.max(max, values[j] ?? 0);
     out.push(Math.max(2, max));

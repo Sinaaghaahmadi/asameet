@@ -1,19 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
-import { assertSameOrigin, errorResponse, requireToken, rpc } from "@/lib/server/api";
+import {
+  assertSameOrigin,
+  errorResponse,
+  requireToken,
+  rpc,
+} from "@/lib/server/api";
 import type { MessageMeta, MessageType } from "@/lib/types";
 
-export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+export async function GET(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await ctx.params;
     const token = await requireToken();
     const after = req.nextUrl.searchParams.get("after");
-    return NextResponse.json(await rpc("api_messages", { p_token: token, p_chat_id: id, p_after: after }));
+    return NextResponse.json(
+      await rpc("api_messages", {
+        p_token: token,
+        p_chat_id: id,
+        p_after: after,
+      }),
+    );
   } catch (e) {
     return errorResponse(e);
   }
 }
 
-export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+export async function POST(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> },
+) {
   try {
     assertSameOrigin(req);
     const { id } = await ctx.params;
@@ -40,14 +57,25 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   }
 }
 
-export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  req: NextRequest,
+  ctx: { params: Promise<{ id: string }> },
+) {
   try {
     assertSameOrigin(req);
     const { id } = await ctx.params;
     const token = await requireToken();
     const body = (await req.json().catch(() => null)) as {
       messageId?: string;
-      action?: "pin" | "unpin" | "read" | "react" | "edit" | "delete" | "forward" | "vote";
+      action?:
+        | "pin"
+        | "unpin"
+        | "read"
+        | "react"
+        | "edit"
+        | "delete"
+        | "forward"
+        | "vote";
       emoji?: string;
       text?: string;
       targetChatId?: string;
