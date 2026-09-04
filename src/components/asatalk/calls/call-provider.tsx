@@ -14,6 +14,7 @@ import { CallSession, type CallPhase, type PeerState } from "@/lib/talk/webrtc";
 import { useT } from "@/lib/i18n";
 import type { Call, User } from "@/lib/types";
 import { useTalkStore } from "@/stores/talk-store";
+import { useTalk } from "../talk-data";
 import { CallScreen } from "./call-screen";
 
 export interface ActiveCall {
@@ -48,6 +49,7 @@ export function CallProvider({ me, users, children }: { me: User; users: Map<str
   const t = useT();
   const qc = useQueryClient();
   const settings = useTalkStore((s) => s.settings);
+  const { openPrivateChat } = useTalk();
   const [active, setActive] = useState<ActiveCall | null>(null);
   const stopSound = useRef<() => void>(() => undefined);
   const activeRef = useRef<ActiveCall | null>(null);
@@ -189,6 +191,18 @@ export function CallProvider({ me, users, children }: { me: User; users: Map<str
           }}
           onSpeaker={(s) => patch({ speaker: s })}
           onMinimize={(m) => patch({ minimized: m })}
+          onMessage={() => {
+            const peer = active.peer;
+            if (active.phase !== "ended") void active.session.decline();
+            setActive(null);
+            stopSound.current();
+            void openPrivateChat(peer.id).catch(() => undefined);
+          }}
+          onCallAgain={() => {
+            const { peer, call } = active;
+            setActive(null);
+            window.setTimeout(() => void startCall(peer, call.type), 50);
+          }}
         />
       )}
     </Ctx.Provider>

@@ -59,21 +59,32 @@ export function CallsPage({ onBack }: { onBack: () => void }) {
               const { Icon, cls, label } = meta(c);
               return (
                 <div key={c.id} className="tg-row cursor-default">
-                  <TalkAvatar name={peer?.displayName ?? "?"} src={peer?.avatar} size="md" online={peer?.isOnline} />
+                  <TalkAvatar name={peer?.displayName ?? "?"} src={peer?.avatar} size="md" className="!size-12" online={peer?.isOnline} />
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold">{peer?.displayName ?? t("talk.deletedAccount")}</span>
-                    <span className={cn("flex items-center gap-1 text-xs", cls)}>
+                    <span className={cn("block truncate text-[14.5px] font-bold", c.direction === "missed" && "text-red-500")}>
+                      {peer?.displayName ?? t("talk.deletedAccount")}
+                      
+                    </span>
+                    <span className={cn("flex items-center gap-1 text-[12px]", cls)}>
                       <Icon className="size-3.5" />
-                      {label}
-                      {c.type === "video" && <Video className="size-3.5" />}
-                      {c.duration != null && <span className="tg-muted">· {toLocaleDigits(formatDuration(c.duration), locale)}</span>}
+                      {c.type === "video" ? t("talk.calls.videoCall") : t("talk.calls.audioCall")} · {c.direction === "missed" ? t("talk.conv.missed") : label}
+                      {c.duration != null && c.duration > 0 && (
+                        <span className="tg-muted" dir="ltr">
+                          · {toLocaleDigits(formatDuration(c.duration), locale)}
+                        </span>
+                      )}
                     </span>
                   </span>
                   <span className="tg-time">{formatRelativeDay(c.createdAt, locale, t("common.today"), t("common.yesterday"))}</span>
                   {peer && (
-                    <button type="button" className="tg-btn tg-icon" onClick={() => void startCall(peer, c.type)} aria-label={t("talk.calls.callBack")}>
-                      {c.type === "video" ? <Video className="size-4" /> : <Phone className="size-4" />}
-                    </button>
+                    <>
+                      <button type="button" className="tg-btn tg-icon !h-9 !w-9" onClick={() => void startCall(peer, "audio")} aria-label={t("talk.calls.audioCall")}>
+                        <Phone className="size-4" />
+                      </button>
+                      <button type="button" className="tg-btn tg-icon !h-9 !w-9" onClick={() => void startCall(peer, "video")} aria-label={t("talk.calls.videoCall")}>
+                        <Video className="size-4" />
+                      </button>
+                    </>
                   )}
                 </div>
               );

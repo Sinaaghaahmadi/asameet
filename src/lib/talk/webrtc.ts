@@ -36,8 +36,66 @@ function iceServers(): RTCIceServer[] {
       username: process.env.NEXT_PUBLIC_TURN_USER,
       credential: process.env.NEXT_PUBLIC_TURN_PASS,
     });
+  } else {
+    // Public relay so calls still connect behind strict NATs / mobile
+    // carriers when no private TURN is configured (best effort).
+    servers.push({
+      urls: ["turn:openrelay.metered.ca:80", "turn:openrelay.metered.ca:443", "turn:openrelay.metered.ca:443?transport=tcp"],
+      username: "openrelayproject",
+      credential: "openrelayproject",
+    });
   }
   return servers;
+}
+
+export class MediaAccessError extends Error {
+  constructor(
+    public kind: "denied" | "notfound" | "busy" | "insecure" | "unknown",
+    message?: string
+  ) {
+    super(message ?? kind);
+  }
+}
+
+function classify(e: unknown): MediaAccessError {
+  const name = e instanceof DOMException ? e.name : "";
+  if (name === "NotAllowedError" || name === "SecurityError") return new MediaAccessError("denied");
+  if (name === "NotFoundError" || name === "OverconstrainedError" || name === "DevicesNotFoundError") return new MediaAccessError("notfound");
+  if (name === "NotReadableError" || name === "AbortError" || name === "TrackStartError") return new MediaAccessError("busy");
+  return new MediaAccessError("unknown", e instanceof Error ? e.message : String(e));
+}
+
+/** Camera + mic with graceful degradation; throws MediaAccessError on hard failure. */
+export async function getCallMedia(video: boolean): Promise<{ stream: MediaStream; video: boolean }> {
+  if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) throw new MediaAccessError("insecure");
+  const audio: MediaTrackConstraints = { echoCancellation: true, noiseSuppression: true, autoGainControl: true };
+  if (video) {
+    const attempts: MediaStreamConstraints[] = [
+      { audio, video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } },
+      { audio, video: { facingMode: "user" } },
+      { audio, video: true },
+    ];
+    let lastErr: unknown = null;
+    for (const c of attempts) {
+      try {
+        return { stream: await navigator.mediaDevices.getUserMedia(c), video: true };
+      } catch (e) {
+        lastErr = e;
+        if (classify(e).kind === "denied") throw classify(e);
+      }
+    }
+    // No camera (or it is busy): keep the call alive as audio-only.
+    try {
+      return { stream: await navigator.mediaDevices.getUserMedia({ audio }), video: false };
+    } catch {
+      throw classify(lastErr);
+    }
+  }
+  try {
+    return { stream: await navigator.mediaDevices.getUserMedia({ audio }), video: false };
+  } catch (e) {
+    throw classify(e);
+  }
 }
 
 export class CallSession {
@@ -112,22 +170,23 @@ export class CallSession {
       this.setCamera(true);
       return true;
     }
+    let cam: MediaStream;
     try {
-      const cam = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-      const track = cam.getVideoTracks()[0];
-      this.cameraTrack = track;
-      this.local.addTrack(track);
-      const sender = this.pc?.getSenders().find((s) => s.track?.kind === "video");
-      if (sender) await sender.replaceTrack(track);
-      else this.pc?.addTrack(track, this.local);
-      this.video = true;
-      this.ev.onLocalStream(this.local);
-      await this.renegotiate();
-      void this.sendState();
-      return true;
-    } catch {
-      return false;
+      cam = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } }).catch(() => navigator.mediaDevices.getUserMedia({ video: true }));
+    } catch (e) {
+      throw classify(e);
     }
+    const track = cam.getVideoTracks()[0];
+    this.cameraTrack = track;
+    this.local.addTrack(track);
+    const sender = this.pc?.getSenders().find((s) => s.track?.kind === "video" || (s.track === null && this.pc?.getTransceivers().some((t) => t.sender === s && t.receiver.track.kind === "video")));
+    if (sender) await sender.replaceTrack(track);
+    else this.pc?.addTrack(track, this.local);
+    this.video = true;
+    this.ev.onLocalStream(this.local);
+    await this.renegotiate();
+    void this.sendState();
+    return true;
   }
 
   async switchCamera(): Promise<void> {
@@ -193,17 +252,9 @@ export class CallSession {
 
   private async captureMedia() {
     if (this.local) return;
-    const constraints: MediaStreamConstraints = {
-      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-      video: this.video ? { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } : false,
-    };
-    try {
-      this.local = await navigator.mediaDevices.getUserMedia(constraints);
-    } catch {
-      // Camera refused? Fall back to audio only rather than failing the call.
-      this.video = false;
-      this.local = await navigator.mediaDevices.getUserMedia({ audio: true });
-    }
+    const got = await getCallMedia(this.video);
+    this.local = got.stream;
+    this.video = got.video;
     this.cameraTrack = this.local.getVideoTracks()[0] ?? null;
     this.ev.onLocalStream(this.local);
   }
@@ -214,7 +265,7 @@ export class CallSession {
     this.pc = pc;
     this.local?.getTracks().forEach((t) => pc.addTrack(t, this.local!));
     // Always negotiate a video m-line so either side can turn the camera on later.
-    if (!this.local?.getVideoTracks().length) pc.addTransceiver("video", { direction: "recvonly" });
+    if (!this.local?.getVideoTracks().length) pc.addTransceiver("video", { direction: "sendrecv" });
     pc.onicecandidate = (e) => {
       if (e.candidate) {
         void talkApi.signal(this.call.id, { kind: "ice", candidate: e.candidate.toJSON() } satisfies SignalPayload).catch(() => undefined);
@@ -224,12 +275,17 @@ export class CallSession {
     pc.ontrack = (e) => {
       e.streams[0]?.getTracks().forEach((t) => remote.addTrack(t));
       if (!e.streams[0]) remote.addTrack(e.track);
-      this.ev.onRemoteStream(remote);
+      const notify = () => this.ev.onRemoteStream(remote);
+      e.track.onunmute = notify;
+      e.track.onmute = notify;
+      e.track.onended = notify;
+      notify();
     };
     pc.onconnectionstatechange = () => {
       if (pc.connectionState === "connected") {
         this.startedAt ??= Date.now();
         this.setPhase("connected");
+        void this.sendState();
       } else if (pc.connectionState === "failed") {
         this.finish("failed");
       } else if (pc.connectionState === "disconnected") {

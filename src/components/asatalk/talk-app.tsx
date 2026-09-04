@@ -15,13 +15,15 @@ import { CallProvider } from "./calls/call-provider";
 import { JoinDialog } from "./dialogs";
 import { AsatalkLogo } from "./mascots";
 import { Onboarding } from "./onboarding";
+import { PinScreen } from "./pin-lock";
 import { TalkShell } from "./shell";
 import { TalkDataProvider, useTalk } from "./talk-data";
 
 export function TalkApp({ joinRef }: { joinRef?: string }) {
   const qc = useQueryClient();
   const params = useSearchParams();
-  const { user, setUser, setSettings, setAccounts, openChat, setPanel } = useTalkStore();
+  const { user, setUser, setSettings, setAccounts, openChat, setPanel, settings } = useTalkStore();
+  const [unlocked, setUnlocked] = useState<string | null>(() => (typeof window !== "undefined" ? window.sessionStorage.getItem("asatalk-unlocked") : null));
   const [ready, setReady] = useState(false);
   const [addingAccount, setAddingAccount] = useState(false);
 
@@ -118,6 +120,22 @@ export function TalkApp({ joinRef }: { joinRef?: string }) {
 
   if (!user || addingAccount) {
     return <Onboarding onLogin={onLogin} addAccount={addingAccount} onCancel={addingAccount ? () => setAddingAccount(false) : undefined} />;
+  }
+
+  if (settings.pinLock && unlocked !== settings.pinLock) {
+    return (
+      <PinScreen
+        mode="verify"
+        hash={settings.pinLock}
+        onDone={(h) => {
+          try {
+            window.sessionStorage.setItem("asatalk-unlocked", h);
+          } catch {}
+          setUnlocked(h);
+        }}
+        onForgot={() => void onLogout(true)}
+      />
+    );
   }
 
   return (

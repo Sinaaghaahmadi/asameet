@@ -47,7 +47,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
     const token = await requireToken();
     const body = (await req.json().catch(() => null)) as {
       messageId?: string;
-      action?: "pin" | "unpin" | "read" | "react" | "edit" | "delete" | "forward";
+      action?: "pin" | "unpin" | "read" | "react" | "edit" | "delete" | "forward" | "vote";
       emoji?: string;
       text?: string;
       targetChatId?: string;

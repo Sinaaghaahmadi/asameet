@@ -2,7 +2,13 @@
 
 /** Client-side media helpers: compression, recording, base64 transport. */
 
-export const MAX_UPLOAD_BYTES = 6 * 1024 * 1024;
+/** Vercel functions accept ~4.5 MB bodies; base64 inflates by 4/3, so cap at 3 MB. */
+export const MAX_UPLOAD_BYTES = 3 * 1024 * 1024;
+
+/** "audio/webm;codecs=opus" → "audio/webm": the container type is what the server stores and streams back. */
+export function baseMime(mime: string): string {
+  return (mime.split(";")[0] || "").trim().toLowerCase() || "application/octet-stream";
+}
 
 export function blobToBase64(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -95,7 +101,12 @@ export class VoiceRecorder {
   async start(): Promise<void> {
     this.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
     this.mime = pickMimeType(["audio/webm;codecs=opus", "audio/ogg;codecs=opus", "audio/mp4", "audio/webm"]);
-    this.recorder = new MediaRecorder(this.stream, this.mime ? { mimeType: this.mime, audioBitsPerSecond: 48_000 } : undefined);
+    try {
+      this.recorder = new MediaRecorder(this.stream, this.mime ? { mimeType: this.mime, audioBitsPerSecond: 48_000 } : undefined);
+    } catch {
+      this.mime = "";
+      this.recorder = new MediaRecorder(this.stream);
+    }
     this.chunks = [];
     this.levels = [];
     this.recorder.ondataavailable = (e) => e.data.size > 0 && this.chunks.push(e.data);
@@ -130,7 +141,7 @@ export class VoiceRecorder {
       rec.stop();
     });
     this.cleanup();
-    return { blob, mime: this.mime || blob.type || "audio/webm", duration, waveform: downsample(this.levels, 48) };
+    return { blob, mime: baseMime(this.mime || blob.type || "audio/webm"), duration, waveform: downsample(this.levels, 48) };
   }
 
   cancel(): void {
@@ -167,7 +178,12 @@ export class VideoNoteRecorder {
       audio: true,
     });
     this.mime = pickMimeType(["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/mp4", "video/webm"]);
-    this.recorder = new MediaRecorder(this.stream, this.mime ? { mimeType: this.mime, videoBitsPerSecond: 600_000 } : undefined);
+    try {
+      this.recorder = new MediaRecorder(this.stream, this.mime ? { mimeType: this.mime, videoBitsPerSecond: 600_000 } : undefined);
+    } catch {
+      this.mime = "";
+      this.recorder = new MediaRecorder(this.stream);
+    }
     this.chunks = [];
     this.recorder.ondataavailable = (e) => e.data.size > 0 && this.chunks.push(e.data);
     this.startedAt = Date.now();
@@ -184,7 +200,7 @@ export class VideoNoteRecorder {
       rec.stop();
     });
     this.cleanup();
-    return { blob, mime: this.mime || blob.type || "video/webm", duration };
+    return { blob, mime: baseMime(this.mime || blob.type || "video/webm"), duration };
   }
 
   cancel(): void {

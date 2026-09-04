@@ -13,6 +13,7 @@ import { ACCENTS, WALLPAPERS, useTalkStore, type SettingsPage } from "@/stores/t
 import { AvatarPicker, ConfirmDialog } from "../dialogs";
 import { GBtn, GHeader, GItem, GSection, GSwitch, TalkAvatar } from "../glass";
 import { AsatalkLogo, Mascot } from "../mascots";
+import { PinScreen } from "../pin-lock";
 import { useTalk } from "../talk-data";
 
 export function SettingsPanel({ page, onNavigate, onClose, onLogout, onAddAccount, onSwitch }: { page: SettingsPage; onNavigate: (p: SettingsPage) => void; onClose: () => void; onLogout: (all?: boolean) => void; onAddAccount: () => void; onSwitch: (id: string) => void }) {
@@ -47,6 +48,7 @@ const C = {
   teal: "linear-gradient(135deg,#14b8a6,#0d9488)",
   gray: "linear-gradient(135deg,#64748b,#475569)",
   amber: "linear-gradient(135deg,#f59e0b,#d97706)",
+  sky: "linear-gradient(135deg,#0ea5e9,#0284c7)",
 };
 
 function Root({ onNavigate, onClose, onLogout }: { onNavigate: (p: SettingsPage) => void; onClose: () => void; onLogout: (all?: boolean) => void }) {
@@ -54,6 +56,9 @@ function Root({ onNavigate, onClose, onLogout }: { onNavigate: (p: SettingsPage)
   const { me } = useTalk();
   const { locale } = useLocale();
   const [confirm, setConfirm] = useState(false);
+  const folderCount = useTalkStore((st) => st.settings.folders?.length ?? 0);
+  const sessionsQ = useQuery({ queryKey: ["talk", "sessions"], queryFn: () => talkApi.sessions(), staleTime: 60_000 });
+  const sessionCount = sessionsQ.data?.sessions.length ?? 0;
   return (
     <>
       <GHeader
@@ -67,14 +72,15 @@ function Root({ onNavigate, onClose, onLogout }: { onNavigate: (p: SettingsPage)
       />
       <div className="tg-scroll flex-1 pb-6">
         <button type="button" className="flex w-full items-center gap-4 px-5 py-5 text-start" onClick={() => onNavigate("profile")}>
-          <TalkAvatar name={me.displayName} src={me.avatar} size="xl" />
+          <TalkAvatar name={me.displayName} src={me.avatar} size="xl" className="!size-[70px]" />
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-lg font-black">{me.displayName}</span>
-            <span className="tg-muted block truncate text-sm" dir="ltr">
-              @{me.username}
+            <span className="block truncate text-[18px] font-black">{me.displayName}</span>
+            <span className="tg-muted block truncate text-[13px]" dir="ltr">
+              {me.username}@{me.phone ? ` · ${me.phone}` : me.email ? ` · ${me.email}` : ""}
             </span>
             {me.bio && <span className="tg-muted mt-0.5 block truncate text-xs">{me.bio}</span>}
           </span>
+          <Pencil className="size-4 shrink-0 text-[var(--talk)]" />
         </button>
         <div className="px-3">
           <GSection title={t("talk.settings.account")}>
@@ -83,12 +89,12 @@ function Root({ onNavigate, onClose, onLogout }: { onNavigate: (p: SettingsPage)
           </GSection>
           <GSection title={t("talk.settings.general")}>
             <GItem icon={<Bell className="size-4" />} color={C.red} label={t("talk.settings.notifications")} onClick={() => onNavigate("notifications")} chevron />
-            <GItem icon={<Lock className="size-4" />} color={C.green} label={t("talk.settings.privacy")} onClick={() => onNavigate("privacy")} chevron />
-            <GItem icon={<MessageCircle className="size-4" />} color={C.orange} label={t("talk.settings.chatSettings")} onClick={() => onNavigate("chat")} chevron />
-            <GItem icon={<Folder className="size-4" />} color={C.purple} label={t("talk.settings.folders")} onClick={() => onNavigate("folders")} chevron />
-            <GItem icon={<Database className="size-4" />} color={C.pink} label={t("talk.settings.dataStorage")} onClick={() => onNavigate("data")} chevron />
-            <GItem icon={<Laptop className="size-4" />} color={C.gray} label={t("talk.settings.devices")} onClick={() => onNavigate("devices")} chevron />
-            <GItem icon={<Languages className="size-4" />} color={C.amber} label={t("talk.settings.language")} value={LOCALES.find((l) => l.code === locale)?.label} onClick={() => onNavigate("language")} chevron />
+            <GItem icon={<Lock className="size-4" />} color={C.gray} label={t("talk.settings.privacy")} onClick={() => onNavigate("privacy")} chevron />
+            <GItem icon={<MessageCircle className="size-4" />} color={C.blue} label={t("talk.settings.chatSettings")} onClick={() => onNavigate("chat")} chevron />
+            <GItem icon={<Folder className="size-4" />} color={C.amber} label={t("talk.settings.folders")} value={folderCount ? toLocaleDigits(folderCount, locale) : undefined} onClick={() => onNavigate("folders")} chevron />
+            <GItem icon={<Database className="size-4" />} color={C.green} label={t("talk.settings.dataStorage")} onClick={() => onNavigate("data")} chevron />
+            <GItem icon={<Laptop className="size-4" />} color={C.purple} label={t("talk.settings.devices")} value={sessionCount ? toLocaleDigits(sessionCount, locale) : undefined} onClick={() => onNavigate("devices")} chevron />
+            <GItem icon={<Languages className="size-4" />} color={C.sky} label={t("talk.settings.language")} value={LOCALES.find((l) => l.code === locale)?.label} onClick={() => onNavigate("language")} chevron />
           </GSection>
           <GSection>
             <GItem icon={<Info className="size-4" />} color={C.blue} label={t("talk.settings.about")} onClick={() => onNavigate("about")} chevron />
@@ -97,9 +103,10 @@ function Root({ onNavigate, onClose, onLogout }: { onNavigate: (p: SettingsPage)
           <GSection>
             <GItem icon={<LogOut className="size-4" />} color={C.red} label={t("talk.settings.logout")} danger onClick={() => setConfirm(true)} />
           </GSection>
-          <p className="tg-muted text-center text-[11px]">
-            {t("talk.name")} · {t("talk.settings.version")} 1.0
-          </p>
+          <div className="flex flex-col items-center gap-1 py-4">
+            <Mascot pose="love" size={110} />
+            <p className="tg-muted text-center text-[11px]">{t("talk.name")} ۲.۴.۰ — {t("talk.settings.abt.madeBy")}</p>
+          </div>
         </div>
       </div>
       {confirm && <ConfirmDialog title={t("talk.settings.logoutConfirm")} danger confirmLabel={t("talk.settings.logout")} onCancel={() => setConfirm(false)} onConfirm={() => onLogout(false)} />}
@@ -275,8 +282,20 @@ function PrivacyPage({ back, onNavigate }: { back: () => void; onNavigate: (p: S
   const { s, set } = useSetting();
   const { users, toggleBlock } = useTalk();
   const blocked = (s.blocked ?? []).map((id) => users.get(id)).filter(Boolean);
+  const [pinSetup, setPinSetup] = useState(false);
   return (
     <>
+      {pinSetup && (
+        <PinScreen
+          mode="set"
+          onDone={(pin) => {
+            set({ pinLock: pin });
+            setPinSetup(false);
+            toast.success(t("talk.pin.set"));
+          }}
+          onCancel={() => setPinSetup(false)}
+        />
+      )}
       <GHeader title={t("talk.settings.privacy")} onBack={back} />
       <div className="tg-scroll flex-1 px-3 pb-6 pt-3">
         <GSection title={t("talk.settings.priv.section")} hint={t("talk.settings.priv.whoCan")}>
@@ -303,6 +322,7 @@ function PrivacyPage({ back, onNavigate }: { back: () => void; onNavigate: (p: S
           ))}
         </GSection>
         <GSection title={t("talk.settings.priv.security")}>
+          <GItem icon={<Lock className="size-4" />} color={C.blue} label={t("talk.pin.enable")} value={s.pinLock ? "●●●●●●" : undefined} right={<GSwitch on={!!s.pinLock} onChange={(v) => (v ? setPinSetup(true) : (set({ pinLock: "" }), toast.success(t("talk.pin.removed"))))} />} />
           <GItem icon={<KeyRound className="size-4" />} color={C.amber} label={t("talk.settings.priv.changePassword")} onClick={() => onNavigate("password")} chevron />
           <GItem icon={<Laptop className="size-4" />} color={C.gray} label={t("talk.settings.priv.activeSessions")} onClick={() => onNavigate("devices")} chevron />
         </GSection>
@@ -341,12 +361,11 @@ function ChatSettingsPage({ back }: { back: () => void }) {
         </div>
 
         <GSection title={t("talk.settings.chat.theme")}>
-          <div className="flex gap-2 p-3">
+          <div className="tg-seg m-3">
             {(["light", "dark", "system"] as const).map((k) => (
               <button
                 key={k}
                 type="button"
-                className="tg-chip flex-1 justify-center"
                 data-active={s.theme === k}
                 onClick={() => {
                   set({ theme: k });
@@ -361,27 +380,34 @@ function ChatSettingsPage({ back }: { back: () => void }) {
         </GSection>
 
         <GSection title={t("talk.settings.chat.accent")}>
-          <div className="flex flex-wrap gap-3 p-4">
+          <div className="flex flex-wrap justify-between gap-2 px-4 py-4">
             {Object.entries(ACCENTS).map(([k, a]) => (
               <button
                 key={k}
                 type="button"
                 aria-label={a.name}
+                title={a.name}
                 onClick={() => set({ accent: k })}
-                className={cn("size-9 rounded-full ring-offset-2 transition hover:scale-110", s.accent === k && "ring-2 ring-[var(--talk)]")}
-                style={{ background: `linear-gradient(135deg, oklch(0.75 ${a.c} ${a.h}), oklch(0.55 ${a.c} ${a.h}))`, boxShadow: `0 6px 14px oklch(0.6 ${a.c} ${a.h} / 0.4)` }}
+                className={cn("size-9 rounded-full ring-offset-2 ring-offset-[var(--talk-surface)] transition hover:scale-110", s.accent === k && "ring-2 ring-[var(--talk)]")}
+                style={{ background: `oklch(0.62 ${a.c} ${a.h})`, boxShadow: `0 6px 14px oklch(0.6 ${a.c} ${a.h} / 0.35)` }}
               >
-                {s.accent === k && <Check className="mx-auto size-4 text-white" />}
+                {s.accent === k && <Check className="mx-auto size-4 text-white" strokeWidth={3} />}
               </button>
             ))}
           </div>
         </GSection>
 
         <GSection title={t("talk.settings.chat.wallpaper")}>
-          <div className="grid grid-cols-3 gap-2 p-3">
+          <div className="grid grid-cols-6 gap-2 p-3">
             {WALLPAPERS.map((w) => (
-              <button key={w} type="button" className={cn("tg-wall h-16 rounded-xl border-2 transition", s.wallpaper === w ? "border-[var(--talk)]" : "border-transparent")} data-wall={w} onClick={() => set({ wallpaper: w })} aria-label={w}>
-                {s.wallpaper === w && <Check className="mx-auto size-5 text-[var(--talk)]" />}
+              <button key={w} type="button" className={cn("tg-wall relative aspect-square overflow-hidden rounded-xl border-2 transition", s.wallpaper === w ? "border-[var(--talk)]" : "border-transparent")} data-wall={w} onClick={() => set({ wallpaper: w })} aria-label={w}>
+                {s.wallpaper === w && (
+                  <span className="absolute inset-0 flex items-center justify-center">
+                    <span className="flex size-5 items-center justify-center rounded-full bg-[var(--talk)] text-white">
+                      <Check className="size-3" strokeWidth={3} />
+                    </span>
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -393,14 +419,18 @@ function ChatSettingsPage({ back }: { back: () => void }) {
               <span>{t("talk.settings.chat.fontSize")}</span>
               <span className="tg-muted text-xs">{s.fontSize}px</span>
             </div>
-            <input type="range" min={12} max={20} value={s.fontSize} onChange={(e) => set({ fontSize: Number(e.target.value) })} className="mt-2 w-full accent-[var(--talk)]" />
+            <div className="mt-2 flex items-center gap-3">
+              <span className="text-[12px]">A</span>
+              <input type="range" min={12} max={20} value={s.fontSize} onChange={(e) => set({ fontSize: Number(e.target.value) })} className="tg-range flex-1" style={{ ["--p" as string]: `${((s.fontSize - 12) / 8) * 100}%` }} />
+              <span className="text-[20px] font-bold">A</span>
+            </div>
           </div>
           <div className="px-4 py-3">
             <div className="flex items-center justify-between text-sm">
               <span>{t("talk.settings.chat.bubbleRadius")}</span>
               <span className="tg-muted text-xs">{s.bubbleRadius}px</span>
             </div>
-            <input type="range" min={6} max={24} value={s.bubbleRadius} onChange={(e) => set({ bubbleRadius: Number(e.target.value) })} className="mt-2 w-full accent-[var(--talk)]" />
+            <input type="range" min={6} max={24} value={s.bubbleRadius} onChange={(e) => set({ bubbleRadius: Number(e.target.value) })} className="tg-range mt-2 w-full" style={{ ["--p" as string]: `${((s.bubbleRadius - 6) / 18) * 100}%` }} />
           </div>
         </GSection>
 
