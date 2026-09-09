@@ -46,7 +46,7 @@ function iceServers(): RTCIceServer[] {
 export class MediaAccessError extends Error {
   constructor(
     public kind: "denied" | "notfound" | "busy" | "insecure" | "unknown",
-    message?: string
+    message?: string,
   ) {
     super(message ?? kind);
   }
@@ -54,26 +54,57 @@ export class MediaAccessError extends Error {
 
 function classify(e: unknown): MediaAccessError {
   const name = e instanceof DOMException ? e.name : "";
-  if (name === "NotAllowedError" || name === "SecurityError") return new MediaAccessError("denied");
-  if (name === "NotFoundError" || name === "OverconstrainedError" || name === "DevicesNotFoundError") return new MediaAccessError("notfound");
-  if (name === "NotReadableError" || name === "AbortError" || name === "TrackStartError") return new MediaAccessError("busy");
-  return new MediaAccessError("unknown", e instanceof Error ? e.message : String(e));
+  if (name === "NotAllowedError" || name === "SecurityError")
+    return new MediaAccessError("denied");
+  if (
+    name === "NotFoundError" ||
+    name === "OverconstrainedError" ||
+    name === "DevicesNotFoundError"
+  )
+    return new MediaAccessError("notfound");
+  if (
+    name === "NotReadableError" ||
+    name === "AbortError" ||
+    name === "TrackStartError"
+  )
+    return new MediaAccessError("busy");
+  return new MediaAccessError(
+    "unknown",
+    e instanceof Error ? e.message : String(e),
+  );
 }
 
 /** Camera + mic with graceful degradation; throws MediaAccessError on hard failure. */
-export async function getCallMedia(video: boolean): Promise<{ stream: MediaStream; video: boolean }> {
-  if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) throw new MediaAccessError("insecure");
-  const audio: MediaTrackConstraints = { echoCancellation: true, noiseSuppression: true, autoGainControl: true };
+export async function getCallMedia(
+  video: boolean,
+): Promise<{ stream: MediaStream; video: boolean }> {
+  if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia)
+    throw new MediaAccessError("insecure");
+  const audio: MediaTrackConstraints = {
+    echoCancellation: true,
+    noiseSuppression: true,
+    autoGainControl: true,
+  };
   if (video) {
     const attempts: MediaStreamConstraints[] = [
-      { audio, video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } } },
+      {
+        audio,
+        video: {
+          facingMode: "user",
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+      },
       { audio, video: { facingMode: "user" } },
       { audio, video: true },
     ];
     let lastErr: unknown = null;
     for (const c of attempts) {
       try {
-        return { stream: await navigator.mediaDevices.getUserMedia(c), video: true };
+        return {
+          stream: await navigator.mediaDevices.getUserMedia(c),
+          video: true,
+        };
       } catch (e) {
         lastErr = e;
         if (classify(e).kind === "denied") throw classify(e);
@@ -81,13 +112,19 @@ export async function getCallMedia(video: boolean): Promise<{ stream: MediaStrea
     }
     // No camera (or it is busy): keep the call alive as audio-only.
     try {
-      return { stream: await navigator.mediaDevices.getUserMedia({ audio }), video: false };
+      return {
+        stream: await navigator.mediaDevices.getUserMedia({ audio }),
+        video: false,
+      };
     } catch {
       throw classify(lastErr);
     }
   }
   try {
-    return { stream: await navigator.mediaDevices.getUserMedia({ audio }), video: false };
+    return {
+      stream: await navigator.mediaDevices.getUserMedia({ audio }),
+      video: false,
+    };
   } catch (e) {
     throw classify(e);
   }
@@ -116,7 +153,7 @@ export class CallSession {
   constructor(
     call: Call,
     private readonly myId: string,
-    private readonly ev: SessionEvents
+    private readonly ev: SessionEvents,
   ) {
     this.call = call;
     this.isCaller = call.initiatorId === myId;
@@ -143,8 +180,12 @@ export class CallSession {
   }
 
   async hangup(): Promise<void> {
-    const duration = this.startedAt ? Math.round((Date.now() - this.startedAt) / 1000) : 0;
-    await talkApi.signal(this.call.id, { kind: "bye" } satisfies SignalPayload).catch(() => undefined);
+    const duration = this.startedAt
+      ? Math.round((Date.now() - this.startedAt) / 1000)
+      : 0;
+    await talkApi
+      .signal(this.call.id, { kind: "bye" } satisfies SignalPayload)
+      .catch(() => undefined);
     await talkApi.endCall(this.call.id, duration).catch(() => undefined);
     this.finish("hangup");
   }
@@ -171,14 +212,27 @@ export class CallSession {
     }
     let cam: MediaStream;
     try {
-      cam = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } }).catch(() => navigator.mediaDevices.getUserMedia({ video: true }));
+      cam = await navigator.mediaDevices
+        .getUserMedia({ video: { facingMode: "user" } })
+        .catch(() => navigator.mediaDevices.getUserMedia({ video: true }));
     } catch (e) {
       throw classify(e);
     }
     const track = cam.getVideoTracks()[0];
     this.cameraTrack = track;
     this.local.addTrack(track);
-    const sender = this.pc?.getSenders().find((s) => s.track?.kind === "video" || (s.track === null && this.pc?.getTransceivers().some((t) => t.sender === s && t.receiver.track.kind === "video")));
+    const sender = this.pc
+      ?.getSenders()
+      .find(
+        (s) =>
+          s.track?.kind === "video" ||
+          (s.track === null &&
+            this.pc
+              ?.getTransceivers()
+              .some(
+                (t) => t.sender === s && t.receiver.track.kind === "video",
+              )),
+      );
     if (sender) await sender.replaceTrack(track);
     else this.pc?.addTrack(track, this.local);
     this.video = true;
@@ -191,9 +245,12 @@ export class CallSession {
   async switchCamera(): Promise<void> {
     const current = this.local?.getVideoTracks()[0];
     if (!current || !this.local) return;
-    const facing = current.getSettings().facingMode === "user" ? "environment" : "user";
+    const facing =
+      current.getSettings().facingMode === "user" ? "environment" : "user";
     try {
-      const cam = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing } });
+      const cam = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: facing },
+      });
       const track = cam.getVideoTracks()[0];
       const sender = this.pc?.getSenders().find((s) => s.track === current);
       await sender?.replaceTrack(track);
@@ -212,7 +269,10 @@ export class CallSession {
     const sender = this.pc.getSenders().find((s) => s.track?.kind === "video");
     if (on) {
       try {
-        const display = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+        const display = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: false,
+        });
         const track = display.getVideoTracks()[0];
         this.screenTrack = track;
         track.onended = () => void this.shareScreen(false);
@@ -263,14 +323,23 @@ export class CallSession {
     // max-bundle keeps audio and video on a single ICE/DTLS transport: with a
     // polled signalling channel that is both faster to connect and immune to a
     // second, media-less m-line holding `connectionState` at "connecting".
-    const pc = new RTCPeerConnection({ iceServers: iceServers(), bundlePolicy: "max-bundle" });
+    const pc = new RTCPeerConnection({
+      iceServers: iceServers(),
+      bundlePolicy: "max-bundle",
+    });
     this.pc = pc;
     this.local?.getTracks().forEach((t) => pc.addTrack(t, this.local!));
     // Always negotiate a video m-line so either side can turn the camera on later.
-    if (!this.local?.getVideoTracks().length) pc.addTransceiver("video", { direction: "sendrecv" });
+    if (!this.local?.getVideoTracks().length)
+      pc.addTransceiver("video", { direction: "sendrecv" });
     pc.onicecandidate = (e) => {
       if (e.candidate) {
-        void talkApi.signal(this.call.id, { kind: "ice", candidate: e.candidate.toJSON() } satisfies SignalPayload).catch(() => undefined);
+        void talkApi
+          .signal(this.call.id, {
+            kind: "ice",
+            candidate: e.candidate.toJSON(),
+          } satisfies SignalPayload)
+          .catch(() => undefined);
       }
     };
     const remote = new MediaStream();
@@ -318,7 +387,8 @@ export class CallSession {
     this.dropTimer = window.setTimeout(() => {
       this.dropTimer = null;
       const st = this.pc?.iceConnectionState;
-      if (this.alive && (st === "disconnected" || st === "failed")) this.recover("disconnected");
+      if (this.alive && (st === "disconnected" || st === "failed"))
+        this.recover("disconnected");
     }, 10_000);
   }
 
@@ -329,7 +399,10 @@ export class CallSession {
     this.restarts++;
     this.armWatchdog();
     if (this.isCaller) void this.makeOffer(true).catch(() => undefined);
-    else void talkApi.signal(this.call.id, { kind: "restart" } satisfies SignalPayload).catch(() => undefined);
+    else
+      void talkApi
+        .signal(this.call.id, { kind: "restart" } satisfies SignalPayload)
+        .catch(() => undefined);
   }
 
   /** Negotiation that never reaches a connected transport is retried, then failed. */
@@ -352,9 +425,14 @@ export class CallSession {
 
   private async makeOffer(iceRestart = false) {
     const pc = this.ensurePeer();
-    const offer = await pc.createOffer(iceRestart ? { iceRestart: true } : undefined);
+    const offer = await pc.createOffer(
+      iceRestart ? { iceRestart: true } : undefined,
+    );
     await pc.setLocalDescription(offer);
-    await talkApi.signal(this.call.id, { kind: "offer", sdp: offer.sdp ?? "" } satisfies SignalPayload);
+    await talkApi.signal(this.call.id, {
+      kind: "offer",
+      sdp: offer.sdp ?? "",
+    } satisfies SignalPayload);
     this.offerSent = true;
     this.armWatchdog();
   }
@@ -372,7 +450,10 @@ export class CallSession {
         await this.flushIce();
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
-        await talkApi.signal(this.call.id, { kind: "answer", sdp: answer.sdp ?? "" } satisfies SignalPayload);
+        await talkApi.signal(this.call.id, {
+          kind: "answer",
+          sdp: answer.sdp ?? "",
+        } satisfies SignalPayload);
         this.armWatchdog();
         break;
       }
@@ -386,15 +467,21 @@ export class CallSession {
       }
       case "ice": {
         const pc = this.ensurePeer();
-        if (pc.remoteDescription) await pc.addIceCandidate(payload.candidate).catch(() => undefined);
+        if (pc.remoteDescription)
+          await pc.addIceCandidate(payload.candidate).catch(() => undefined);
         else this.pendingIce.push(payload.candidate);
         break;
       }
       case "state":
-        this.ev.onPeerState({ muted: !!payload.muted, camera: !!payload.camera, screen: !!payload.screen });
+        this.ev.onPeerState({
+          muted: !!payload.muted,
+          camera: !!payload.camera,
+          screen: !!payload.screen,
+        });
         break;
       case "restart":
-        if (this.isCaller && this.phase !== "ended") await this.makeOffer(true).catch(() => undefined);
+        if (this.isCaller && this.phase !== "ended")
+          await this.makeOffer(true).catch(() => undefined);
         break;
       case "bye":
         this.finish("remote");
@@ -417,7 +504,8 @@ export class CallSession {
         const data = await talkApi.pollCall(this.call.id, this.cursor);
         this.ev.onCall(data.call);
         if (data.call.status === "declined") return this.finish("declined");
-        if (data.call.status === "ended") return this.finish(this.startedAt ? "remote" : "missed");
+        if (data.call.status === "ended")
+          return this.finish(this.startedAt ? "remote" : "missed");
         if (data.call.status === "active" && this.isCaller && !this.offerSent) {
           this.setPhase("connecting");
           await this.makeOffer();
@@ -429,7 +517,11 @@ export class CallSession {
       } catch {
         /* transient; next tick retries */
       }
-      if (this.alive) this.pollTimer = window.setTimeout(() => void tick(), this.phase === "connected" ? 1500 : 800);
+      if (this.alive)
+        this.pollTimer = window.setTimeout(
+          () => void tick(),
+          this.phase === "connected" ? 1500 : 800,
+        );
     };
     this.pollTimer = window.setTimeout(() => void tick(), 0);
   }
@@ -463,6 +555,8 @@ export class CallSession {
   }
 
   get duration(): number {
-    return this.startedAt ? Math.round((Date.now() - this.startedAt) / 1000) : 0;
+    return this.startedAt
+      ? Math.round((Date.now() - this.startedAt) / 1000)
+      : 0;
   }
 }

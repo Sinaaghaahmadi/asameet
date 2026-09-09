@@ -17,14 +17,30 @@ export interface GBtnProps extends React.ButtonHTMLAttributes<HTMLButtonElement>
 }
 
 export const GBtn = React.forwardRef<HTMLButtonElement, GBtnProps>(
-  ({ className, variant = "glass", size = "md", type = "button", onPointerDown, ...props }, ref) => (
+  (
+    {
+      className,
+      variant = "glass",
+      size = "md",
+      type = "button",
+      onPointerDown,
+      ...props
+    },
+    ref,
+  ) => (
     <button
       ref={ref}
       type={type}
       onPointerDown={(e) => {
         const r = e.currentTarget.getBoundingClientRect();
-        e.currentTarget.style.setProperty("--rx", `${((e.clientX - r.left) / r.width) * 100}%`);
-        e.currentTarget.style.setProperty("--ry", `${((e.clientY - r.top) / r.height) * 100}%`);
+        e.currentTarget.style.setProperty(
+          "--rx",
+          `${((e.clientX - r.left) / r.width) * 100}%`,
+        );
+        e.currentTarget.style.setProperty(
+          "--ry",
+          `${((e.clientY - r.top) / r.height) * 100}%`,
+        );
         onPointerDown?.(e);
       }}
       className={cn(
@@ -39,11 +55,11 @@ export const GBtn = React.forwardRef<HTMLButtonElement, GBtnProps>(
         size === "icon" && "tg-icon",
         size === "iconLg" && "tg-icon-lg",
         size === "fab" && "tg-fab",
-        className
+        className,
       )}
       {...props}
     />
-  )
+  ),
 );
 GBtn.displayName = "GBtn";
 
@@ -86,7 +102,9 @@ export function TalkAvatar({
         width: px,
         height: px,
         fontSize: px * 0.36,
-        background: src ? undefined : `linear-gradient(145deg, oklch(0.8 0.13 ${hue}), oklch(0.58 0.17 ${hue}))`,
+        background: src
+          ? undefined
+          : `linear-gradient(145deg, oklch(0.8 0.13 ${hue}), oklch(0.58 0.17 ${hue}))`,
       }}
       onClick={onClick}
       aria-label={name}
@@ -106,7 +124,15 @@ export function TalkAvatar({
 
 /* ---------- Switch ---------- */
 
-export function GSwitch({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label?: string }) {
+export function GSwitch({
+  on,
+  onChange,
+  label,
+}: {
+  on: boolean;
+  onChange: (v: boolean) => void;
+  label?: string;
+}) {
   return (
     <button
       type="button"
@@ -122,7 +148,17 @@ export function GSwitch({ on, onChange, label }: { on: boolean; onChange: (v: bo
 
 /* ---------- Settings rows ---------- */
 
-export function GSection({ title, hint, children, className }: { title?: string; hint?: string; children: React.ReactNode; className?: string }) {
+export function GSection({
+  title,
+  hint,
+  children,
+  className,
+}: {
+  title?: string;
+  hint?: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
     <div className={cn("mb-4", className)}>
       {title && <p className="tg-section-title">{title}</p>}
@@ -157,14 +193,34 @@ export function GItem({
   const Chevron = dir === "rtl" ? ChevronLeft : ChevronRight;
   const Comp = onClick ? "button" : "div";
   return (
-    <Comp type={onClick ? "button" : undefined} className={cn("tg-item", !onClick && "cursor-default", className)} onClick={onClick}>
+    <Comp
+      type={onClick ? "button" : undefined}
+      className={cn("tg-item", !onClick && "cursor-default", className)}
+      onClick={onClick}
+    >
       {icon && (
-        <span className="tg-item-icon" style={{ background: color ?? "linear-gradient(135deg, var(--talk), var(--talk-strong))" }}>
+        <span
+          className="tg-item-icon"
+          style={{
+            background:
+              color ??
+              "linear-gradient(135deg, var(--talk), var(--talk-strong))",
+          }}
+        >
           {icon}
         </span>
       )}
-      <span className={cn("min-w-0 flex-1 text-sm font-medium", danger && "text-red-500")}>{label}</span>
-      {value !== undefined && <span className="tg-muted max-w-[45%] truncate text-xs">{value}</span>}
+      <span
+        className={cn(
+          "min-w-0 flex-1 text-sm font-medium",
+          danger && "text-red-500",
+        )}
+      >
+        {label}
+      </span>
+      {value !== undefined && (
+        <span className="tg-muted max-w-[45%] truncate text-xs">{value}</span>
+      )}
       {right}
       {chevron && <Chevron className="tg-muted size-4 shrink-0" />}
     </Comp>
@@ -181,25 +237,35 @@ export const GMenuContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>
 >(({ className, sideOffset = 6, ...props }, ref) => (
   <DropdownMenuPrimitive.Portal>
-    <DropdownMenuPrimitive.Content ref={ref} sideOffset={sideOffset} className={cn("tg-menu talk", className)} {...props} />
+    <DropdownMenuPrimitive.Content
+      ref={ref}
+      sideOffset={sideOffset}
+      className={cn("tg-menu talk", className)}
+      {...props}
+    />
   </DropdownMenuPrimitive.Portal>
 ));
 GMenuContent.displayName = "GMenuContent";
 
 export const GMenuItem = React.forwardRef<
   React.ComponentRef<typeof DropdownMenuPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & { danger?: boolean }
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
+    danger?: boolean;
+  }
 >(({ className, danger, ...props }, ref) => (
   <DropdownMenuPrimitive.Item
     ref={ref}
     data-danger={danger}
-    className={cn("tg-menu-item outline-none [&_svg]:size-4 [&_svg]:shrink-0", className)}
+    className={cn(
+      "tg-menu-item outline-none [&_svg]:size-4 [&_svg]:shrink-0",
+      className,
+    )}
     {...props}
   />
 ));
 GMenuItem.displayName = "GMenuItem";
 
-export const GMenuSeparator = () => <div className="my-1 h-px bg-[var(--talk-line)]" />;
+export const GMenuSeparator = () => <div className="bg-talk-line my-1 h-px" />;
 
 /* ---------- Header bar ---------- */
 
@@ -221,7 +287,12 @@ export function GHeader({
   const { dir } = useLocale();
   const Back = dir === "rtl" ? ChevronRight : ChevronLeft;
   return (
-    <header className={cn("tg-panel tg-safe-top z-10 flex h-14 shrink-0 items-center gap-2 border-b tg-line px-2", className)}>
+    <header
+      className={cn(
+        "tg-panel tg-safe-top z-chrome tg-line flex h-14 shrink-0 items-center gap-2 border-b px-2",
+        className,
+      )}
+    >
       {onBack && (
         <GBtn variant="ghost" size="icon" onClick={onBack} aria-label="back">
           <Back className="size-5" />
@@ -230,7 +301,9 @@ export function GHeader({
       {left}
       <div className="min-w-0 flex-1 px-1">
         <div className="truncate text-sm font-bold">{title}</div>
-        {subtitle && <div className="tg-muted truncate text-[11px]">{subtitle}</div>}
+        {subtitle && (
+          <div className="tg-muted text-caption truncate">{subtitle}</div>
+        )}
       </div>
       {right}
     </header>
@@ -239,10 +312,24 @@ export function GHeader({
 
 /* ---------- Search field ---------- */
 
-export function GSearch({ value, onChange, placeholder, autoFocus, icon }: { value: string; onChange: (v: string) => void; placeholder: string; autoFocus?: boolean; icon: React.ReactNode }) {
+export function GSearch({
+  value,
+  onChange,
+  placeholder,
+  autoFocus,
+  icon,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  autoFocus?: boolean;
+  icon: React.ReactNode;
+}) {
   return (
     <div className="relative">
-      <span className="tg-muted pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 [&_svg]:size-4">{icon}</span>
+      <span className="tg-muted pointer-events-none absolute start-3.5 top-1/2 -translate-y-1/2 [&_svg]:size-4">
+        {icon}
+      </span>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -257,7 +344,17 @@ export function GSearch({ value, onChange, placeholder, autoFocus, icon }: { val
 
 /* ---------- Empty state with a mascot ---------- */
 
-export function GEmpty({ mascot, title, desc, action }: { mascot: React.ReactNode; title: string; desc?: string; action?: React.ReactNode }) {
+export function GEmpty({
+  mascot,
+  title,
+  desc,
+  action,
+}: {
+  mascot: React.ReactNode;
+  title: string;
+  desc?: string;
+  action?: React.ReactNode;
+}) {
   return (
     <div className="tg-fade-in flex h-full flex-col items-center justify-center gap-3 p-8 text-center">
       {mascot}

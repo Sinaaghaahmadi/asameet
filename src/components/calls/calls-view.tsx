@@ -125,8 +125,9 @@ export function CallsView() {
               <p className="glass-card p-8 text-center text-sm text-muted-foreground">{t("calls.noCalls")}</p>
             )}
             {(callsData?.calls ?? []).map((call) => {
+              // A group call has no peer; Asameet's list only shows 1:1.
               const peerId = call.initiatorId === currentUser.id ? call.peerId : call.initiatorId;
-              const peer = users.get(peerId);
+              const peer = peerId ? users.get(peerId) : undefined;
               const meta = dirMeta(call);
               return (
                 <div key={call.id} className="glass-card slide-in flex items-center gap-3 p-3.5">

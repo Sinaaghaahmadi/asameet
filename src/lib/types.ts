@@ -94,15 +94,26 @@ export interface Message {
   createdAt: string;
 }
 
+export interface CallParticipant {
+  userId: string;
+  state: "ringing" | "joined" | "left" | "declined";
+  muted: boolean;
+  camera: boolean;
+}
+
 export interface Call {
   id: string;
   type: "audio" | "video";
   status: "ringing" | "active" | "ended" | "declined";
   direction: "incoming" | "outgoing" | "missed";
   initiatorId: string;
-  peerId: string;
+  /** Null for a group call, which is addressed by `chatId` instead. */
+  peerId: string | null;
+  chatId: string | null;
   duration: number | null;
   createdAt: string;
+  /** Live roster of a group call; empty for 1:1. */
+  participants: CallParticipant[];
 }
 
 export type MeetingType = "meeting" | "conference" | "class";
@@ -139,7 +150,12 @@ export interface AdminStats {
   totalMeetings: number;
   activeCalls: number;
   totalMessages: number;
-  weeklyActivity: { day: string; messages: number; meetings: number; calls: number }[];
+  weeklyActivity: {
+    day: string;
+    messages: number;
+    meetings: number;
+    calls: number;
+  }[];
   roleDistribution: { role: Role; count: number }[];
 }
 
