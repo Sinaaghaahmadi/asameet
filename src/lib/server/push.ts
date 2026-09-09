@@ -11,10 +11,13 @@ import { rpc } from "@/lib/server/api";
  * back to the in-page notifications it already had.
  */
 
+// The application server key is public by design: every browser that
+// subscribes receives it. Defaulting it here means only the private half has
+// to be configured. Override via env to point at a different key pair.
 const PUBLIC_KEY =
   process.env.ASATALK_VAPID_PUBLIC_KEY ??
   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ??
-  "";
+  "BO_sNpBOTWfN-UmlGvDS8nuq2NZ8RzWcRtDqOjbJ_49tiBcLmFqqxWnH3GUWLhE11DqzBnBaKtetdglKLkjboec";
 const PRIVATE_KEY = process.env.ASATALK_VAPID_PRIVATE_KEY ?? "";
 const SUBJECT = process.env.ASATALK_VAPID_SUBJECT ?? "mailto:info@asatalk.app";
 
