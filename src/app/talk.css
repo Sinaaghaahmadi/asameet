@@ -607,18 +607,23 @@
   border-radius: var(--talk-radius);
   line-height: 1.55;
   word-break: break-word;
-  box-shadow:
-    0 1px 2px oklch(0 0 0 / 0.08),
-    0 4px 12px oklch(0 0 0 / 0.04);
+  box-shadow: 0 1px 3px oklch(0 0 0 / 0.1);
   font-size: var(--talk-font-size);
+}
+
+/* Only a message that arrived while you were looking animates in. Opening a
+   chat used to start one animation per bubble on screen, which is most of
+   what made the installed app feel heavy on the first frame. */
+.tg-bubble-fresh {
   animation: tg-bubble-in 0.22s var(--talk-spring);
 }
 
+/* No backdrop-filter here on purpose: the bubble is already 92-95% opaque,
+   so the blur was invisible while costing a composited layer per message —
+   the difference between a smooth and a stuttering list on a phone. */
 .tg-bubble-in {
   background: var(--talk-bubble-in);
   color: var(--talk-bubble-in-fg);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
 }
 
 .tg-bubble-out {
@@ -636,20 +641,16 @@
   padding: 0;
 }
 
-[dir="rtl"] .tg-bubble-out.tg-tail {
-  border-end-start-radius: 4px;
+/* Sides are physical, not logical: what you send is on the right and what
+   you receive is on the left, in Persian exactly as in English — the way
+   Telegram does it. Everything below therefore uses left/right rather than
+   start/end, which would flip with the UI language. */
+.tg-bubble-out.tg-tail {
+  border-bottom-right-radius: 4px;
 }
 
-[dir="rtl"] .tg-bubble-in.tg-tail {
-  border-end-end-radius: 4px;
-}
-
-[dir="ltr"] .tg-bubble-out.tg-tail {
-  border-end-end-radius: 4px;
-}
-
-[dir="ltr"] .tg-bubble-in.tg-tail {
-  border-end-start-radius: 4px;
+.tg-bubble-in.tg-tail {
+  border-bottom-left-radius: 4px;
 }
 
 .tg-bubble.tg-tail::after {
@@ -659,30 +660,142 @@
   width: 12px;
   height: 14px;
   background: inherit;
-  clip-path: polygon(0 0, 100% 100%, 0 100%);
 }
 
-[dir="ltr"] .tg-bubble-out.tg-tail::after {
+.tg-bubble-out.tg-tail::after {
   right: -8px;
+  clip-path: polygon(0 0, 0 100%, 100% 100%);
+}
+
+.tg-bubble-in.tg-tail::after {
+  left: -8px;
   clip-path: polygon(100% 0, 100% 100%, 0 100%);
-  transform: scaleX(-1);
 }
 
-[dir="ltr"] .tg-bubble-in.tg-tail::after {
-  left: 0px;
-  bottom: 0;
-  clip-path: polygon(0% 0, 100% 100%, 0 100%);
+/* ---------- Message row ----------
+   The row is a plain physical layout: auto margins (unlike `justify-*`) do
+   not flip with direction, so one rule holds for both. */
+.tg-msg-row {
+  display: flex;
+  align-items: flex-end;
+  padding-inline: 0.5rem;
+  position: relative;
 }
 
-[dir="rtl"] .tg-bubble-out.tg-tail::after {
-  left: 0px;
-  clip-path: polygon(0% 0, 100% 100%, 0 100%);
+.tg-msg-inner {
+  display: flex;
+  align-items: flex-end;
+  max-width: min(86%, 560px);
+  min-width: 0;
 }
 
-[dir="rtl"] .tg-bubble-in.tg-tail::after {
-  right: 0px;
-  clip-path: polygon(100% 0, 100% 100%, 0 100%);
-  transform: scaleX(-1);
+/* Incoming: avatar first, physically to the left of the bubble. */
+[dir="rtl"] .tg-msg-inner {
+  flex-direction: row-reverse;
+}
+
+.tg-msg-row[data-own="true"] > .tg-msg-inner {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+.tg-msg-row[data-own="false"] > .tg-msg-inner {
+  margin-right: auto;
+  margin-left: 0;
+}
+
+.tg-msg-body {
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Reactions and the "seen by" line hug the same edge as their bubble. */
+.tg-msg-row[data-own="true"] .tg-msg-foot {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.tg-msg-row[data-own="false"] .tg-msg-foot {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+[dir="rtl"] .tg-msg-row[data-own="true"] .tg-msg-foot {
+  justify-content: flex-start;
+}
+
+[dir="rtl"] .tg-msg-row[data-own="false"] .tg-msg-foot {
+  justify-content: flex-end;
+}
+
+/* Desktop hover affordance, always on the bubble's outer side. */
+.tg-msg-actions {
+  position: absolute;
+  top: 0.25rem;
+  display: flex;
+  gap: 0.125rem;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  pointer-events: none;
+}
+
+.tg-msg-row[data-own="true"] .tg-msg-actions {
+  right: 100%;
+  margin-right: 0.375rem;
+  flex-direction: row-reverse;
+}
+
+.tg-msg-row[data-own="false"] .tg-msg-actions {
+  left: 100%;
+  margin-left: 0.375rem;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tg-msg-row:hover .tg-msg-actions,
+  .tg-msg-actions[data-open="true"] {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+/* On touch the same menu comes from a long press, so the affordance would
+   only be dead weight in the layout. */
+@media (hover: none) {
+  .tg-msg-actions {
+    display: none;
+  }
+}
+
+/* ---------- Swipe to reply (touch) ---------- */
+.tg-msg-swipe {
+  touch-action: pan-y;
+  will-change: transform;
+}
+
+.tg-msg-hint {
+  position: absolute;
+  top: 50%;
+  translate: 0 -50%;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  background: var(--talk-glass-strong);
+  color: var(--talk);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tg-msg-row[data-own="true"] .tg-msg-hint {
+  right: 100%;
+  margin-right: 0.25rem;
+}
+
+.tg-msg-row[data-own="false"] .tg-msg-hint {
+  left: 100%;
+  margin-left: 0.25rem;
 }
 
 .tg-bubble-sticker.tg-tail::after {
@@ -722,10 +835,9 @@
   margin: 0;
   padding: 0.15rem 0.45rem;
   border-radius: 999px;
-  background: oklch(0 0 0 / 0.45);
+  background: oklch(0 0 0 / 0.55);
   color: white;
   opacity: 1;
-  backdrop-filter: blur(6px);
 }
 
 .tg-quote {

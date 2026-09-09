@@ -16,6 +16,7 @@ import {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { talkApi, TalkApiError, type TalkSettings } from "@/lib/talk/api";
+import { usePresence, usePushRegistration } from "@/lib/talk/presence";
 import { playIncomingMessage } from "@/lib/talk/sounds";
 import { messagePreview } from "@/lib/talk/format";
 import { useT } from "@/lib/i18n";
@@ -58,10 +59,16 @@ export function TalkDataProvider({
   const t = useT();
   const { settings, patchSettings, openChat, activeChatId } = useTalkStore();
 
+  // Hold the presence lease while this tab is visible, and keep this
+  // browser's push subscription registered so closed-app messages arrive.
+  usePresence(true);
+  usePushRegistration(true);
+
   const usersQ = useQuery({
     queryKey: ["talk", "users"],
+    // Fast enough that the online dot tracks the 50s presence lease.
     queryFn: () => talkApi.users(),
-    refetchInterval: 30_000,
+    refetchInterval: 20_000,
   });
   const chatsQ = useQuery({
     queryKey: ["talk", "chats"],

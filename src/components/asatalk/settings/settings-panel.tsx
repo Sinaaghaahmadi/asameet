@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTheme } from "next-themes";
 import {
@@ -32,6 +32,7 @@ import {
   UserPlus,
   X,
   HelpCircle,
+  QrCode,
 } from "lucide-react";
 import { toast } from "sonner";
 import { talkApi, type TalkSettings } from "@/lib/talk/api";
@@ -45,9 +46,12 @@ import {
   type SettingsPage,
 } from "@/stores/talk-store";
 import { AvatarPicker, ConfirmDialog } from "../dialogs";
+import { enablePush } from "@/lib/talk/presence";
+import { codeFromScan, qrScanSupported, useQrScanner } from "../qr";
 import { GBtn, GHeader, GItem, GSection, GSwitch, TalkAvatar } from "../glass";
 import { AsatalkLogo, Mascot } from "../mascots";
 import { PinScreen } from "../pin-lock";
+import { TalkPortal } from "../portal";
 import { useTalk } from "../talk-data";
 
 export function SettingsPanel({
@@ -605,7 +609,12 @@ function NotificationsPage({ back }: { back: () => void }) {
             }
             onClick={
               perm === "default"
-                ? () => void Notification.requestPermission().then(setPerm)
+                ? () =>
+                    void Notification.requestPermission().then((r) => {
+                      setPerm(r);
+                      // Granting is also what makes push possible.
+                      if (r === "granted") void enablePush();
+                    })
                 : undefined
             }
             chevron={perm === "default"}
@@ -1215,6 +1224,7 @@ function DevicesPage({ back }: { back: () => void }) {
     queryKey: ["talk", "sessions"],
     queryFn: () => talkApi.sessions(),
   });
+  const [scanning, setScanning] = useState(false);
   const sessions = q.data?.sessions ?? [];
   const current = sessions.find((s) => s.current);
   const others = sessions.filter((s) => !s.current);
@@ -1231,6 +1241,20 @@ function DevicesPage({ back }: { back: () => void }) {
     <>
       <GHeader title={t("talk.settings.devices")} onBack={back} />
       <div className="tg-scroll flex-1 px-3 pt-3 pb-6">
+        <GSection>
+          <GItem
+            icon={<QrCode className="size-4" />}
+            color={C.blue}
+            label={t("talk.onboard.qrScan")}
+            onClick={() => setScanning(true)}
+          />
+        </GSection>
+        {scanning && (
+          <QrApproveSheet
+            onClose={() => setScanning(false)}
+            onDone={() => void q.refetch()}
+          />
+        )}
         {current && (
           <GSection title={t("talk.settings.dev.current")}>
             <GItem
@@ -1277,6 +1301,111 @@ function DevicesPage({ back }: { back: () => void }) {
         </div>
       </div>
     </>
+  );
+}
+
+/**
+ * Scan a sign-in QR from inside the app and approve it. `BarcodeDetector` is
+ * only in Chromium today, so the sheet always offers the code by hand too —
+ * and the code on screen is a link, which any camera app can open instead.
+ */
+function QrApproveSheet({
+  onClose,
+  onDone,
+}: {
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const t = useT();
+  const [code, setCode] = useState<string | null>(null);
+  const [manual, setManual] = useState("");
+  const [busy, setBusy] = useState(false);
+  const onCode = useCallback((raw: string) => setCode(codeFromScan(raw)), []);
+  const { videoRef, error } = useQrScanner(qrScanSupported() && !code, onCode);
+
+  async function decide(approve: boolean) {
+    if (!code) return;
+    setBusy(true);
+    try {
+      await talkApi.qrApprove(code, approve);
+      toast.success(
+        t(approve ? "talk.onboard.qrApproved" : "talk.onboard.qrRejected"),
+      );
+      onDone();
+      onClose();
+    } catch {
+      toast.error(t("talk.onboard.qrExpired"));
+      setCode(null);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <TalkPortal>
+      <div className="tg-sheet-backdrop" onClick={onClose} />
+      <div className="tg-sheet tg-glass-strong">
+        <span className="tg-sheet-handle" />
+        <h2 className="text-[18px] font-black">{t("talk.onboard.qrScan")}</h2>
+        {!code && qrScanSupported() && !error && (
+          <video
+            ref={videoRef}
+            playsInline
+            muted
+            className="aspect-square w-full max-w-[280px] rounded-2xl bg-black object-cover"
+          />
+        )}
+        {!code && (
+          <div className="w-full">
+            <p className="tg-muted mb-2 text-xs">
+              {t("talk.onboard.qrManual")}
+            </p>
+            <input
+              className="tg-input h-11 w-full"
+              dir="ltr"
+              value={manual}
+              placeholder="a1b2c3…"
+              onChange={(e) => {
+                setManual(e.target.value);
+                const c = codeFromScan(e.target.value);
+                if (c) setCode(c);
+              }}
+            />
+          </div>
+        )}
+        {code && (
+          <>
+            <p className="tg-muted text-body leading-6">
+              {t("talk.onboard.qrApproveSub")}
+            </p>
+            <GBtn
+              variant="primary"
+              size="lg"
+              className="h-[52px] w-full"
+              disabled={busy}
+              onClick={() => void decide(true)}
+            >
+              {t("talk.onboard.approve")}
+            </GBtn>
+            <button
+              type="button"
+              className="text-sm font-semibold text-red-500"
+              disabled={busy}
+              onClick={() => void decide(false)}
+            >
+              {t("talk.onboard.reject")}
+            </button>
+          </>
+        )}
+        <button
+          type="button"
+          className="tg-muted text-sm font-semibold"
+          onClick={onClose}
+        >
+          {t("common.cancel")}
+        </button>
+      </div>
+    </TalkPortal>
   );
 }
 

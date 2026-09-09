@@ -71,7 +71,7 @@ export function ChatInfo({
   const { locale } = useLocale();
   const { me, users, refreshChats, showError, isBlocked, toggleBlock } =
     useTalk();
-  const { startCall } = useCalls();
+  const { startCall, startGroupCall } = useCalls();
   const { openChat, setLightbox } = useTalkStore();
   const [editing, setEditing] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -202,6 +202,22 @@ export function ChatInfo({
                 <Phone className="size-4" /> {t("talk.chat.call")}
               </GBtn>
               <GBtn size="sm" onClick={() => void startCall(peer, "video")}>
+                <Video className="size-4" /> {t("talk.chat.videoCall")}
+              </GBtn>
+            </div>
+          )}
+          {chat.type === "group" && (
+            <div className="mt-2 flex gap-2">
+              <GBtn
+                size="sm"
+                onClick={() => void startGroupCall(chat.id, title, "audio")}
+              >
+                <Phone className="size-4" /> {t("talk.chat.call")}
+              </GBtn>
+              <GBtn
+                size="sm"
+                onClick={() => void startGroupCall(chat.id, title, "video")}
+              >
                 <Video className="size-4" /> {t("talk.chat.videoCall")}
               </GBtn>
             </div>

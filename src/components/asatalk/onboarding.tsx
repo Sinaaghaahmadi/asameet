@@ -2,8 +2,9 @@
 
 /**
  * Asatalk onboarding, per the mobile design hand-off:
- * language → splash → sign-in (phone / email, or username+password) → OTP with
- * numpad → profile (name, username, avatar) → permission sheets.
+ * language → splash → sign-in (phone / email, username+password, or a QR
+ * approved on a device that is already signed in) → OTP → profile (name,
+ * username, avatar) → notification permission.
  */
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -13,25 +14,26 @@ import {
   Bell,
   Camera,
   Check,
-  Delete,
   KeyRound,
   Loader2,
   QrCode,
-  ScanFace,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { talkApi, TalkApiError } from "@/lib/talk/api";
+import { enablePush } from "@/lib/talk/presence";
 import { makeAvatarDataUrl } from "@/lib/talk/media";
 import { LOCALES, useLocale, useT, type Locale } from "@/lib/i18n";
 import { cn, toLocaleDigits } from "@/lib/utils";
 import type { User } from "@/lib/types";
 import { useTalkStore } from "@/stores/talk-store";
 import { GBtn, TalkAvatar } from "./glass";
+import { QrImage } from "./qr";
 import { Mascot } from "./mascots";
 import { TalkPortal } from "./portal";
 
 type Step =
-  "lang" | "splash" | "signin" | "password" | "otp" | "profile" | "perm";
+  "lang" | "splash" | "signin" | "password" | "otp" | "qr" | "profile" | "perm";
 
 const LANG_STORAGE = "asatalk-lang-chosen";
 
@@ -80,6 +82,7 @@ export function Onboarding({
   const [profileUsername, setProfileUsername] = useState("");
   const [avatar, setAvatar] = useState<string | null>(null);
   const pendingUser = useRef<User | null>(null);
+  const codeRef = useRef<HTMLInputElement>(null);
   const Next = dir === "rtl" ? ArrowLeft : ArrowRight;
 
   function fail(e: unknown) {
@@ -135,13 +138,6 @@ export function Onboarding({
     } finally {
       setBusy(false);
     }
-  }
-
-  function pushDigit(d: string) {
-    if (busy) return;
-    const next = (code + d).slice(0, 6);
-    setCode(next);
-    if (next.length === 6) void verify(next);
   }
 
   async function submitPassword() {
@@ -380,7 +376,8 @@ export function Onboarding({
               <GBtn
                 size="lg"
                 className="h-[48px] w-full"
-                onClick={() => toast.info(t("talk.conv.soon"))}
+                type="button"
+                onClick={() => setStep("qr")}
               >
                 <QrCode className="size-4" /> {t("talk.onboard.qr")}
               </GBtn>
@@ -481,12 +478,32 @@ export function Onboarding({
                   <span className="text-talk tracking-[0.3em]">{demoCode}</span>
                 </button>
               )}
-              <motion.div
+              {/* The boxes are decoration over one real input, so the code
+                  is typed on the device keyboard and SMS autofill works. */}
+              <motion.label
                 animate={shake ? { x: [0, -8, 8, -6, 6, 0] } : { x: 0 }}
                 transition={{ duration: 0.45 }}
-                className="mt-7 flex justify-center gap-2"
+                className="relative mt-7 flex justify-center gap-2"
                 dir="ltr"
               >
+                <input
+                  ref={codeRef}
+                  className="absolute inset-0 z-10 h-full w-full cursor-text opacity-0"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete="one-time-code"
+                  autoFocus
+                  maxLength={6}
+                  value={code}
+                  disabled={busy}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, "").slice(0, 6);
+                    setCode(v);
+                    if (v.length === 6) void verify(v);
+                  }}
+                  aria-label={t("talk.onboard.codeTitle")}
+                />
                 {Array.from({ length: 6 }).map((_, i) => (
                   <div
                     key={i}
@@ -500,7 +517,7 @@ export function Onboarding({
                     ) : null}
                   </div>
                 ))}
-              </motion.div>
+              </motion.label>
               <p className="tg-muted text-preview mt-4 text-center">
                 {ttl > 0 ? (
                   <>
@@ -525,49 +542,14 @@ export function Onboarding({
               {busy && (
                 <Loader2 className="text-talk mx-auto mt-2 size-5 animate-spin" />
               )}
-              <div className="mt-auto pb-6">
-                <div className="tg-numpad" dir="ltr">
-                  {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
-                    <button
-                      key={d}
-                      type="button"
-                      className="tg-ripple hover:bg-talk-hover"
-                      onClick={() => pushDigit(d)}
-                    >
-                      {toLocaleDigits(d, locale)}
-                    </button>
-                  ))}
-                  <span />
-                  <button
-                    type="button"
-                    className="tg-ripple hover:bg-talk-hover"
-                    onClick={() => pushDigit("0")}
-                  >
-                    {toLocaleDigits(0, locale)}
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="backspace"
-                    className="tg-ripple hover:bg-talk-hover flex items-center justify-center"
-                    onClick={() => setCode((c) => c.slice(0, -1))}
-                  >
-                    <Delete className="size-6" />
-                  </button>
-                </div>
-                <input
-                  className="sr-only"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  value={code}
-                  onChange={(e) => {
-                    const v = e.target.value.replace(/\D/g, "").slice(0, 6);
-                    setCode(v);
-                    if (v.length === 6) void verify(v);
-                  }}
-                  aria-label="code"
-                />
-              </div>
             </div>
+          </Screen>
+        )}
+
+        {/* 4b · sign in by QR approved on another device */}
+        {step === "qr" && (
+          <Screen key="qr">
+            <QrSignIn onLogin={finish} onBack={() => setStep("signin")} />
           </Screen>
         )}
 
@@ -673,6 +655,114 @@ export function Onboarding({
   );
 }
 
+/**
+ * Sign in by QR. This device asks for a ticket, shows it as a code and waits;
+ * a device already signed in scans it and approves. Approval mints the
+ * session server-side and it reaches us as an httpOnly cookie — the token
+ * itself never touches this page.
+ *
+ * The code encodes a link to /qr, so the phone's own camera app is a valid
+ * scanner; no in-app scanner is required on either side.
+ */
+function QrSignIn({
+  onLogin,
+  onBack,
+}: {
+  onLogin: (u: User) => void;
+  onBack: () => void;
+}) {
+  const t = useT();
+  const [code, setCode] = useState<string | null>(null);
+  const [ttl, setTtl] = useState(0);
+  const [nonce, setNonce] = useState(0);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    setCode(null);
+    setFailed(false);
+    talkApi
+      .qrCreate()
+      .then((r) => {
+        if (!alive) return;
+        setCode(r.code);
+        setTtl(r.ttl ?? 180);
+      })
+      .catch(() => alive && setFailed(true));
+    return () => {
+      alive = false;
+    };
+  }, [nonce]);
+
+  // Countdown; the ticket dies with it and a fresh one has to be asked for.
+  useEffect(() => {
+    if (!code || ttl <= 0) return;
+    const id = window.setTimeout(() => setTtl((v) => v - 1), 1000);
+    return () => window.clearTimeout(id);
+  }, [code, ttl]);
+
+  useEffect(() => {
+    if (!code || ttl <= 0) return;
+    let alive = true;
+    const id = window.setInterval(async () => {
+      try {
+        const r = await talkApi.qrPoll(code);
+        if (!alive) return;
+        if (r.status === "approved" && r.user) {
+          window.clearInterval(id);
+          onLogin(r.user);
+        } else if (r.status === "rejected" || r.status === "expired") {
+          window.clearInterval(id);
+          setTtl(0);
+        }
+      } catch {
+        /* a dropped poll is retried on the next tick */
+      }
+    }, 2000);
+    return () => {
+      alive = false;
+      window.clearInterval(id);
+    };
+  }, [code, ttl, onLogin]);
+
+  const expired = !failed && code !== null && ttl <= 0;
+  const link =
+    typeof window !== "undefined" && code
+      ? `${window.location.origin}${process.env.NEXT_PUBLIC_BASE_PATH || ""}/qr#${code}`
+      : "";
+
+  return (
+    <div className="flex flex-1 flex-col items-center px-6 pt-14 text-center">
+      <h1 className="text-[24px] font-black">{t("talk.onboard.qrTitle")}</h1>
+      <p className="tg-muted text-body mt-1 leading-6">
+        {t("talk.onboard.qrSub")}
+      </p>
+      <div className="tg-glass relative mt-8 grid size-[248px] place-items-center rounded-3xl p-3">
+        {failed || expired ? (
+          <button
+            type="button"
+            className="text-talk flex flex-col items-center gap-2 text-sm font-semibold"
+            onClick={() => setNonce((n) => n + 1)}
+          >
+            <RefreshCw className="size-7" />
+            {t(failed ? "talk.errors.generic" : "talk.onboard.qrExpired")}
+          </button>
+        ) : code ? (
+          <QrImage value={link} size={220} className="rounded-xl" />
+        ) : (
+          <Loader2 className="text-talk size-7 animate-spin" />
+        )}
+      </div>
+      <ol className="tg-muted mt-6 space-y-1.5 text-start text-[13px] leading-6">
+        <li>۱ — {t("talk.onboard.qrStep1")}</li>
+        <li>۲ — {t("talk.onboard.qrStep2")}</li>
+        <li>۳ — {t("talk.onboard.qrStep3")}</li>
+      </ol>
+      <BackBtn onClick={onBack} />
+    </div>
+  );
+}
+
 function Screen({
   children,
   className,
@@ -735,30 +825,25 @@ function SplashDots() {
 
 function PermissionSheets({ onDone }: { onDone: () => void }) {
   const t = useT();
-  const [stage, setStage] = useState<"notif" | "media">("notif");
   const [busy, setBusy] = useState(false);
 
+  /**
+   * Only notifications are asked for here. The microphone and the camera are
+   * requested by the call itself, at the moment they are actually used —
+   * a permission prompt on the way in reads as an app that wants to listen.
+   */
   async function allowNotif() {
     setBusy(true);
     try {
-      if ("Notification" in window) await Notification.requestPermission();
-    } catch {}
-    setBusy(false);
-    setStage("media");
-  }
-  async function allowMedia() {
-    setBusy(true);
-    try {
-      const s = await navigator.mediaDevices
-        .getUserMedia({ audio: true, video: true })
-        .catch(() => navigator.mediaDevices.getUserMedia({ audio: true }));
-      s.getTracks().forEach((tr) => tr.stop());
+      if ("Notification" in window) {
+        const r = await Notification.requestPermission();
+        // Push is what reaches the phone with the app closed.
+        if (r === "granted") await enablePush();
+      }
     } catch {}
     setBusy(false);
     onDone();
   }
-
-  const notif = stage === "notif";
   return (
     <div className="relative flex flex-1 flex-col">
       <div className="flex flex-1 flex-col items-center justify-center px-6 opacity-60">
@@ -768,33 +853,31 @@ function PermissionSheets({ onDone }: { onDone: () => void }) {
         <div className="tg-sheet-backdrop" />
         <div className="tg-sheet tg-glass-strong">
           <span className="tg-sheet-handle" />
-          <Mascot pose={notif ? "bell" : "video"} size={120} />
+          <Mascot pose="bell" size={120} />
           <h2 className="text-[20px] font-black">
-            {t(notif ? "talk.onboard.notifTitle" : "talk.onboard.micTitle")}
+            {t("talk.onboard.notifTitle")}
           </h2>
           <p className="tg-muted text-body leading-6">
-            {t(notif ? "talk.onboard.notifSub" : "talk.onboard.micSub")}
+            {t("talk.onboard.notifSub")}
           </p>
           <GBtn
             variant="primary"
             size="lg"
             className="h-[52px] w-full"
             disabled={busy}
-            onClick={() => void (notif ? allowNotif() : allowMedia())}
+            onClick={() => void allowNotif()}
           >
             {busy ? (
               <Loader2 className="size-4 animate-spin" />
-            ) : notif ? (
-              <Bell className="size-4" />
             ) : (
-              <ScanFace className="size-4" />
+              <Bell className="size-4" />
             )}
-            {t(notif ? "talk.onboard.turnOn" : "talk.onboard.allow")}
+            {t("talk.onboard.turnOn")}
           </GBtn>
           <button
             type="button"
             className="tg-muted text-sm font-semibold"
-            onClick={() => (notif ? setStage("media") : onDone())}
+            onClick={onDone}
           >
             {t("talk.onboard.notNow")}
           </button>

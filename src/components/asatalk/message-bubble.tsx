@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import {
   BarChart3,
   Check,
@@ -58,7 +58,12 @@ export interface BubbleActions {
   openContact: (userId: string) => void;
 }
 
-export function MessageBubble({
+/**
+ * Memoised: the chat and user queries poll every few seconds, and with
+ * TanStack's structural sharing an unchanged message keeps its identity, so
+ * a poll that changes nothing re-renders nothing.
+ */
+export const MessageBubble = memo(function MessageBubble({
   msg,
   chat,
   me,
@@ -98,8 +103,16 @@ export function MessageBubble({
   const isSticker =
     msg.type === "sticker" || (msg.type === "text" && isOnlyEmoji(msg.content));
   const time = formatTime(msg.createdAt, locale);
+  // Anything older than a couple of seconds at mount is history, not news.
+  const [mountedAt] = useState(() => Date.now());
+  const fresh = mountedAt - new Date(msg.createdAt).getTime() < 2000;
   const [menuOpen, setMenuOpen] = useState(false);
   const [allReactions, setAllReactions] = useState(false);
+  const touch = useMessageTouch({
+    onLongPress: () => setMenuOpen(true),
+    onReply: () => actions.reply(msg),
+  });
+  const { swipeRef, hintRef } = touch;
   const senderRole =
     chat.type !== "private"
       ? chat.createdBy === msg.senderId
@@ -313,246 +326,350 @@ export function MessageBubble({
   return (
     <div
       className={cn(
-        "group relative flex items-end px-2",
-        own ? "flex-row-reverse" : "flex-row",
+        "tg-msg-row group",
         selected && "bg-talk-wash-2 rounded-xl",
       )}
       data-message-id={msg.id}
+      data-own={own}
     >
-      {!own && chat.type !== "private" && (
-        <span className="w-8 shrink-0">
-          {tail && (
-            <TalkAvatar
-              name={sender?.displayName ?? "?"}
-              src={sender?.avatar}
-              size="xs"
-            />
-          )}
-        </span>
-      )}
-      <GMenu open={menuOpen} onOpenChange={setMenuOpen}>
-        <div className="relative max-w-full">
-          <div
-            onContextMenu={(e) => {
-              e.preventDefault();
-              setMenuOpen(true);
-            }}
-            className={cn(
-              "tg-bubble",
-              own ? "tg-bubble-out" : "tg-bubble-in",
-              tail && "tg-tail",
-              isMedia && "tg-bubble-media",
-              (isSticker || msg.type === "video_note") && "tg-bubble-sticker",
+      <div className="tg-msg-inner">
+        {!own && chat.type !== "private" && (
+          <span className="w-8 shrink-0">
+            {tail && (
+              <TalkAvatar
+                name={sender?.displayName ?? "?"}
+                src={sender?.avatar}
+                size="xs"
+              />
             )}
-            onDoubleClick={() => actions.reply(msg)}
-          >
-            {msg.forwardedFrom && (
-              <p className="text-caption mb-0.5 font-semibold opacity-80">
-                <Forward className="me-1 inline size-3" />
-                {t("talk.msg.forwardedFrom")} {msg.forwardedFrom}
-              </p>
-            )}
-            {showSender &&
-              !own &&
-              chat.type !== "private" &&
-              msg.type !== "sticker" && (
-                <p
-                  className="tg-sender flex items-center gap-1.5"
-                  style={{
-                    color: `oklch(0.55 0.17 ${hueOf(sender?.id ?? "")})`,
-                  }}
-                >
-                  {sender?.displayName}
-                  {senderRole && (
-                    <span className="tg-role-badge">
-                      {t(`talk.conv.${senderRole}`)}
+          </span>
+        )}
+        <GMenu open={menuOpen} onOpenChange={setMenuOpen}>
+          <div className="tg-msg-body">
+            <span className="tg-msg-hint" ref={hintRef} aria-hidden="true">
+              <CornerUpLeft className="size-3.5" />
+            </span>
+            <div
+              className="tg-msg-swipe"
+              ref={swipeRef}
+              onPointerDown={touch.onPointerDown}
+              onPointerMove={touch.onPointerMove}
+              onPointerUp={touch.onPointerUp}
+              onPointerCancel={touch.onPointerUp}
+            >
+              <div
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  setMenuOpen(true);
+                }}
+                className={cn(
+                  "tg-bubble",
+                  fresh && "tg-bubble-fresh",
+                  own ? "tg-bubble-out" : "tg-bubble-in",
+                  tail && "tg-tail",
+                  isMedia && "tg-bubble-media",
+                  (isSticker || msg.type === "video_note") &&
+                    "tg-bubble-sticker",
+                )}
+                onDoubleClick={() => actions.reply(msg)}
+              >
+                {msg.forwardedFrom && (
+                  <p className="text-caption mb-0.5 font-semibold opacity-80">
+                    <Forward className="me-1 inline size-3" />
+                    {t("talk.msg.forwardedFrom")} {msg.forwardedFrom}
+                  </p>
+                )}
+                {showSender &&
+                  !own &&
+                  chat.type !== "private" &&
+                  msg.type !== "sticker" && (
+                    <p
+                      className="tg-sender flex items-center gap-1.5"
+                      style={{
+                        color: `oklch(0.55 0.17 ${hueOf(sender?.id ?? "")})`,
+                      }}
+                    >
+                      {sender?.displayName}
+                      {senderRole && (
+                        <span className="tg-role-badge">
+                          {t(`talk.conv.${senderRole}`)}
+                        </span>
+                      )}
+                    </p>
+                  )}
+                {repliedTo && (
+                  <button
+                    type="button"
+                    className="tg-quote w-full text-start"
+                    onClick={() => actions.jumpTo(repliedTo.id)}
+                  >
+                    <span className="block truncate font-bold">
+                      {users.get(repliedTo.senderId)?.displayName}
                     </span>
+                    <span className="block truncate opacity-80">
+                      {repliedTo.type === "text"
+                        ? repliedTo.content
+                        : `${t(`talk.msg.${previewKey(repliedTo.type)}`)}`}
+                    </span>
+                  </button>
+                )}
+                {body}
+                {!isSticker && msg.type !== "video_note" && meta}
+              </div>
+              {(isSticker || msg.type === "video_note") && (
+                <span
+                  className={cn(
+                    "text-meta absolute bottom-1 opacity-70",
+                    own ? "start-1" : "end-1",
+                  )}
+                >
+                  {time}{" "}
+                  {own &&
+                    (msg.isRead ? (
+                      <CheckCheck className="inline size-3" />
+                    ) : (
+                      <Check className="inline size-3" />
+                    ))}
+                </span>
+              )}
+              {msg.reactions.length > 0 && (
+                <div className="tg-msg-foot mt-1 flex flex-wrap gap-1">
+                  {msg.reactions.map((r) => (
+                    <button
+                      key={r.emoji}
+                      type="button"
+                      className="tg-reaction"
+                      data-mine={r.userIds.includes(me.id)}
+                      onClick={() => actions.react(msg, r.emoji)}
+                    >
+                      <span>{r.emoji}</span>
+                      {r.userIds.length > 1 && (
+                        <span className="text-caption font-bold">
+                          {toLocaleDigits(r.userIds.length, locale)}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {own && seenBy != null && seenBy > 0 && chat.type === "group" && (
+                <p className="tg-seenby tg-msg-foot mt-0.5 flex items-center gap-1">
+                  <CheckCheck className="text-talk size-3" />{" "}
+                  {t("talk.conv.seenBy").replace(
+                    "{n}",
+                    toLocaleDigits(seenBy, locale),
                   )}
                 </p>
               )}
-            {repliedTo && (
-              <button
-                type="button"
-                className="tg-quote w-full text-start"
-                onClick={() => actions.jumpTo(repliedTo.id)}
-              >
-                <span className="block truncate font-bold">
-                  {users.get(repliedTo.senderId)?.displayName}
-                </span>
-                <span className="block truncate opacity-80">
-                  {repliedTo.type === "text"
-                    ? repliedTo.content
-                    : `${t(`talk.msg.${previewKey(repliedTo.type)}`)}`}
-                </span>
-              </button>
-            )}
-            {body}
-            {!isSticker && msg.type !== "video_note" && meta}
-          </div>
-          {(isSticker || msg.type === "video_note") && (
-            <span
-              className={cn(
-                "text-meta absolute bottom-1 opacity-70",
-                own ? "start-1" : "end-1",
-              )}
-            >
-              {time}{" "}
-              {own &&
-                (msg.isRead ? (
-                  <CheckCheck className="inline size-3" />
-                ) : (
-                  <Check className="inline size-3" />
-                ))}
-            </span>
-          )}
-          {msg.reactions.length > 0 && (
-            <div
-              className={cn(
-                "mt-1 flex flex-wrap gap-1",
-                own ? "justify-end" : "justify-start",
-              )}
-            >
-              {msg.reactions.map((r) => (
-                <button
-                  key={r.emoji}
-                  type="button"
-                  className="tg-reaction"
-                  data-mine={r.userIds.includes(me.id)}
-                  onClick={() => actions.react(msg, r.emoji)}
-                >
-                  <span>{r.emoji}</span>
-                  {r.userIds.length > 1 && (
-                    <span className="text-caption font-bold">
-                      {toLocaleDigits(r.userIds.length, locale)}
-                    </span>
-                  )}
-                </button>
-              ))}
             </div>
-          )}
-          {own && seenBy != null && seenBy > 0 && chat.type === "group" && (
-            <p className="tg-seenby mt-0.5">
-              <CheckCheck className="text-talk size-3" />{" "}
-              {t("talk.conv.seenBy").replace(
-                "{n}",
-                toLocaleDigits(seenBy, locale),
-              )}
-            </p>
-          )}
-          {/* hover affordance (desktop); long-press / right-click opens the same menu */}
-          <div
-            className={cn(
-              "absolute top-1 flex gap-0.5 opacity-0 transition-opacity md:group-hover:opacity-100",
-              menuOpen && "opacity-100",
-              own ? "-start-16 flex-row-reverse" : "-end-16",
-            )}
-          >
-            <button
-              type="button"
-              className="tg-btn tg-icon !h-7 !w-7"
-              onClick={() => actions.reply(msg)}
-              aria-label={t("talk.msg.reply")}
-              tabIndex={-1}
-            >
-              <CornerUpLeft className="size-3.5" />
-            </button>
-            <GMenuTrigger asChild>
+            {/* Desktop hover affordance. On touch the same menu comes from a
+                long press and reply from a swipe, so it is hidden there. */}
+            <div className="tg-msg-actions" data-open={menuOpen}>
               <button
                 type="button"
                 className="tg-btn tg-icon !h-7 !w-7"
-                aria-label={t("talk.msg.react")}
+                onClick={() => actions.reply(msg)}
+                aria-label={t("talk.msg.reply")}
                 tabIndex={-1}
               >
-                <SmilePlus className="size-3.5" />
+                <CornerUpLeft className="size-3.5" />
               </button>
-            </GMenuTrigger>
+              <GMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="tg-btn tg-icon !h-7 !w-7"
+                  aria-label={t("talk.msg.react")}
+                  tabIndex={-1}
+                >
+                  <SmilePlus className="size-3.5" />
+                </button>
+              </GMenuTrigger>
+            </div>
           </div>
-        </div>
-        <GMenuContent align={own ? "end" : "start"} className="max-w-[92vw]">
-          <div
-            className={cn(
-              "tg-quick-reactions mb-1 !px-2 !py-1",
-              allReactions && "max-w-[300px] flex-wrap",
-            )}
-          >
-            {QUICK_REACTIONS.slice(
-              0,
-              allReactions ? QUICK_REACTIONS.length : 6,
-            ).map((e) => (
-              <GMenuItem
-                key={e}
-                className="!p-0.5 !text-[24px] hover:scale-125"
-                onSelect={() => actions.react(msg, e)}
-              >
-                {e}
-              </GMenuItem>
-            ))}
-            {!allReactions && (
-              <button
-                type="button"
-                className="tg-muted hover:bg-talk-hover flex size-7 items-center justify-center rounded-full"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setAllReactions(true);
-                }}
-                aria-label="more"
-              >
-                <ChevronDown className="size-4" />
-              </button>
-            )}
-          </div>
-          <GMenuSeparator />
-          <GMenuItem onSelect={() => actions.reply(msg)}>
-            <CornerUpLeft /> {t("talk.msg.reply")}
-          </GMenuItem>
-          {msg.type === "text" && (
-            <GMenuItem
-              onSelect={() => {
-                void navigator.clipboard.writeText(msg.content);
-                toast.success(t("talk.msg.copied"));
-              }}
+          <GMenuContent align={own ? "end" : "start"} className="max-w-[92vw]">
+            <div
+              className={cn(
+                "tg-quick-reactions mb-1 !px-2 !py-1",
+                allReactions && "max-w-[300px] flex-wrap",
+              )}
             >
-              <Copy /> {t("talk.msg.copy")}
+              {QUICK_REACTIONS.slice(
+                0,
+                allReactions ? QUICK_REACTIONS.length : 6,
+              ).map((e) => (
+                <GMenuItem
+                  key={e}
+                  className="!p-0.5 !text-[24px] hover:scale-125"
+                  onSelect={() => actions.react(msg, e)}
+                >
+                  {e}
+                </GMenuItem>
+              ))}
+              {!allReactions && (
+                <button
+                  type="button"
+                  className="tg-muted hover:bg-talk-hover flex size-7 items-center justify-center rounded-full"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setAllReactions(true);
+                  }}
+                  aria-label="more"
+                >
+                  <ChevronDown className="size-4" />
+                </button>
+              )}
+            </div>
+            <GMenuSeparator />
+            <GMenuItem onSelect={() => actions.reply(msg)}>
+              <CornerUpLeft /> {t("talk.msg.reply")}
             </GMenuItem>
-          )}
-          <GMenuItem onSelect={() => actions.forward(msg)}>
-            <Forward /> {t("talk.msg.forward")}
-          </GMenuItem>
-          {editable && (
-            <GMenuItem onSelect={() => actions.edit(msg)}>
-              <Pencil /> {t("talk.msg.edit")}
-            </GMenuItem>
-          )}
-          {canPin && (
-            <GMenuItem onSelect={() => actions.pin(msg)}>
-              {msg.isPinned ? <PinOff /> : <Pin />}{" "}
-              {msg.isPinned ? t("talk.msg.unpin") : t("talk.msg.pin")}
-            </GMenuItem>
-          )}
-          <GMenuItem onSelect={() => actions.select(msg)}>
-            <SquareCheck /> {t("talk.msg.select")}
-          </GMenuItem>
-          {msg.mediaId && (
-            <GMenuItem asChild>
-              <a href={mediaUrl(msg.mediaId)} download>
-                <Download /> {t("talk.msg.download")}
-              </a>
-            </GMenuItem>
-          )}
-          {deletable && (
-            <>
-              <GMenuSeparator />
-              <GMenuItem danger onSelect={() => actions.remove(msg)}>
-                <Trash2 /> {t("talk.msg.delete")}
+            {msg.type === "text" && (
+              <GMenuItem
+                onSelect={() => {
+                  void navigator.clipboard.writeText(msg.content);
+                  toast.success(t("talk.msg.copied"));
+                }}
+              >
+                <Copy /> {t("talk.msg.copy")}
               </GMenuItem>
-            </>
-          )}
-        </GMenuContent>
-      </GMenu>
+            )}
+            <GMenuItem onSelect={() => actions.forward(msg)}>
+              <Forward /> {t("talk.msg.forward")}
+            </GMenuItem>
+            {editable && (
+              <GMenuItem onSelect={() => actions.edit(msg)}>
+                <Pencil /> {t("talk.msg.edit")}
+              </GMenuItem>
+            )}
+            {canPin && (
+              <GMenuItem onSelect={() => actions.pin(msg)}>
+                {msg.isPinned ? <PinOff /> : <Pin />}{" "}
+                {msg.isPinned ? t("talk.msg.unpin") : t("talk.msg.pin")}
+              </GMenuItem>
+            )}
+            <GMenuItem onSelect={() => actions.select(msg)}>
+              <SquareCheck /> {t("talk.msg.select")}
+            </GMenuItem>
+            {msg.mediaId && (
+              <GMenuItem asChild>
+                <a href={mediaUrl(msg.mediaId)} download>
+                  <Download /> {t("talk.msg.download")}
+                </a>
+              </GMenuItem>
+            )}
+            {deletable && (
+              <>
+                <GMenuSeparator />
+                <GMenuItem danger onSelect={() => actions.remove(msg)}>
+                  <Trash2 /> {t("talk.msg.delete")}
+                </GMenuItem>
+              </>
+            )}
+          </GMenuContent>
+        </GMenu>
+      </div>
     </div>
   );
+});
+
+/**
+ * Telegram-style touch gestures on a message: press and hold opens the
+ * context menu (reactions included), a short horizontal drag replies.
+ *
+ * Pointer events rather than touch events so a stylus behaves the same, and
+ * the transform is written straight to the node — re-rendering every message
+ * on every frame of a drag is what made the installed PWA feel heavy.
+ */
+function useMessageTouch({
+  onLongPress,
+  onReply,
+}: {
+  onLongPress: () => void;
+  onReply: () => void;
+}) {
+  const swipeRef = useRef<HTMLDivElement>(null);
+  const hintRef = useRef<HTMLSpanElement>(null);
+  const press = useRef<{
+    id: number;
+    x: number;
+    y: number;
+    dragging: boolean;
+    fired: boolean;
+    timer: ReturnType<typeof setTimeout> | null;
+  } | null>(null);
+
+  const paint = (dx: number, animate: boolean) => {
+    const el = swipeRef.current;
+    if (el) {
+      el.style.transition = animate ? "transform 0.18s ease-out" : "none";
+      el.style.transform = dx ? `translateX(${dx}px)` : "";
+    }
+    const hint = hintRef.current;
+    if (hint) {
+      hint.style.transition = animate ? "opacity 0.18s ease-out" : "none";
+      hint.style.opacity = String(Math.min(1, Math.abs(dx) / SWIPE_REPLY));
+    }
+  };
+
+  const clear = () => {
+    if (press.current?.timer) clearTimeout(press.current.timer);
+    press.current = null;
+  };
+
+  useEffect(() => clear, []);
+
+  return {
+    swipeRef,
+    hintRef,
+    onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+      if (e.pointerType === "mouse") return;
+      press.current = {
+        id: e.pointerId,
+        x: e.clientX,
+        y: e.clientY,
+        dragging: false,
+        fired: false,
+        timer: setTimeout(() => {
+          const p = press.current;
+          if (!p || p.dragging) return;
+          p.fired = true;
+          navigator.vibrate?.(12);
+          onLongPress();
+        }, 380),
+      };
+    },
+    onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
+      const p = press.current;
+      if (!p || p.id !== e.pointerId || p.fired) return;
+      const dx = e.clientX - p.x;
+      const dy = e.clientY - p.y;
+      if (!p.dragging) {
+        // A vertical intent belongs to the scroller, not to us.
+        if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)) return clear();
+        if (Math.abs(dx) < 10) return;
+        p.dragging = true;
+        if (p.timer) clearTimeout(p.timer);
+      }
+      paint(Math.max(-SWIPE_MAX, Math.min(SWIPE_MAX, dx)), false);
+    },
+    onPointerUp(e: React.PointerEvent<HTMLDivElement>) {
+      const p = press.current;
+      if (!p || p.id !== e.pointerId) return;
+      const dx = e.clientX - p.x;
+      if (p.dragging && Math.abs(dx) >= SWIPE_REPLY) {
+        navigator.vibrate?.(10);
+        onReply();
+      }
+      if (p.dragging) paint(0, true);
+      clear();
+    },
+  };
 }
+
+/** Drag distance that commits to a reply, and how far the bubble follows. */
+const SWIPE_REPLY = 56;
+const SWIPE_MAX = 76;
 
 function previewKey(type: Message["type"]): string {
   return type === "video_note"

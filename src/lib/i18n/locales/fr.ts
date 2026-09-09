@@ -585,6 +585,7 @@ export const fr: typeof fa = {
     installDesc:
       "Installez Asameet comme une application native sur votre appareil.",
     install: "Installer",
+    installIos: "Pour installer : Partager, puis « Sur l’écran d’accueil ».",
     later: "Plus tard",
   },
   talk: en.talk,

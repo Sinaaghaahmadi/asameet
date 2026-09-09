@@ -567,6 +567,7 @@ export const ar: typeof fa = {
     installTitle: "تثبيت أساميت",
     installDesc: "ثبّت أساميت كتطبيق أصلي على جهازك.",
     install: "تثبيت",
+    installIos: "للتثبيت: زر المشاركة ثم «إضافة إلى الشاشة الرئيسية».",
     later: "لاحقًا",
   },
   talk: en.talk,

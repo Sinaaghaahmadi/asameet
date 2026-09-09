@@ -78,7 +78,7 @@ export function ChatView({
     toggleBlock,
     openPrivateChat,
   } = useTalk();
-  const { startCall } = useCalls();
+  const { startCall, startGroupCall } = useCalls();
   const {
     replyTo,
     editing,
@@ -452,6 +452,26 @@ export function ChatView({
                     variant="ghost"
                     size="icon"
                     onClick={() => void startCall(peer, "video")}
+                    aria-label={t("talk.chat.videoCall")}
+                  >
+                    <Video className="size-5" />
+                  </GBtn>
+                </>
+              )}
+              {chat.type === "group" && (
+                <>
+                  <GBtn
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => void startGroupCall(chat.id, title, "audio")}
+                    aria-label={t("talk.calls.groupCall")}
+                  >
+                    <Phone className="size-5" />
+                  </GBtn>
+                  <GBtn
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => void startGroupCall(chat.id, title, "video")}
                     aria-label={t("talk.chat.videoCall")}
                   >
                     <Video className="size-5" />

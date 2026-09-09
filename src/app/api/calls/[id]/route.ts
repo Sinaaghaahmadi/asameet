@@ -7,7 +7,7 @@ import {
   rpc,
 } from "@/lib/server/api";
 
-/** Poll call state + the other side's signals newer than `?after=`. */
+/** Poll call state + signals addressed to me newer than `?after=`. */
 export async function GET(
   req: NextRequest,
   ctx: { params: Promise<{ id: string }> },
@@ -28,7 +28,12 @@ export async function GET(
   }
 }
 
-/** accept / decline / signal (WebRTC offer, answer, ICE candidates). */
+/**
+ * accept / decline / signal / leave / presence.
+ *
+ * In a group call signalling is a mesh, so `to` addresses one peer; a signal
+ * with no recipient is still broadcast (that is the 1:1 path).
+ */
 export async function POST(
   req: NextRequest,
   ctx: { params: Promise<{ id: string }> },
@@ -40,7 +45,11 @@ export async function POST(
     const body = (await req.json().catch(() => null)) as {
       action?: string;
       payload?: unknown;
+      to?: string | null;
+      muted?: boolean;
+      camera?: boolean;
     } | null;
+
     if (body?.action === "signal") {
       if (!body.payload || typeof body.payload !== "object")
         throw new ApiError("bad_request", 400);
@@ -48,8 +57,23 @@ export async function POST(
         p_token: token,
         p_call_id: id,
         p_payload: body.payload,
+        p_to: body.to ?? null,
       });
       return NextResponse.json({});
+    }
+    if (body?.action === "presence") {
+      await rpc("api_call_presence", {
+        p_token: token,
+        p_call_id: id,
+        p_muted: typeof body.muted === "boolean" ? body.muted : null,
+        p_camera: typeof body.camera === "boolean" ? body.camera : null,
+      });
+      return NextResponse.json({});
+    }
+    if (body?.action === "leave") {
+      return NextResponse.json(
+        await rpc("api_call_leave", { p_token: token, p_call_id: id }),
+      );
     }
     if (body?.action === "accept" || body?.action === "decline") {
       return NextResponse.json(

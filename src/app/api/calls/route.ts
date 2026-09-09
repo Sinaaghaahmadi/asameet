@@ -1,11 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import {
   assertSameOrigin,
   errorResponse,
   requireToken,
   rpc,
 } from "@/lib/server/api";
+import { callTargets, sendPush } from "@/lib/server/push";
 import type { Call } from "@/lib/types";
+
+export const runtime = "nodejs";
 
 export async function GET() {
   try {
@@ -16,6 +19,7 @@ export async function GET() {
   }
 }
 
+/** Ring one person (`peerId`) or start/join a group call in a chat (`chatId`). */
 export async function POST(req: NextRequest) {
   try {
     assertSameOrigin(req);
@@ -23,12 +27,31 @@ export async function POST(req: NextRequest) {
     const body = (await req.json().catch(() => null)) as {
       type?: Call["type"];
       peerId?: string;
+      chatId?: string;
+      title?: string;
     } | null;
-    const data = await rpc("api_call_start", {
+    const data = await rpc<{ call: Call }>("api_call_start", {
       p_token: token,
       p_type: body?.type ?? "audio",
       p_peer_id: body?.peerId ?? null,
+      p_chat_id: body?.chatId ?? null,
     });
+
+    // A ringing phone with the app closed only finds out through push.
+    const call = data.call;
+    if (call?.id) {
+      after(async () => {
+        const targets = await callTargets(token, call.id);
+        await sendPush(token, targets, {
+          kind: "call",
+          callId: call.id,
+          chatId: call.chatId ?? null,
+          type: call.type,
+          title: body?.title ?? "Asatalk",
+          body: call.type === "video" ? "تماس تصویری" : "تماس صوتی",
+        });
+      });
+    }
     return NextResponse.json(data, { status: 201 });
   } catch (e) {
     return errorResponse(e);

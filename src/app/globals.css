@@ -1022,3 +1022,23 @@ body {
     transform: none !important;
   }
 }
+
+/* ---------- sonner ----------
+   The library sets its own font-family and radius on the toaster root, which
+   made toasts the one surface in the app not rendered in Vazirmatn. */
+[data-sonner-toaster],
+[data-sonner-toaster] [data-sonner-toast],
+.talk-toast {
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01";
+}
+[data-sonner-toaster] [data-sonner-toast] {
+  border-radius: 14px;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  letter-spacing: 0;
+}
+[data-sonner-toaster] [data-title],
+[data-sonner-toaster] [data-description] {
+  font-family: var(--font-sans);
+}

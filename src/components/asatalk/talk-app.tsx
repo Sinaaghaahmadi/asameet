@@ -14,6 +14,7 @@ import { useTalkStore } from "@/stores/talk-store";
 import { CallProvider } from "./calls/call-provider";
 import { JoinDialog } from "./dialogs";
 import { AsatalkLogo } from "./mascots";
+import { InstallPrompt } from "./install-prompt";
 import { Onboarding } from "./onboarding";
 import { PinScreen } from "./pin-lock";
 import { TalkShell } from "./shell";
@@ -167,6 +168,8 @@ export function TalkApp({ joinRef }: { joinRef?: string }) {
           onSwitch={(id) => void onSwitch(id)}
         />
         {joinRef && <JoinRoute joinRef={joinRef} />}
+        <NotificationRoute />
+        <InstallPrompt />
       </WithCalls>
     </TalkDataProvider>
   );
@@ -179,6 +182,32 @@ function WithCalls({ me, children }: { me: User; children: React.ReactNode }) {
       {children}
     </CallProvider>
   );
+}
+
+/**
+ * A tapped notification lands here: the service worker focuses an existing
+ * window and posts the chat, and a cold start carries it in the hash. Both
+ * routes end at the same `openChat`.
+ */
+function NotificationRoute() {
+  const openChat = useTalkStore((s) => s.openChat);
+  useEffect(() => {
+    const go = (chatId?: string | null) => {
+      if (chatId) openChat(chatId);
+    };
+    const hash = window.location.hash.match(/chat=([0-9a-f-]{36})/i);
+    if (hash) {
+      go(hash[1]);
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+    const onMessage = (e: MessageEvent) => {
+      if (e.data?.type === "asatalk:open") go(e.data.chatId);
+    };
+    navigator.serviceWorker?.addEventListener("message", onMessage);
+    return () =>
+      navigator.serviceWorker?.removeEventListener("message", onMessage);
+  }, [openChat]);
+  return null;
 }
 
 function JoinRoute({ joinRef }: { joinRef: string }) {

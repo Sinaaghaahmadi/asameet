@@ -582,6 +582,8 @@ export const de: typeof fa = {
     installTitle: "Asameet installieren",
     installDesc: "Installiere Asameet wie eine native App auf deinem Gerät.",
     install: "Installieren",
+    installIos:
+      "Zum Installieren: Teilen antippen, dann „Zum Home-Bildschirm“.",
     later: "Später",
   },
   talk: en.talk,

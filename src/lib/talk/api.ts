@@ -208,19 +208,60 @@ export const talkApi = {
     post<{ id: string }>("/api/media", { chatId, mime, data: base64 }),
 
   calls: () => json<{ calls: Call[] }>("/api/calls"),
-  startCall: (peerId: string, type: "audio" | "video") =>
-    post<{ call: Call }>("/api/calls", { peerId, type }),
+  startCall: (peerId: string, type: "audio" | "video", title?: string) =>
+    post<{ call: Call }>("/api/calls", { peerId, type, title }),
+  /** Start the chat's group call, or join the one already running. */
+  startGroupCall: (chatId: string, type: "audio" | "video", title?: string) =>
+    post<{ call: Call }>("/api/calls", { chatId, type, title }),
   endCall: (callId: string, duration: number) =>
     post<{ call: Call }>("/api/calls", { callId, duration }, "PATCH"),
+  leaveCall: (callId: string) =>
+    post<{ call: Call }>(`/api/calls/${callId}`, { action: "leave" }),
   answerCall: (callId: string, action: "accept" | "decline") =>
     post<{ call: Call }>(`/api/calls/${callId}`, { action }),
-  signal: (callId: string, payload: unknown) =>
-    post<object>(`/api/calls/${callId}`, { action: "signal", payload }),
+  /** Heartbeat the roster and publish my mute / camera state. */
+  callPresence: (callId: string, state: { muted?: boolean; camera?: boolean }) =>
+    post<object>(`/api/calls/${callId}`, { action: "presence", ...state }),
+  /** `to` addresses one peer of a mesh call; omit it for the 1:1 path. */
+  signal: (callId: string, payload: unknown, to?: string | null) =>
+    post<object>(`/api/calls/${callId}`, { action: "signal", payload, to }),
   pollCall: (callId: string, after: number) =>
-    json<{ call: Call; signals: { id: number; payload: SignalPayload }[] }>(
-      `/api/calls/${callId}?after=${after}`,
-    ),
+    json<{
+      call: Call;
+      signals: { id: number; from: string; payload: SignalPayload }[];
+    }>(`/api/calls/${callId}?after=${after}`),
   incomingCall: () => json<{ call: Call | null }>("/api/calls/incoming"),
+
+  /** Sign-in by QR: the signed-out device creates a ticket and polls it. */
+  qrCreate: () => post<{ code: string; ttl: number }>("/api/auth/qr", {
+    action: "create",
+  }),
+  qrPoll: (code: string) =>
+    post<{
+      status: "pending" | "approved" | "rejected" | "expired";
+      user?: User;
+    }>("/api/auth/qr", { action: "poll", code }),
+  /** …and the signed-in device inspects and approves it. */
+  qrPeek: (code: string) =>
+    post<{ userAgent: string; createdAt: string }>("/api/auth/qr", {
+      action: "peek",
+      code,
+    }),
+  qrApprove: (code: string, approve: boolean) =>
+    post<{ status: string }>("/api/auth/qr", {
+      action: approve ? "approve" : "reject",
+      code,
+    }),
+
+  /** Renew ("online") or release ("offline") the presence lease. */
+  presence: (state: "online" | "offline") =>
+    post<object>(`/api/presence?state=${state}`),
+
+  pushKey: () => json<{ key: string | null }>("/api/push"),
+  pushSubscribe: (sub: PushSubscriptionJSON) =>
+    post<object>("/api/push", sub),
+  pushUnsubscribe: (endpoint: string) =>
+    post<object>("/api/push", { endpoint }, "DELETE"),
 };
 
 export type SignalPayload =

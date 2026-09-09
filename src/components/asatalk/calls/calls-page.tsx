@@ -27,7 +27,7 @@ import { useTalk } from "../talk-data";
 export function CallsPage({ onBack }: { onBack: () => void }) {
   const t = useT();
   const { locale } = useLocale();
-  const { me, users, userList } = useTalk();
+  const { me, users, userList, chats } = useTalk();
   const { startCall } = useCalls();
   const [tab, setTab] = useState<"recent" | "contacts">("recent");
   const [q, setQ] = useState("");
@@ -108,14 +108,23 @@ export function CallsPage({ onBack }: { onBack: () => void }) {
             </div>
           ) : (
             calls.map((c) => {
-              const peerId = c.initiatorId === me.id ? c.peerId : c.initiatorId;
-              const peer = users.get(peerId);
+              // A group call has no peer; it is named after its chat.
+              const peerId =
+                c.initiatorId === me.id ? c.peerId : c.initiatorId;
+              const peer = peerId ? users.get(peerId) : undefined;
+              const groupChat = c.chatId
+                ? chats.find((x) => x.id === c.chatId)
+                : undefined;
+              const title =
+                peer?.displayName ??
+                groupChat?.name ??
+                t("talk.deletedAccount");
               const { Icon, cls, label } = meta(c);
               return (
                 <div key={c.id} className="tg-row cursor-default">
                   <TalkAvatar
-                    name={peer?.displayName ?? "?"}
-                    src={peer?.avatar}
+                    name={title}
+                    src={peer?.avatar ?? groupChat?.avatar}
                     size="md"
                     className="!size-12"
                     online={peer?.isOnline}
@@ -127,7 +136,7 @@ export function CallsPage({ onBack }: { onBack: () => void }) {
                         c.direction === "missed" && "text-red-500",
                       )}
                     >
-                      {peer?.displayName ?? t("talk.deletedAccount")}
+                      {title}
                     </span>
                     <span
                       className={cn("flex items-center gap-1 text-[12px]", cls)}
