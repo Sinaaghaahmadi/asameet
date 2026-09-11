@@ -51,17 +51,57 @@ export type PushBody =
       body: string;
     };
 
+/**
+ * The native app registers an Expo push token as an `expo:` endpoint, so one
+ * target list serves both browsers and phones; Expo's service relays to
+ * APNs / FCM and needs no key of ours.
+ */
+const EXPO_PREFIX = "expo:";
+
+async function sendExpo(token: string, targets: PushTarget[], payload: PushBody) {
+  const messages = targets.map((t) => ({
+    to: t.endpoint.slice(EXPO_PREFIX.length),
+    title: payload.title,
+    body: payload.body,
+    sound: "default",
+    priority: payload.kind === "call" ? "high" : "default",
+    channelId: payload.kind === "call" ? "calls" : "messages",
+    ttl: payload.kind === "call" ? 30 : 60 * 60 * 12,
+    data: payload.kind === "call"
+      ? { kind: "call", callId: payload.callId, chatId: payload.chatId ?? null }
+      : { kind: "message", chatId: payload.chatId },
+  }));
+  try {
+    const res = await fetch("https://exp.host/--/api/v2/push/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(messages),
+    });
+    const out = (await res.json().catch(() => ({}))) as { data?: { status: string; details?: { error?: string } }[] };
+    // A DeviceNotRegistered ticket means the app was uninstalled: forget it.
+    await Promise.all((out.data ?? []).map((ticket, i) =>
+      ticket.status === "error" && ticket.details?.error === "DeviceNotRegistered"
+        ? rpc("api_push_prune", { p_token: token, p_endpoint: targets[i].endpoint }).catch(() => {})
+        : Promise.resolve()));
+  } catch {
+    /* Expo unreachable; the app polls anyway */
+  }
+}
+
 /** Deliver to every target; dead endpoints are pruned as we learn about them. */
 export async function sendPush(
   token: string,
   targets: PushTarget[],
   payload: PushBody,
 ): Promise<void> {
-  if (!pushEnabled || targets.length === 0) return;
+  const expo = targets.filter((t) => t.endpoint.startsWith(EXPO_PREFIX));
+  const web = targets.filter((t) => !t.endpoint.startsWith(EXPO_PREFIX));
+  if (expo.length) await sendExpo(token, expo, payload);
+  if (!pushEnabled || web.length === 0) return;
   const json = JSON.stringify(payload);
   const ttl = payload.kind === "call" ? 30 : 60 * 60 * 12;
   await Promise.all(
-    targets.map(async (t) => {
+    web.map(async (t) => {
       const sub: PushSubscription = {
         endpoint: t.endpoint,
         keys: { p256dh: t.p256dh, auth: t.auth },
