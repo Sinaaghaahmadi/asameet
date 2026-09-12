@@ -5,12 +5,21 @@
  * same-origin /api routes; the session is the httpOnly cookie.
  */
 import { apiFetch } from "@/lib/client-api";
-import type { Call, Chat, ChatPreview, DeviceSession, Message, MessageMeta, MessageType, User } from "@/lib/types";
+import type {
+  Call,
+  Chat,
+  ChatPreview,
+  DeviceSession,
+  Message,
+  MessageMeta,
+  MessageType,
+  User,
+} from "@/lib/types";
 
 export class TalkApiError extends Error {
   constructor(
     public code: string,
-    public status: number
+    public status: number,
   ) {
     super(code);
   }
@@ -26,8 +35,11 @@ async function json<T>(path: string, init?: RequestInit): Promise<T> {
   return data;
 }
 
-const post = <T,>(path: string, body?: unknown, method = "POST") =>
-  json<T>(path, { method, body: body === undefined ? undefined : JSON.stringify(body) });
+const post = <T>(path: string, body?: unknown, method = "POST") =>
+  json<T>(path, {
+    method,
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
 
 export interface TalkSettings {
   theme?: "light" | "dark" | "system";
@@ -49,6 +61,9 @@ export interface TalkSettings {
   forwards?: "everybody" | "contacts" | "nobody";
   groupsPrivacy?: "everybody" | "contacts" | "nobody";
   blocked?: string[];
+  pinLock?: string;
+  chatThemes?: Record<string, { accent?: string; wallpaper?: string }>;
+  onboarded?: boolean;
   autoDownloadPhotos?: boolean;
   autoDownloadVideos?: boolean;
   autoDownloadFiles?: boolean;
@@ -59,69 +74,194 @@ export interface TalkSettings {
 
 export const talkApi = {
   me: () => json<{ user: User; settings: TalkSettings }>("/api/auth"),
-  login: (username: string, password: string) => post<{ user: User }>("/api/auth", { username, password }),
+  login: (username: string, password: string) =>
+    post<{ user: User }>("/api/auth", { username, password }),
   signup: (username: string, password: string, displayName: string) =>
-    post<{ user: User }>("/api/auth", { mode: "signup", username, password, displayName }),
-  logoutCurrent: () => post<{ user: User | null }>("/api/auth?keep=1", undefined, "DELETE"),
-  logoutAll: () => post<{ user: User | null }>("/api/auth", undefined, "DELETE"),
-  accounts: () => json<{ accounts: { user: User; current: boolean }[] }>("/api/auth/accounts"),
-  switchAccount: (userId: string) => post<{ user: User; settings: TalkSettings }>("/api/auth/switch", { userId }),
-  changePassword: (current: string, next: string) => post<object>("/api/auth/password", { current, next }),
+    post<{ user: User }>("/api/auth", {
+      mode: "signup",
+      username,
+      password,
+      displayName,
+    }),
+  otpRequest: (identifier: string) =>
+    post<{
+      kind: "phone" | "email";
+      known: boolean;
+      demoCode?: string;
+      ttl: number;
+    }>("/api/auth/otp", { identifier }),
+  otpVerify: (identifier: string, code: string, displayName?: string) =>
+    post<{ user: User; isNew: boolean }>("/api/auth/otp", {
+      identifier,
+      code,
+      displayName,
+    }),
+  logoutCurrent: () =>
+    post<{ user: User | null }>("/api/auth?keep=1", undefined, "DELETE"),
+  logoutAll: () =>
+    post<{ user: User | null }>("/api/auth", undefined, "DELETE"),
+  accounts: () =>
+    json<{ accounts: { user: User; current: boolean }[] }>(
+      "/api/auth/accounts",
+    ),
+  switchAccount: (userId: string) =>
+    post<{ user: User; settings: TalkSettings }>("/api/auth/switch", {
+      userId,
+    }),
+  changePassword: (current: string, next: string) =>
+    post<object>("/api/auth/password", { current, next }),
   sessions: () => json<{ sessions: DeviceSession[] }>("/api/auth/sessions"),
   terminateSession: (id?: string) =>
-    post<object>(`/api/auth/sessions${id ? `?id=${encodeURIComponent(id)}` : ""}`, undefined, "DELETE"),
+    post<object>(
+      `/api/auth/sessions${id ? `?id=${encodeURIComponent(id)}` : ""}`,
+      undefined,
+      "DELETE",
+    ),
 
-  updateProfile: (body: { displayName?: string; username?: string; bio?: string; avatar?: string; clearAvatar?: boolean }) =>
-    post<{ user: User }>("/api/profile", body, "PATCH"),
-  updateSettings: (patch: TalkSettings) => post<{ settings: TalkSettings }>("/api/settings", patch, "PATCH"),
+  updateProfile: (body: {
+    displayName?: string;
+    username?: string;
+    bio?: string;
+    avatar?: string;
+    clearAvatar?: boolean;
+    note?: string;
+    clearNote?: boolean;
+  }) => post<{ user: User }>("/api/profile", body, "PATCH"),
+  updateSettings: (patch: TalkSettings) =>
+    post<{ settings: TalkSettings }>("/api/settings", patch, "PATCH"),
 
   users: () => json<{ users: User[] }>("/api/users"),
   chats: () => json<{ chats: Chat[] }>("/api/chats"),
-  createChat: (body: { type: Chat["type"]; name?: string; memberIds: string[]; description?: string; avatar?: string }) =>
-    post<{ chat: Chat }>("/api/chats", body),
+  createChat: (body: {
+    type: Chat["type"];
+    name?: string;
+    memberIds: string[];
+    description?: string;
+    avatar?: string;
+  }) => post<{ chat: Chat }>("/api/chats", body),
   savedChat: () => post<{ chat: Chat }>("/api/chats/saved"),
   updateChat: (
     id: string,
-    body: { name?: string; description?: string; username?: string; avatar?: string; clearAvatar?: boolean; resetInvite?: boolean }
+    body: {
+      name?: string;
+      description?: string;
+      username?: string;
+      avatar?: string;
+      clearAvatar?: boolean;
+      resetInvite?: boolean;
+    },
   ) => post<{ chat: Chat }>(`/api/chats/${id}`, body, "PATCH"),
-  deleteChat: (id: string) => post<object>(`/api/chats/${id}`, undefined, "DELETE"),
-  chatMembers: (id: string, action: "add" | "remove" | "promote" | "demote" | "leave" | "delete", userId?: string) =>
-    post<{ chat?: Chat }>(`/api/chats/${id}/members`, { action, userId }),
-  chatPrefs: (id: string, prefs: { pinned?: boolean; muted?: boolean }) => post<object>(`/api/chats/${id}/prefs`, prefs),
+  deleteChat: (id: string) =>
+    post<object>(`/api/chats/${id}`, undefined, "DELETE"),
+  chatMembers: (
+    id: string,
+    action: "add" | "remove" | "promote" | "demote" | "leave" | "delete",
+    userId?: string,
+  ) => post<{ chat?: Chat }>(`/api/chats/${id}/members`, { action, userId }),
+  chatPrefs: (
+    id: string,
+    prefs: { pinned?: boolean; muted?: boolean; archived?: boolean },
+  ) => post<object>(`/api/chats/${id}/prefs`, prefs),
   typing: (id: string) => post<object>(`/api/chats/${id}/typing`),
   join: (ref: string) => post<{ chat: Chat }>("/api/chats/join", { ref }),
-  previewJoin: (ref: string) => post<{ preview: ChatPreview }>("/api/chats/join", { ref, preview: true }),
+  previewJoin: (ref: string) =>
+    post<{ preview: ChatPreview }>("/api/chats/join", { ref, preview: true }),
 
-  messages: (chatId: string) => json<{ messages: Message[] }>(`/api/chats/${chatId}/messages`),
+  messages: (chatId: string) =>
+    json<{ messages: Message[] }>(`/api/chats/${chatId}/messages`),
   send: (
     chatId: string,
-    body: { content: string; type?: MessageType; replyToId?: string | null; mediaId?: string | null; meta?: MessageMeta }
+    body: {
+      content: string;
+      type?: MessageType;
+      replyToId?: string | null;
+      mediaId?: string | null;
+      meta?: MessageMeta;
+    },
   ) => post<{ message: Message }>(`/api/chats/${chatId}/messages`, body),
   messageAction: (
     chatId: string,
     body: {
       messageId: string;
-      action: "pin" | "unpin" | "read" | "react" | "edit" | "delete" | "forward";
+      action:
+        | "pin"
+        | "unpin"
+        | "read"
+        | "react"
+        | "edit"
+        | "delete"
+        | "forward"
+        | "vote";
       emoji?: string;
       text?: string;
       targetChatId?: string;
-    }
-  ) => post<{ message?: Message }>(`/api/chats/${chatId}/messages`, body, "PATCH"),
+    },
+  ) =>
+    post<{ message?: Message }>(`/api/chats/${chatId}/messages`, body, "PATCH"),
   markRead: (chatId: string) => post<object>(`/api/chats/${chatId}/read`),
   search: (q: string, chatId?: string) =>
-    json<{ messages: Message[] }>(`/api/search?q=${encodeURIComponent(q)}${chatId ? `&chatId=${chatId}` : ""}`),
+    json<{ messages: Message[] }>(
+      `/api/search?q=${encodeURIComponent(q)}${chatId ? `&chatId=${chatId}` : ""}`,
+    ),
 
   uploadMedia: (chatId: string, mime: string, base64: string) =>
     post<{ id: string }>("/api/media", { chatId, mime, data: base64 }),
 
   calls: () => json<{ calls: Call[] }>("/api/calls"),
-  startCall: (peerId: string, type: "audio" | "video") => post<{ call: Call }>("/api/calls", { peerId, type }),
-  endCall: (callId: string, duration: number) => post<{ call: Call }>("/api/calls", { callId, duration }, "PATCH"),
-  answerCall: (callId: string, action: "accept" | "decline") => post<{ call: Call }>(`/api/calls/${callId}`, { action }),
-  signal: (callId: string, payload: unknown) => post<object>(`/api/calls/${callId}`, { action: "signal", payload }),
+  startCall: (peerId: string, type: "audio" | "video", title?: string) =>
+    post<{ call: Call }>("/api/calls", { peerId, type, title }),
+  /** Start the chat's group call, or join the one already running. */
+  startGroupCall: (chatId: string, type: "audio" | "video", title?: string) =>
+    post<{ call: Call }>("/api/calls", { chatId, type, title }),
+  endCall: (callId: string, duration: number) =>
+    post<{ call: Call }>("/api/calls", { callId, duration }, "PATCH"),
+  leaveCall: (callId: string) =>
+    post<{ call: Call }>(`/api/calls/${callId}`, { action: "leave" }),
+  answerCall: (callId: string, action: "accept" | "decline") =>
+    post<{ call: Call }>(`/api/calls/${callId}`, { action }),
+  /** Heartbeat the roster and publish my mute / camera state. */
+  callPresence: (callId: string, state: { muted?: boolean; camera?: boolean }) =>
+    post<object>(`/api/calls/${callId}`, { action: "presence", ...state }),
+  /** `to` addresses one peer of a mesh call; omit it for the 1:1 path. */
+  signal: (callId: string, payload: unknown, to?: string | null) =>
+    post<object>(`/api/calls/${callId}`, { action: "signal", payload, to }),
   pollCall: (callId: string, after: number) =>
-    json<{ call: Call; signals: { id: number; payload: SignalPayload }[] }>(`/api/calls/${callId}?after=${after}`),
+    json<{
+      call: Call;
+      signals: { id: number; from: string; payload: SignalPayload }[];
+    }>(`/api/calls/${callId}?after=${after}`),
   incomingCall: () => json<{ call: Call | null }>("/api/calls/incoming"),
+
+  /** Sign-in by QR: the signed-out device creates a ticket and polls it. */
+  qrCreate: () => post<{ code: string; ttl: number }>("/api/auth/qr", {
+    action: "create",
+  }),
+  qrPoll: (code: string) =>
+    post<{
+      status: "pending" | "approved" | "rejected" | "expired";
+      user?: User;
+    }>("/api/auth/qr", { action: "poll", code }),
+  /** …and the signed-in device inspects and approves it. */
+  qrPeek: (code: string) =>
+    post<{ userAgent: string; createdAt: string }>("/api/auth/qr", {
+      action: "peek",
+      code,
+    }),
+  qrApprove: (code: string, approve: boolean) =>
+    post<{ status: string }>("/api/auth/qr", {
+      action: approve ? "approve" : "reject",
+      code,
+    }),
+
+  /** Renew ("online") or release ("offline") the presence lease. */
+  presence: (state: "online" | "offline") =>
+    post<object>(`/api/presence?state=${state}`),
+
+  pushKey: () => json<{ key: string | null }>("/api/push"),
+  pushSubscribe: (sub: PushSubscriptionJSON) =>
+    post<object>("/api/push", sub),
+  pushUnsubscribe: (endpoint: string) =>
+    post<object>("/api/push", { endpoint }, "DELETE"),
 };
 
 export type SignalPayload =
@@ -129,6 +269,7 @@ export type SignalPayload =
   | { kind: "answer"; sdp: string }
   | { kind: "ice"; candidate: RTCIceCandidateInit }
   | { kind: "state"; muted?: boolean; camera?: boolean; screen?: boolean }
+  | { kind: "restart" }
   | { kind: "bye" };
 
 export function mediaUrl(mediaId: string): string {

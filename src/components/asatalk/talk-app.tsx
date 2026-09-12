@@ -14,14 +14,29 @@ import { useTalkStore } from "@/stores/talk-store";
 import { CallProvider } from "./calls/call-provider";
 import { JoinDialog } from "./dialogs";
 import { AsatalkLogo } from "./mascots";
+import { InstallPrompt } from "./install-prompt";
 import { Onboarding } from "./onboarding";
+import { PinScreen } from "./pin-lock";
 import { TalkShell } from "./shell";
 import { TalkDataProvider, useTalk } from "./talk-data";
 
 export function TalkApp({ joinRef }: { joinRef?: string }) {
   const qc = useQueryClient();
   const params = useSearchParams();
-  const { user, setUser, setSettings, setAccounts, openChat, setPanel } = useTalkStore();
+  const {
+    user,
+    setUser,
+    setSettings,
+    setAccounts,
+    openChat,
+    setPanel,
+    settings,
+  } = useTalkStore();
+  const [unlocked, setUnlocked] = useState<string | null>(() =>
+    typeof window !== "undefined"
+      ? window.sessionStorage.getItem("asatalk-unlocked")
+      : null,
+  );
   const [ready, setReady] = useState(false);
   const [addingAccount, setAddingAccount] = useState(false);
 
@@ -74,12 +89,14 @@ export function TalkApp({ joinRef }: { joinRef?: string }) {
       setPanel({ kind: "none" });
       await boot();
     },
-    [qc, setUser, openChat, setPanel, boot]
+    [qc, setUser, openChat, setPanel, boot],
   );
 
   const onLogout = useCallback(
     async (all?: boolean) => {
-      const res = all ? await talkApi.logoutAll().catch(() => ({ user: null })) : await talkApi.logoutCurrent().catch(() => ({ user: null }));
+      const res = all
+        ? await talkApi.logoutAll().catch(() => ({ user: null }))
+        : await talkApi.logoutCurrent().catch(() => ({ user: null }));
       qc.clear();
       openChat(null);
       setPanel({ kind: "none" });
@@ -89,7 +106,7 @@ export function TalkApp({ joinRef }: { joinRef?: string }) {
         setAccounts([]);
       }
     },
-    [qc, openChat, setPanel, boot, setUser, setAccounts]
+    [qc, openChat, setPanel, boot, setUser, setAccounts],
   );
 
   const onSwitch = useCallback(
@@ -105,7 +122,7 @@ export function TalkApp({ joinRef }: { joinRef?: string }) {
         void loadAccounts();
       }
     },
-    [qc, openChat, setPanel, boot, loadAccounts]
+    [qc, openChat, setPanel, boot, loadAccounts],
   );
 
   if (!ready) {
@@ -117,14 +134,42 @@ export function TalkApp({ joinRef }: { joinRef?: string }) {
   }
 
   if (!user || addingAccount) {
-    return <Onboarding onLogin={onLogin} addAccount={addingAccount} onCancel={addingAccount ? () => setAddingAccount(false) : undefined} />;
+    return (
+      <Onboarding
+        onLogin={onLogin}
+        addAccount={addingAccount}
+        onCancel={addingAccount ? () => setAddingAccount(false) : undefined}
+      />
+    );
+  }
+
+  if (settings.pinLock && unlocked !== settings.pinLock) {
+    return (
+      <PinScreen
+        mode="verify"
+        hash={settings.pinLock}
+        onDone={(h) => {
+          try {
+            window.sessionStorage.setItem("asatalk-unlocked", h);
+          } catch {}
+          setUnlocked(h);
+        }}
+        onForgot={() => void onLogout(true)}
+      />
+    );
   }
 
   return (
     <TalkDataProvider me={user}>
       <WithCalls me={user}>
-        <TalkShell onLogout={(all) => void onLogout(all)} onAddAccount={() => setAddingAccount(true)} onSwitch={(id) => void onSwitch(id)} />
+        <TalkShell
+          onLogout={(all) => void onLogout(all)}
+          onAddAccount={() => setAddingAccount(true)}
+          onSwitch={(id) => void onSwitch(id)}
+        />
         {joinRef && <JoinRoute joinRef={joinRef} />}
+        <NotificationRoute />
+        <InstallPrompt />
       </WithCalls>
     </TalkDataProvider>
   );
@@ -139,6 +184,32 @@ function WithCalls({ me, children }: { me: User; children: React.ReactNode }) {
   );
 }
 
+/**
+ * A tapped notification lands here: the service worker focuses an existing
+ * window and posts the chat, and a cold start carries it in the hash. Both
+ * routes end at the same `openChat`.
+ */
+function NotificationRoute() {
+  const openChat = useTalkStore((s) => s.openChat);
+  useEffect(() => {
+    const go = (chatId?: string | null) => {
+      if (chatId) openChat(chatId);
+    };
+    const hash = window.location.hash.match(/chat=([0-9a-f-]{36})/i);
+    if (hash) {
+      go(hash[1]);
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+    const onMessage = (e: MessageEvent) => {
+      if (e.data?.type === "asatalk:open") go(e.data.chatId);
+    };
+    navigator.serviceWorker?.addEventListener("message", onMessage);
+    return () =>
+      navigator.serviceWorker?.removeEventListener("message", onMessage);
+  }, [openChat]);
+  return null;
+}
+
 function JoinRoute({ joinRef }: { joinRef: string }) {
   const [open, setOpen] = useState(true);
   if (!open) return null;
@@ -147,7 +218,11 @@ function JoinRoute({ joinRef }: { joinRef: string }) {
       initial={joinRef}
       onClose={() => {
         setOpen(false);
-        window.history.replaceState(null, "", `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/talk`);
+        window.history.replaceState(
+          null,
+          "",
+          `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/`,
+        );
       }}
     />
   );

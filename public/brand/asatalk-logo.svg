@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" aria-label="Asatalk logo">
+  <defs>
+    <linearGradient id="at-g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8FD0FF"/>
+      <stop offset="0.55" stop-color="#2F80ED"/>
+      <stop offset="1" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <linearGradient id="at-s" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <!-- Container: the "talk bubble" — a circle with a tail at 7 o'clock -->
+  <circle cx="256" cy="248" r="216" fill="url(#at-g)"/>
+  <path d="M118 402 L88 478 L188 428 Z" fill="#1D4ED8"/>
+  <path d="M256 32 a216 216 0 0 1 216 216 c0 18 -3 36 -8 52 C380 200 300 170 60 300 40 210 110 32 256 32z" fill="url(#at-s)"/>
+  <!-- Core Asa mark -->
+  <path d="M150 352 L256 140 L362 352 H312 L256 234 L200 352 Z" fill="#fff"/>
+  <circle cx="256" cy="104" r="18" fill="#fff"/>
+</svg>

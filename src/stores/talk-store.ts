@@ -71,9 +71,9 @@ export const DEFAULT_SETTINGS: Required<
     | "folders"
   >
 > = {
-  theme: "system",
+  theme: "dark",
   accent: "sky",
-  wallpaper: "bubbles",
+  wallpaper: "gradient",
   bubbleRadius: 16,
   fontSize: 15,
   animations: true,

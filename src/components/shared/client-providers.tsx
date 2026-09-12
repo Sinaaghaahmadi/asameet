@@ -49,7 +49,15 @@ export function ClientProviders({ children }: { children: React.ReactNode }) {
         <I18nProvider>
           <TooltipProvider delayDuration={300}>
             {children}
-            <Toaster position="top-center" richColors dir="rtl" />
+            {/* sonner ships its own font-family, which otherwise left
+                toasts as the one surface not rendered in Vazirmatn. */}
+            <Toaster
+              position="top-center"
+              richColors
+              dir="rtl"
+              className="talk-toaster"
+              toastOptions={{ className: "talk-toast" }}
+            />
           </TooltipProvider>
         </I18nProvider>
       </ThemeProvider>

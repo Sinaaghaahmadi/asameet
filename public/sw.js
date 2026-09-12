@@ -1,7 +1,7 @@
 /* Asameet service worker — offline shell + static asset caching.
    All asset URLs are relative to the SW location so it works at the domain
    root (Vercel/self-hosted) and under a base path. */
-const CACHE = "asameet-v3";
+const CACHE = "asameet-v4";
 const STATIC_ASSETS = [
   "./",
   "manifest.webmanifest",
@@ -77,4 +77,62 @@ self.addEventListener("fetch", (event) => {
         )
     );
   }
+});
+
+/* ---------------- Web push (Asatalk) ----------------
+   Messages and calls that arrive while the app is closed. The payload is the
+   JSON the app server sent; a call is shown with high priority and its own
+   tag so a second ring replaces the first rather than stacking. */
+
+const TALK_ICON = "asatalk/icons/icon-192.png";
+
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { title: "Asatalk", body: event.data ? event.data.text() : "" };
+  }
+  const isCall = data.kind === "call";
+  const icon = new URL(TALK_ICON, self.location).href;
+  event.waitUntil(
+    self.registration.showNotification(data.title || "Asatalk", {
+      body: data.body || "",
+      icon,
+      badge: icon,
+      tag: data.tag || (isCall ? `call:${data.callId}` : `chat:${data.chatId}`),
+      renotify: isCall,
+      requireInteraction: isCall,
+      vibrate: isCall ? [300, 120, 300, 120, 300] : [80],
+      timestamp: Date.now(),
+      data: {
+        chatId: data.chatId || null,
+        callId: data.callId || null,
+        kind: data.kind || "message",
+      },
+    })
+  );
+});
+
+/* Focus an open tab rather than reopening — a cold start loses call state. */
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const { chatId, callId } = event.notification.data || {};
+  const target = new URL("talk", self.location);
+  if (callId) target.hash = `call=${callId}`;
+  else if (chatId) target.hash = `chat=${chatId}`;
+
+  event.waitUntil(
+    self.clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((list) => {
+        for (const client of list) {
+          if (new URL(client.url).origin !== self.location.origin) continue;
+          if (!new URL(client.url).pathname.includes("/talk")) continue;
+          client.postMessage({ type: "asatalk:open", chatId, callId });
+          return client.focus();
+        }
+        return self.clients.openWindow(target.href);
+      })
+  );
 });

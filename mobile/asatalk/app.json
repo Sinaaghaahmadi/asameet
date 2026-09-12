@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "آساتاک",
+    "slug": "asatalk",
+    "scheme": "asatalk",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": false,
+    "splash": { "image": "./assets/splash.png", "resizeMode": "contain", "backgroundColor": "#0f172a" },
+    "ios": {
+      "bundleIdentifier": "online.asameet.asatalk",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "برای تماس تصویری، پیام ویدئویی و اسکن کد QR",
+        "NSMicrophoneUsageDescription": "برای تماس صوتی و پیام صوتی",
+        "NSPhotoLibraryUsageDescription": "برای ارسال عکس و ویدئو",
+        "UIBackgroundModes": ["audio", "voip", "remote-notification"]
+      },
+      "associatedDomains": ["applinks:asameet.vercel.app"]
+    },
+    "android": {
+      "package": "online.asameet.asatalk",
+      "adaptiveIcon": { "foregroundImage": "./assets/adaptive-icon.png", "backgroundColor": "#0f172a" },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.VIBRATE",
+        "android.permission.POST_NOTIFICATIONS"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [{ "scheme": "https", "host": "asameet.vercel.app", "pathPrefix": "/talk" }],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      ["expo-camera", { "cameraPermission": "برای تماس تصویری و اسکن کد QR" }],
+      ["expo-av", { "microphonePermission": "برای تماس صوتی و پیام صوتی" }],
+      ["expo-image-picker", { "photosPermission": "برای ارسال عکس و ویدئو" }],
+      ["expo-notifications", { "icon": "./assets/notification-icon.png", "color": "#3b82f6" }],
+      ["@config-plugins/react-native-webrtc", { "cameraPermission": "برای تماس تصویری", "microphonePermission": "برای تماس صوتی" }]
+    ],
+    "extra": { "eas": { "projectId": "" } }
+  }
+}

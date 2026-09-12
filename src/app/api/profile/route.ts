@@ -11,6 +11,8 @@ export async function PATCH(req: NextRequest) {
       bio?: string;
       avatar?: string;
       clearAvatar?: boolean;
+      note?: string;
+      clearNote?: boolean;
     } | null;
     const data = await rpc("api_update_profile", {
       p_token: token,
@@ -19,6 +21,8 @@ export async function PATCH(req: NextRequest) {
       p_bio: body?.bio ?? null,
       p_avatar: body?.avatar ?? null,
       p_clear_avatar: body?.clearAvatar ?? false,
+      p_note: body?.note ?? null,
+      p_clear_note: body?.clearNote ?? false,
     });
     return NextResponse.json(data);
   } catch (e) {
