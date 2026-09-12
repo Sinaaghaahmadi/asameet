@@ -69,4 +69,4 @@ docs                 # پرامپت محصول، استقرار، اندروید
 - **سرور و دامنه نهایی:** `docker compose up -d` + نمونه کانفیگ `nginx.conf.example` — راهنمای کامل در [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 - **اندروید:** راهنمای ساخت APK در [docs/ANDROID.md](docs/ANDROID.md)
 
-مستندات بیشتر: [پرامپت محصول](docs/ASAMEET_PROMPT.md) · [سیستم طراحی](docs/DESIGN_SYSTEM.md) · [آساتاک](docs/ASATALK.md)
+مستندات بیشتر: [برندبوک](docs/BRAND_BOOK.md) · [سیستم طراحی](docs/DESIGN_SYSTEM.md) · [پرامپت طراحی UI/UX](docs/DESIGN_PROMPT.md) · [پرامپت ساخت ۲٫۰](docs/BUILD_PROMPT.md) · [آساتاک](docs/ASATALK.md) · [پرامپت محصول نسخهٔ ۱](docs/ASAMEET_PROMPT.md) · [آساتاک](docs/ASATALK.md)
